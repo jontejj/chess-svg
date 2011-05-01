@@ -1,0 +1,8 @@
+
+syntax: regexp
+^.classpath
+^.project
+^chess.settings
+bin/*
+syntax: glob
+.DS_Store
