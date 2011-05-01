@@ -310,6 +310,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		}
 		else
 		{
+			repaint();
 			ChessState state = getBoard().getCurrentState();
 			if(state == ChessState.CHECKMATE)
 			{
@@ -324,8 +325,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			if(state == ChessState.STALEMATE)
 			{				
 				JOptionPane.showMessageDialog(myWindow, "Stalemate! Draw.");
-			}
-			repaint();
+			}	
 		}
 	}
 }
