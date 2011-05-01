@@ -5,6 +5,5 @@ syntax: regexp
 ^chess.settings
 bin/*
 build/*
-dist/*
 syntax: glob
 .DS_Store

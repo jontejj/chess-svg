@@ -2,6 +2,7 @@ package com.jjonsson.chess.moves;
 
 import java.util.Map;
 
+import com.google.common.collect.ImmutableSet;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
@@ -82,7 +83,7 @@ public abstract class Move implements Comparable<Move>
 	/**
 	 * Override this for moves depending on other pieces not standing in the way
 	 * @param ignoreIfPositionIsBlocked this position should not be considered when checking for blocking pieces (i.e simulating a pass-through piece)
-	 * * @param ignoreIfPositionIsBlocked2 this position should not be considered when checking for blocking pieces (i.e simulating that the piece asking is hovering)
+	 * @param ignoreIfPositionIsBlocked2 this position should not be considered when checking for blocking pieces (i.e simulating that the piece asking is hovering)
 	 * @return
 	 */
 	public boolean isPieceBlockingMe(Position ignoreIfPositionIsBlocked, Position ignoreIfPositionIsBlocked2)
@@ -227,13 +228,13 @@ public abstract class Move implements Comparable<Move>
 			return false;
 		
 		if(myCanBeMadeCache)
-		{
+		{			
 			//This checks if the move would end in check mate, because no other piece stands in the path a check-mating move that this piece stops right now
 			//TODO: could this be cached?
-			Map<Piece, Move> kingThreateningMoves = board.getNonAvailableMoves(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity());
-			if(kingThreateningMoves != null && kingThreateningMoves.size() > 0)
+			ImmutableSet<Move> kingThreateningMoves = board.getNonAvailableMoves(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity());
+			if(kingThreateningMoves.size() > 0)
 			{
-				for(Move threateningMove : kingThreateningMoves.values())
+				for(Move threateningMove : kingThreateningMoves)
 				{
 					if(this.getPositionIfPerformed().equals(threateningMove.getCurrentPosition()))
 					{
@@ -265,8 +266,12 @@ public abstract class Move implements Comparable<Move>
 					}
 				}
 			}
+			
+			//Checks if this piece is protecting the king from being taken
+			/*Move kingThreateningMove = board.moveThreateningPosition(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity(), myPiece);
+			if(kingThreateningMove != null)
+				return false;*/
 		}
-		
 		return myCanBeMadeCache;
 	}
 	/**

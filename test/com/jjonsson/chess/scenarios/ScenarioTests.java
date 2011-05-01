@@ -1,4 +1,4 @@
-package com.jjonsson.chess.persistance.test;
+package com.jjonsson.chess.scenarios;
 
 import java.io.File;
 
@@ -17,7 +17,6 @@ import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.WhitePawn;
-
 
 public class ScenarioTests
 {

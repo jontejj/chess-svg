@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
@@ -111,24 +113,28 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	private void markSquaresAsAvailable(Graphics2D graphics)
 	{
-		//Mark pieces with available moves
-		Collection<Piece> currentPlayerPieces = getBoard().getPiecesForAffinity(getBoard().getCurrentPlayer());
-		for(Piece p : currentPlayerPieces)
+		//Only draw possible moves if the game is in play
+		if(getBoard().inPlay())
 		{
-			if(p.canMakeAMove(getBoard()))
-				markSquare(p.getCurrentPosition(),Color.MAGENTA, graphics);
-		}	
-		
-		if(myCurrentlySelectedPiece != null)
-		{
-			//Mark available moves for the selected piece
-			List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
-			for(Move m : moves)
+			//Mark pieces with available moves
+			Collection<Piece> currentPlayerPieces = getBoard().getPiecesForAffinity(getBoard().getCurrentPlayer());
+			for(Piece p : currentPlayerPieces)
 			{
-				markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
+				if(p.canMakeAMove(getBoard()))
+					markSquare(p.getCurrentPosition(),Color.MAGENTA, graphics);
+			}	
+			
+			if(myCurrentlySelectedPiece != null)
+			{
+				//Mark available moves for the selected piece
+				List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
+				for(Move m : moves)
+				{
+					markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
+				}
+				//Mark the selected piece
+				markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN, graphics);
 			}
-			//Mark the selected piece
-			markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN, graphics);
 		}
 		/*
 		//Mark Square Testing
@@ -284,9 +290,9 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void nextPlayer()
 	{
-		if(getBoard().getCurrentPlayer() == Piece.BLACK)
+		if(getBoard().inPlay())
 		{
-			if(getBoard().inPlay())
+			/*if(getBoard().getCurrentPlayer() == Piece.BLACK)
 			{
 				try
 				{
@@ -300,7 +306,26 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				{
 					e.printStackTrace();
 				}
+			}*/
+		}
+		else
+		{
+			ChessState state = getBoard().getCurrentState();
+			if(state == ChessState.CHECKMATE)
+			{
+				String winner = null;
+				if(getBoard().getCurrentPlayer() == Piece.BLACK)
+					winner = "White";
+				else
+					winner = "Black";
+				
+				JOptionPane.showMessageDialog(myWindow, "Checkmate! " + winner + " won.");
 			}
+			if(state == ChessState.STALEMATE)
+			{				
+				JOptionPane.showMessageDialog(myWindow, "Stalemate! Draw.");
+			}
+			repaint();
 		}
 	}
 }

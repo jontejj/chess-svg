@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import com.google.common.collect.ImmutableSet;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.King;
@@ -23,26 +25,26 @@ public class ChessBoardEvaluator
 	public static ChessState getState(ChessBoard board)
 	{
 		King currentKing = board.getCurrentKing();
-		HashMap<Piece, Move> movesThreateningKing = board.getMovesThreateningPosition(currentKing.getCurrentPosition(), !currentKing.getAffinity());
-		if(movesThreateningKing != null && movesThreateningKing.size() > 0)
+		ImmutableSet<Move> movesThreateningKing = board.getAvailableMoves(currentKing.getCurrentPosition(), !currentKing.getAffinity());
+		if(movesThreateningKing.size() > 0)
 		{
 			List<Move> kingMoves = currentKing.getAvailableMoves(false, board);
 			Set<Move> movesStoppingCheck = new HashSet<Move>();
 			int stoppableMoves = 0;
-			for(Entry<Piece, Move> entry : movesThreateningKing.entrySet())
+			for(Move threateningMove : movesThreateningKing)
 			{
 				boolean moveIsStoppable = false;
-				if(entry.getValue() instanceof DependantMove)
+				if(threateningMove instanceof DependantMove)
 				{
 					//Check if a player can put himself in harms way
-					DependantMove move = (DependantMove) entry.getValue();
+					DependantMove move = (DependantMove) threateningMove;
 					DependantMove moveThatThisMoveDependUpon = move.getMoveThatIDependUpon();
 					while(moveThatThisMoveDependUpon != null)
 					{
-						HashMap<Piece, Move> movesStoppingMove = board.getMovesThreateningPosition(moveThatThisMoveDependUpon.getPositionIfPerformed(), !entry.getKey().getAffinity());
-						if(movesStoppingMove != null && movesStoppingMove.size() > 0)
+						ImmutableSet<Move> movesStoppingMove = board.getAvailableMoves(moveThatThisMoveDependUpon.getPositionIfPerformed(), !threateningMove.getAffinity());
+						if(movesStoppingMove.size() > 0)
 						{
-							movesStoppingCheck.addAll(movesStoppingMove.values());
+							movesStoppingCheck.addAll(movesStoppingMove);
 							moveIsStoppable = true;
 						}
 						moveThatThisMoveDependUpon = moveThatThisMoveDependUpon.getMoveThatIDependUpon();
@@ -51,10 +53,10 @@ public class ChessBoardEvaluator
 				}
 				
 				//If the threatening piece can be taken in one move then the king can be saved
-				HashMap<Piece, Move> defendingMoves = board.getMovesThreateningPosition(entry.getKey().getCurrentPosition(), currentKing.getAffinity());
-				if(defendingMoves != null && defendingMoves.size() > 0)
+				ImmutableSet<Move> defendingMoves = board.getAvailableMoves(threateningMove.getCurrentPosition(), currentKing.getAffinity());
+				if(defendingMoves.size() > 0)
 				{
-					movesStoppingCheck.addAll(defendingMoves.values());
+					movesStoppingCheck.addAll(defendingMoves);
 					moveIsStoppable = true;
 				}
 				

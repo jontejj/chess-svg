@@ -11,10 +11,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
@@ -46,20 +51,20 @@ public class ChessBoard
 	 * To each possible position there is a sorted map (sorted by the pieces value) of pieces 
 	 * 	and the move that would reach this position
 	 */
-	private Map<Position, HashMap<Piece, Move>> myBlackAvailableMoves;
+	private HashMultimap<Position, Move> myBlackAvailableMoves;
 	/**
 	 * A map that keeps track of every position reachable by a move by the white player
 	 * To each possible position there is a sorted map (sorted by the pieces value) of pieces 
 	 * 	and the move that would reach this position
 	 */
-	private Map<Position, HashMap<Piece, Move>> myWhiteAvailableMoves;
+	private HashMultimap<Position, Move> myWhiteAvailableMoves;
 	/**
 	 * A map that keeps track of every move by the black player that isn't available right now
 	 * To each possible position there is a sorted map (by the pieces value) of pieces 
 	 * 	and the move that would reach this position
 	 */
-	private Map<Position, HashMap<Piece, Move>> myBlackNonAvailableMoves;
-	private Map<Position, HashMap<Piece, Move>> myWhiteNonAvailableMoves;
+	private HashMultimap<Position, Move> myBlackNonAvailableMoves;
+	private HashMultimap<Position, Move> myWhiteNonAvailableMoves;
 	
 	private boolean myCurrentPlayer;
 	
@@ -83,12 +88,12 @@ public class ChessBoard
 		myMoveLogger = new MoveLogger();
 		
 		myBlackPieces = new HashMap<Position, Piece>();
-		myBlackAvailableMoves = new HashMap<Position, HashMap<Piece, Move>>();
-		myBlackNonAvailableMoves = new HashMap<Position, HashMap<Piece, Move>>();
+		myBlackAvailableMoves = HashMultimap.create();
+		myBlackNonAvailableMoves = HashMultimap.create();
 		
 		myWhitePieces = new HashMap<Position, Piece>();
-		myWhiteAvailableMoves = new HashMap<Position, HashMap<Piece, Move>>();
-		myWhiteNonAvailableMoves = new HashMap<Position, HashMap<Piece, Move>>();
+		myWhiteAvailableMoves = HashMultimap.create();
+		myWhiteNonAvailableMoves = HashMultimap.create();
 	}
 	
 	/**
@@ -125,24 +130,20 @@ public class ChessBoard
 	 */
 	public boolean isMoveUnavailableDueToCheck(KingMove kingMove)
 	{
-		Map<Piece, Move> movesBehindKing = getNonAvailableMoves(kingMove.getPositionIfPerformed(), !kingMove.getAffinity());
-		if(movesBehindKing != null && movesBehindKing.size() > 0)
+		ImmutableSet<Move> movesBehindKing = getNonAvailableMoves(kingMove.getPositionIfPerformed(), !kingMove.getAffinity());
+		for(Move behindMove : movesBehindKing)
 		{
-			for(Move behindMove : movesBehindKing.values())
+			if(behindMove instanceof DependantMove)
 			{
-				if(behindMove instanceof DependantMove)
+				DependantMove move = ((DependantMove) behindMove).getMoveThatIDependUpon();
+				if(move != null)
 				{
-					DependantMove move = ((DependantMove) behindMove).getMoveThatIDependUpon();
-					if(move != null)
+					Position destinationForMove = move.getPositionIfPerformed();
+					//Is the move this belongs to the one that is threatening the king?
+					if(destinationForMove != null && destinationForMove.equals(kingMove.getCurrentPosition()))
 					{
-						Position destinationForMove = move.getPositionIfPerformed();
-						//Is the move this belongs to the one that is threatening the king?
-						if(destinationForMove != null && destinationForMove.equals(kingMove.getCurrentPosition()))
-						{
-							//TODO: optimize getAvailableMoves so that it returns a Set<Move> instead so that containsValue will be faster
-							if(getAvailableMoves(move.getPositionIfPerformed(),move.getAffinity()).containsValue(move))
-								return true;
-						}
+						if(getAvailableMoves(move.getPositionIfPerformed(),move.getAffinity()).contains(move))
+							return true;
 					}
 				}
 			}
@@ -201,38 +202,29 @@ public class ChessBoard
 	
 	public void performRandomMove() throws NoMovesAvailableException, UnavailableMoveException
 	{
-		Collection<HashMap<Piece, Move>> availableMoves = getAvailableMoves(getCurrentPlayer()).values();
-		if(availableMoves.size() == 0)
-			throw new NoMovesAvailableException();
+		HashMultimap<Position, Move> availableMoves = getAvailableMoves(getCurrentPlayer());
+		
 		boolean movePerformed = false;
 		while(!movePerformed)
 		{
-			int randomIndex = Math.abs(new Random().nextInt()) % availableMoves.size();
-			Object entry = availableMoves.toArray()[randomIndex];
-			if(entry instanceof HashMap<?, ?>)
+			try
 			{
-				Collection<?> randomEntry = ((HashMap<?, ?>) entry).values();
-				int randomMoveIndex = Math.abs(new Random().nextInt()) % (randomEntry.size() + 1);
-				int index = 0;
-				Iterator<?> iterator = randomEntry.iterator();
-				while(iterator.hasNext())
+				//TODO: perhaps we should perform the best move?
+				Move randomMove = Ordering.arbitrary().max(availableMoves.values());
+				Piece piece = getPiece(randomMove.getCurrentPosition());
+				if(piece == null)
+					throw new NoMovesAvailableException();
+				if(randomMove.canBeMade(this))
 				{
-					Move randomMove = (Move) iterator.next();
-					if(index == randomMoveIndex)
-					{
-						Piece piece = getPiece(randomMove.getCurrentPosition());
-						if(piece == null)
-							throw new NoMovesAvailableException();
-						if(randomMove.canBeMade(this))
-						{
-							System.out.println("Performing: " + randomMove);
-							piece.performMove(randomMove, this);
-							movePerformed = true;
-							break;
-						}
-					}
-					index++;
+					System.out.println("Performing: " + randomMove);
+					piece.performMove(randomMove, this);
+					movePerformed = true;
+					break;
 				}
+			}
+			catch(NoSuchElementException empty)
+			{
+				throw new NoMovesAvailableException();
 			}
 		}
 	}
@@ -341,26 +333,14 @@ public class ChessBoard
 	
 	public void removeAvailableMove(Position pos, Piece piece, Move move)
 	{
-		Map<Position, HashMap<Piece, Move>> availableMoves = getAvailableMoves(piece.getAffinity());
-		HashMap<Piece, Move> movesToPosition = availableMoves.get(pos);
-		if(movesToPosition != null)
-		{
-			Move oldMove = movesToPosition.get(piece);
-			if(oldMove == move)
-				movesToPosition.remove(piece);
-		}
+		HashMultimap<Position, Move> availableMoves = getAvailableMoves(piece.getAffinity());
+		availableMoves.remove(pos, move);
 	}
 
 	public void removeNonAvailableMove(Position pos, Piece piece, Move move)
 	{
-		Map<Position, HashMap<Piece, Move>> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
-		Map<Piece, Move> nonMovesToPosition = nonAvailableMoves.get(pos);
-		if(nonMovesToPosition != null)
-		{
-			Move oldMove = nonMovesToPosition.get(piece);
-			if(oldMove == move)
-				nonMovesToPosition.remove(piece);
-		}
+		HashMultimap<Position, Move> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
+		nonAvailableMoves.remove(pos, move);
 	}
 	
 	public void addNonAvailableMove(Position pos, Piece piece, Move move)
@@ -368,35 +348,26 @@ public class ChessBoard
 		//Out of bounds moves aren't handled here
 		if(pos != null)
 		{	
-			Map<Position, HashMap<Piece, Move>> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
-			HashMap<Piece, Move> nonMovesToPosition = nonAvailableMoves.get(pos);
-			if(nonMovesToPosition == null)
-			{
-				nonMovesToPosition = new HashMap<Piece, Move>();
-				nonAvailableMoves.put(pos, nonMovesToPosition);
-			}
-			nonMovesToPosition.put(piece, move);
+			HashMultimap<Position, Move> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
+			nonAvailableMoves.put(pos, move);
 			
 			//Check if the opposite king previously couldn't move into this position, if so then maybe he can now?
-			King oppositeKing = getOppositeKing(piece.getAffinity());
-			Move kingMove = oppositeKing.getNonAvailableMoveForPosition(pos, this);
-			if(kingMove != null)
+			if(!(piece instanceof King))
 			{
-				kingMove.updateMove(this);
+				King oppositeKing = getOppositeKing(piece.getAffinity());
+				Move kingMove = oppositeKing.getNonAvailableMoveForPosition(pos, this);
+				if(kingMove != null)
+				{
+					kingMove.updateMove(this);
+				}
 			}
 		}
 	}
 	
 	public void addAvailableMove(Position pos, Piece piece, Move move)
 	{	
-		Map<Position, HashMap<Piece, Move>> availableMoves = getAvailableMoves(piece.getAffinity());
-		HashMap<Piece, Move> movesToPosition = availableMoves.get(pos);
-		if(movesToPosition == null)
-		{
-			movesToPosition = new HashMap<Piece, Move>();
-			availableMoves.put(pos, movesToPosition);
-		}
-		movesToPosition.put(piece, move);
+		HashMultimap<Position, Move> availableMoves = getAvailableMoves(piece.getAffinity());
+		availableMoves.put(pos, move);
 		
 		//Check if the opposite king previously could move into this position, if so remove that move because now he can't
 		King oppositeKing = getOppositeKing(piece.getAffinity());
@@ -440,7 +411,7 @@ public class ChessBoard
 		return myWhitePieces.values();	
 	}
 	
-	public Map<Position, HashMap<Piece, Move>> getAvailableMoves(boolean affinity)
+	public HashMultimap<Position, Move> getAvailableMoves(boolean affinity)
 	{
 		if(affinity == Piece.WHITE)
 			return myWhiteAvailableMoves;
@@ -450,27 +421,23 @@ public class ChessBoard
 	
 	/**
 	 * 
-	 * @param position
-	 * @param affinity
-	 * @return an unmodifiable map of the available moves
+	 * @param position the wanted position
+	 * @param affinity the affinity of the player that should be able to move into the position
 	 */
-	public Map<Piece, Move> getAvailableMoves(Position position, boolean affinity)
+	public ImmutableSet<Move> getAvailableMoves(Position position, boolean affinity)
 	{
-		Map<Piece, Move> moves = null;
+		Set<Move> moves = null;
 		if(affinity == Piece.WHITE)
 			moves = myWhiteAvailableMoves.get(position);
 		else
 			moves = myBlackAvailableMoves.get(position);
 		
-		if(moves == null)
-			moves = Collections.emptyMap();
-		
-		return Collections.unmodifiableMap(moves);	
+		return ImmutableSet.copyOf(moves);	
 	}
 	
-	public Map<Position, HashMap<Piece, Move>> getNonAvailableMoves(boolean affinity)
+	public HashMultimap<Position, Move> getNonAvailableMoves(boolean affinity)
 	{
-		Map<Position, HashMap<Piece, Move>> moves = null;
+		HashMultimap<Position, Move> moves = null;
 		if(affinity == Piece.WHITE)
 			moves = myWhiteNonAvailableMoves;
 		else
@@ -483,20 +450,16 @@ public class ChessBoard
 	 * 
 	 * @param position
 	 * @param affinity
-	 * @return an unmodifiable map of the non available moves
 	 */
-	public Map<Piece, Move> getNonAvailableMoves(Position position, boolean affinity)
+	public ImmutableSet<Move> getNonAvailableMoves(Position position, boolean affinity)
 	{
-		Map<Piece, Move> moves = null;
+		Set<Move> moves = null;
 		if(affinity == Piece.BLACK)
 			moves  = myBlackNonAvailableMoves.get(position);
 		else
 			moves = myWhiteNonAvailableMoves.get(position);
 		
-		if(moves == null)
-			moves = Collections.emptyMap();
-		
-		return Collections.unmodifiableMap(moves);	
+		return ImmutableSet.copyOf(moves);	
 	}
 	
 	/**
@@ -507,73 +470,42 @@ public class ChessBoard
 	 */
 	public Move moveThreateningPosition(Position position, boolean affinity, Piece pieceThatWonders)
 	{
-		Move threateningMove = null;
-		HashMap<Piece, Move> moves = null;
-		if(affinity == Piece.BLACK)
-		{
-			moves = myBlackAvailableMoves.get(position);
-		}
-		else
-			moves = myWhiteAvailableMoves.get(position);
+		ImmutableSet<Move> moves = getAvailableMoves(position, affinity);
 		
 		//Pieces may be able to move into this position if a piece moves there so 
 		//we check all pieces that has a currently non possible move that leads to this position
-		HashMap<Piece, Move> possibleTakeOverMoves = null;
-		if(affinity == Piece.BLACK)
-		{
-			possibleTakeOverMoves = myBlackNonAvailableMoves.get(position);
-		}
-		else
-			possibleTakeOverMoves = myWhiteNonAvailableMoves.get(position);
+		ImmutableSet<Move> possibleTakeOverMoves = getNonAvailableMoves(position, affinity);
 		
 		if(possibleTakeOverMoves != null)
 		{
-			for(Move m : possibleTakeOverMoves.values())
+			for(Move m : possibleTakeOverMoves)
 			{
 				if(m instanceof PawnTakeOverMove)
 				{
-					threateningMove = m;
+					return m;
 				}
 				else
 				{
 					if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
-						threateningMove = m;
+						return m;
 				}
 			}
 		}
 		
-		if(threateningMove == null && moves != null)
+		//Select first move that would take this square over
+		Iterator<Move> iterator = moves.iterator();
+		while(iterator.hasNext())
 		{
-			//Select first move that would take this square over
-			Iterator<Move> iterator = moves.values().iterator();
-			while(iterator.hasNext())
+			Move threateningMove = iterator.next();
+			//A pawn move can't be made if there is something standing in this square and thus is it not threatening this square
+			if(!(threateningMove instanceof PawnMove))
 			{
-				threateningMove = iterator.next();
-				//A pawn move can't be made if there is something standing in this square and thus is it not threatening this square
-				if(!(threateningMove instanceof PawnMove))
-				{
-					//We have found our first move that really is threatening this square
-					break;
-				}
-				threateningMove = null;
+				//We have found our first move that really is threatening this square
+				return threateningMove;
 			}
 		}
 		
-		return threateningMove;
-	}
-	
-	/**
-	 * 
-	 * @param position the threatened position
-	 * @param affinity the affinity of the player that should threaten the position
-	 * @return a map of pieces and their respective moves that is threatening the given position
-	 */
-	public HashMap<Piece, Move> getMovesThreateningPosition(Position position, boolean affinity)
-	{
-		if(affinity == Piece.BLACK)
-			return myBlackAvailableMoves.get(position);
-		
-		return myWhiteAvailableMoves.get(position);
+		return null;
 	}
 	
 	/**
@@ -584,15 +516,7 @@ public class ChessBoard
 	 */
 	public boolean isMoveThreateningPositionRightNow(Position position, boolean affinity)
 	{
-		HashMap<Piece, Move> moves = null;
-		if(affinity == Piece.BLACK)
-		{
-			moves = myBlackAvailableMoves.get(position);
-		}
-		else
-			moves = myWhiteAvailableMoves.get(position);
-		
-		return moves != null && moves.size() > 0;
+		return getAvailableMoves(position, affinity).size() > 0;
 	}
 
 	/**
@@ -641,28 +565,15 @@ public class ChessBoard
 	
 	/**
 	 * 
-	 * @param moveMap
+	 * @param moves
 	 * @param pos
 	 */
-	private void updatePossibiltyForMapOfMoves(Map<Position, HashMap<Piece, Move>> moveMap, Position pos)
+	private void updatePossibiltyForMapOfMoves(HashMultimap<Position, Move> moves, Position pos)
 	{
-		//As the move may be removed this iteration will need a shallow copy of the move map
-		
-		Object o = moveMap.get(pos);
-		if(o == null)
-		{
-			return;
-		}
-		
-		Object clone = moveMap.get(pos).clone();
-		if(clone instanceof HashMap<?, ?>)
-		{
-			for(Object m : ((HashMap<?, ?>)clone).values())
-			{
-				if(m instanceof Move)
-					((Move)m).updateMove(this);
-			}	
-		}
+		//As the move may be removed during this iteration will need a shallow copy of the move map
+		ImmutableSet<Move> copy = ImmutableSet.copyOf(moves.get(pos));
+		for(Move m : copy)
+			m.updateMove(this);
 	}
 
 	public void updateGameState()
