@@ -30,7 +30,7 @@ public class ChessWindow extends JFrame implements ActionListener
 	public static final int DEFAULT_WINDOW_WIDTH = 800;
 	public static final int DEFAULT_WINDOW_HEIGHT = 800;
 	
-	private static final int FILE_MENU_HEIGHT = 22;
+	private static final int FILE_MENU_HEIGHT = 36;
 	
 	private static final String NEW_MENU_ITEM = "New";
 	private static final String LOAD_MENU_ITEM = "Load";
@@ -172,7 +172,7 @@ public class ChessWindow extends JFrame implements ActionListener
 	private void selectFile(String buttonText)
 	{
 		JFileChooser jfc = new JFileChooser(getFileChooserPath());
-		jfc.setAcceptAllFileFilterUsed(false);
+		jfc.setAcceptAllFileFilterUsed(true);
 		jfc.setFileFilter(new ChessFileFilter());
 		jfc.showDialog(this.getRootPane(), buttonText);
 		myCurrentBoardFile = jfc.getSelectedFile();

@@ -1,8 +1,8 @@
 package com.jjonsson.chess.gui;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
@@ -13,8 +13,7 @@ import com.jjonsson.chess.pieces.Piece;
 
 public class PieceImageCache
 {
-	private static String myPath = "file://" + new File("").getAbsolutePath() + "/images/svg/piece_";
-	
+
 	private static SAXSVGDocumentFactory svgFactory = new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());
 	
 	private static HashMap<String, SVGDocument> pieceCache = new HashMap<String, SVGDocument>();
@@ -25,7 +24,7 @@ public class PieceImageCache
 		{
 			try
 			{
-				cachedDocument = svgFactory.createSVGDocument(imagePathForPiece(p));
+				cachedDocument = svgFactory.createSVGDocument(imagePathForPiece(p).toString());
 				//pieceCache.put(p.getIdentifier(), cachedDocument);
 			}
 			catch (FileNotFoundException fnfe)
@@ -41,9 +40,11 @@ public class PieceImageCache
 		}
 		return cachedDocument;
 	}
-	
-	private static String imagePathForPiece(Piece p)
+	/**
+	 * Note: This function requires that the "images" directory is added to the class path
+	 */
+	private static URL imagePathForPiece(Piece p)
 	{
-		return myPath + p.getIdentifier() + ".svg";
+		return PieceImageCache.class.getResource("/svg/Piece_" + p.getIdentifier() + ".svg");
 	}
 }

@@ -86,7 +86,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		  g2d.setRenderingHints(WindowUtilities.getRenderingHints());
 		  setBackground(Color.darkGray);
 		  drawGrid(g2d);
-		  markSquaresAsAvailable();
+		  markSquaresAsAvailable(g2d);
 	}
 	
 	private void drawGrid(Graphics g)
@@ -109,14 +109,14 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		}
 	}
 	
-	private void markSquaresAsAvailable()
+	private void markSquaresAsAvailable(Graphics2D graphics)
 	{
 		//Mark pieces with available moves
 		Collection<Piece> currentPlayerPieces = getBoard().getPiecesForAffinity(getBoard().getCurrentPlayer());
 		for(Piece p : currentPlayerPieces)
 		{
 			if(p.canMakeAMove(getBoard()))
-				markSquare(p.getCurrentPosition(),Color.MAGENTA);
+				markSquare(p.getCurrentPosition(),Color.MAGENTA, graphics);
 		}	
 		
 		if(myCurrentlySelectedPiece != null)
@@ -125,10 +125,10 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
 			for(Move m : moves)
 			{
-				markSquare(m.getPositionIfPerformed(),Color.GREEN);
+				markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
 			}
 			//Mark the selected piece
-			markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN);
+			markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN, graphics);
 		}
 		/*
 		//Mark Square Testing
@@ -144,19 +144,24 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		*/
 	}
 	
-	private void markSquare(Position pos, Color markingColor)
+	/**
+	 * Marks the given position with the given color on the given graphics object
+	 * @param pos the position to surround with a color
+	 * @param markingColor the color to surround the position with
+	 * @param graphics the object to draw the square on
+	 */
+	private void markSquare(Position pos, Color markingColor, Graphics2D graphics)
 	{
-		Graphics g = this.getGraphics();
-		g.setColor(markingColor);
+		graphics.setColor(markingColor);
 		Point point = getInnerBorderUpperLeftCornerPointForSquare(pos);
 		//Upper line
-		g.fillRect(point.x, point.y, ChessPieceComponent.SIZE, ChessPieceComponent.BORDER_SIZE / 2);
+		graphics.fillRect(point.x, point.y, ChessPieceComponent.SIZE, ChessPieceComponent.BORDER_SIZE / 2);
 		//Bottom line
-		g.fillRect(point.x, point.y + ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.SIZE, ChessPieceComponent.BORDER_SIZE / 2);
+		graphics.fillRect(point.x, point.y + ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.SIZE, ChessPieceComponent.BORDER_SIZE / 2);
 		//Left line
-		g.fillRect(point.x, point.y + ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE);
+		graphics.fillRect(point.x, point.y + ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE);
 		//Right line
-		g.fillRect(point.x + ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE / 2, point.y + ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE);
+		graphics.fillRect(point.x + ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE / 2, point.y + ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE);
 	}
 	
 	private Point getInnerBorderUpperLeftCornerPointForSquare(Position pos)

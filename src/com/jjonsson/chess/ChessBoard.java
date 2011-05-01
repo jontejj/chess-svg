@@ -212,7 +212,7 @@ public class ChessBoard
 			if(entry instanceof HashMap<?, ?>)
 			{
 				Collection<?> randomEntry = ((HashMap<?, ?>) entry).values();
-				int randomMoveIndex = Math.abs(new Random().nextInt()) % randomEntry.size();
+				int randomMoveIndex = Math.abs(new Random().nextInt()) % (randomEntry.size() + 1);
 				int index = 0;
 				Iterator<?> iterator = randomEntry.iterator();
 				while(iterator.hasNext())

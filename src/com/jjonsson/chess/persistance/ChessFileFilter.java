@@ -9,7 +9,7 @@ public class ChessFileFilter extends FileFilter
 
 	@Override
 	public boolean accept(File pathname)
-	{
+	{				
 		return pathname.getAbsolutePath().endsWith(".chess");
 	}
 
