@@ -93,15 +93,22 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	private void drawGrid(Graphics g)
 	{
-		g.setColor(Color.GRAY);
-		for(int i = 0;i<=ChessBoard.BOARD_SIZE;i++)
-		{
-			//Horizontal line
-			g.fillRect(0, i* ChessPieceComponent.SIZE, ChessWindow.DEFAULT_WINDOW_WIDTH, ChessPieceComponent.BORDER_SIZE);
-			//Vertical line
-			g.fillRect(i* ChessPieceComponent.SIZE, 0, ChessPieceComponent.BORDER_SIZE, ChessWindow.DEFAULT_WINDOW_HEIGHT + ChessPieceComponent.BORDER_SIZE);
-		}
+		for (int row = 0;  row < ChessBoard.BOARD_SIZE;  row++ ) {
+            for (int col = 0;  col < ChessBoard.BOARD_SIZE;  col++ ) {
+                int x = ChessPieceComponent.SIZE*col;
+                int y = ChessPieceComponent.SIZE*row;
+                if ( (row % 2) == (col % 2) )
+                   g.setColor(Color.darkGray);
+                else
+                   g.setColor(Color.lightGray);
+                g.fillRect(x,y,ChessPieceComponent.SIZE,ChessPieceComponent.SIZE);
+            }
+         }
 	}
+	/**
+	 * TODO: This doesn't seem to work
+	 * @param newWindowSize
+	 */
 	public void resizeBoard(Dimension newWindowSize)
 	{
 		for(ChessPieceComponent p : pieces)
@@ -172,7 +179,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	private Point getInnerBorderUpperLeftCornerPointForSquare(Position pos)
 	{
-		Point p = new Point(pos.getColumn() * ChessPieceComponent.SIZE + ChessPieceComponent.BORDER_SIZE / 2, (ChessBoard.BOARD_SIZE - pos.getRow() - 1) * ChessPieceComponent.SIZE + ChessPieceComponent.BORDER_SIZE / 2);
+		Point p = new Point(pos.getColumn() * ChessPieceComponent.SIZE, (ChessBoard.BOARD_SIZE - pos.getRow() - 1) * ChessPieceComponent.SIZE);
 		return p;
 	}
 	
@@ -292,7 +299,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	{
 		if(getBoard().inPlay())
 		{
-			/*if(getBoard().getCurrentPlayer() == Piece.BLACK)
+			if(getBoard().getCurrentPlayer() == Piece.BLACK)
 			{
 				try
 				{
@@ -306,7 +313,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				{
 					e.printStackTrace();
 				}
-			}*/
+			}
 		}
 		else
 		{

@@ -1,5 +1,6 @@
 package com.jjonsson.chess.gui.components;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -44,7 +45,8 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		{
 			setSize(pieceSize(), pieceSize());
 			//Makes sure that the image is displayed without a background
-			setBackground(null);
+			setBackgroundColor(); 
+            
 			setLocation(getPointForPiece(myPieceToDraw));
 			setSVGDocument(doc);
 			addMouseListener(this);
@@ -68,10 +70,20 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	{
 		return ChessPieceComponent.SIZE - MARGIN * 2 - BORDER_SIZE * 2;
 	}
+	
+	private void setBackgroundColor()
+	{
+		//setBackground(null);
+        if ( (myPieceToDraw.getCurrentPosition().getRow() % 2) == (myPieceToDraw.getCurrentPosition().getColumn() % 2) )
+        	setBackground(Color.lightGray);
+         else
+        	 setBackground(Color.darkGray); 	
+	}
 
 	@Override
 	public void movePerformed(Move performedMove)
-	{
+	{	
+		setBackgroundColor();
 		setLocation(getPointForPiece(myPieceToDraw));
 	}
 

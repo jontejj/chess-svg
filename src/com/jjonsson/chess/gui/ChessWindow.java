@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
@@ -19,18 +21,17 @@ import com.google.common.io.Files;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessGame;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
-import com.jjonsson.chess.gui.components.ChessPieceComponent;
 import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.ChessFileFilter;
 
-public class ChessWindow extends JFrame implements ActionListener
+public class ChessWindow extends JFrame implements ActionListener, KeyListener
 {
 	private static final long	serialVersionUID	= 1L;
 	
 	public static final int DEFAULT_WINDOW_WIDTH = 800;
 	public static final int DEFAULT_WINDOW_HEIGHT = 800;
 	
-	private static final int FILE_MENU_HEIGHT = 36;
+	private static final int FILE_MENU_HEIGHT = 59;
 	
 	private static final String NEW_MENU_ITEM = "New";
 	private static final String LOAD_MENU_ITEM = "Load";
@@ -50,12 +51,13 @@ public class ChessWindow extends JFrame implements ActionListener
 		super(ChessGame.NAME);
 		myGame = chessGame;
 	    this.setBackground(Color.DARK_GRAY);
-	    this.setSize(ChessWindow.DEFAULT_WINDOW_WIDTH + ChessPieceComponent.BORDER_SIZE, ChessWindow.DEFAULT_WINDOW_HEIGHT + 23 + FILE_MENU_HEIGHT + ChessPieceComponent.BORDER_SIZE);
+	    this.setSize(ChessWindow.DEFAULT_WINDOW_WIDTH + 3, ChessWindow.DEFAULT_WINDOW_HEIGHT + FILE_MENU_HEIGHT);
 	    
 	    myComponent = new ChessBoardComponent(this);
 	    this.setContentPane(myComponent);
 	    
 	    this.addWindowListener(new WindowListener(this));
+	    this.addKeyListener(this);
 	    WindowUtilities.setNativeLookAndFeel();
 	    
 	    createMenuBar();
@@ -117,7 +119,52 @@ public class ChessWindow extends JFrame implements ActionListener
 	    exitAction.addActionListener(this);
 	    saveAsAction.addActionListener(this);
 	}
-
+	
+	private void save(boolean forceDialog)
+	{
+		if(myCurrentBoardFile == null || forceDialog)
+			selectFile("Save Chess File");
+		
+		BoardLoader.saveBoard(getBoard(), myCurrentBoardFile);	
+	}
+	
+	private void newGame()
+	{
+		myComponent.clear();
+		myGame.getBoard().reset();
+	}
+	
+	private void load()
+	{
+		selectFile("Load Chess File");
+		if(myCurrentBoardFile != null)
+		{
+			//TODO: make a copy of the previous board, in case something goes wrong with the loading
+			getBoard().clear();
+			myComponent.clear();
+			boolean loadOk = BoardLoader.loadFileIntoBoard(myCurrentBoardFile, getBoard());
+			while(!loadOk && myCurrentBoardFile != null)
+			{
+				System.out.println("Invalid board file format, Select new file to load");
+				selectFile("Load Chess File");
+				loadOk = BoardLoader.loadFileIntoBoard(myCurrentBoardFile, getBoard());
+			}
+			myComponent.loadingOfBoardDone();
+		}
+	}
+	
+	/**
+	 * Re-translates an exit action into a real window event
+	 */
+	private void exit()
+	{
+		
+		WindowEvent we = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
+		for(java.awt.event.WindowListener wl : this.getWindowListeners())
+		{
+			wl.windowClosing(we);
+		}
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent e)
@@ -125,47 +172,23 @@ public class ChessWindow extends JFrame implements ActionListener
 		System.out.println(e.getActionCommand());
 		if(e.getActionCommand().equals(NEW_MENU_ITEM))
 		{
-			myComponent.clear();
-			myGame.getBoard().reset();
+			newGame();
 		}
 		else if(e.getActionCommand().equals(SAVE_MENU_ITEM))
 		{
-			if(myCurrentBoardFile == null)
-				selectFile("Save Chess File");
-			
-			BoardLoader.saveBoard(getBoard(), myCurrentBoardFile);
+			save(false);
 		}
 		else if(e.getActionCommand().equals(SAVE_AS_MENU_ITEM))
 		{
-			selectFile("Save Chess File");
-			BoardLoader.saveBoard(getBoard(), myCurrentBoardFile);
+			save(true);
 		}
 		else if(e.getActionCommand().equals(LOAD_MENU_ITEM))
 		{
-			selectFile("Load Chess File");
-			if(myCurrentBoardFile != null)
-			{
-				//TODO: make a copy of the previous board, in case something goes wrong with the loading
-				getBoard().clear();
-				myComponent.clear();
-				boolean loadOk = BoardLoader.loadFileIntoBoard(myCurrentBoardFile, getBoard());
-				while(!loadOk && myCurrentBoardFile != null)
-				{
-					System.out.println("Invalid board file format, Select new file to load");
-					selectFile("Load Chess File");
-					loadOk = BoardLoader.loadFileIntoBoard(myCurrentBoardFile, getBoard());
-				}
-				myComponent.loadingOfBoardDone();
-			}
+			load();
 		}	
 		else if(e.getActionCommand().equals(EXIT_MENU_ITEM))
 		{
-			//Retranslate this event into a real window event
-			WindowEvent we = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
-			for(java.awt.event.WindowListener wl : this.getWindowListeners())
-			{
-				wl.windowClosing(we);
-			}
+			exit();
 		}
 	}
 	
@@ -214,6 +237,34 @@ public class ChessWindow extends JFrame implements ActionListener
 			{
 			}
 			lastFileChooserLocation = path;
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) 
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) 
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) 
+	{
+		if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_S)
+		{
+			//Save [as]
+			save(e.isShiftDown());
+		}
+		if(e.isAltDown() && e.getKeyCode() == KeyEvent.VK_F4)
+		{
+			exit();
 		}
 	}
 }
