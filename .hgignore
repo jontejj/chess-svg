@@ -1,9 +1,12 @@
 
 syntax: regexp
+settings.xml
 .classpath
 .project
 ^chess.settings
 bin/*
 build/*
+.metadata/*
+.settings/*
 syntax: glob
 .DS_Store
