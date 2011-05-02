@@ -8,5 +8,6 @@ bin/*
 build/*
 .metadata/*
 .settings/*
+target/*/*.class
 syntax: glob
 .DS_Store
