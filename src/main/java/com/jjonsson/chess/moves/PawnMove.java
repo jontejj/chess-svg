@@ -4,7 +4,7 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
 
-public class PawnMove extends DependantMove
+public abstract class PawnMove extends DependantMove
 {
 	public PawnMove(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith, DependantMove moveDependingOnMe, DependantMove moveThatIDependUpon)
 	{
@@ -23,18 +23,6 @@ public class PawnMove extends DependantMove
 		{
 			//The white/black pawn has reached the bottom/top and now it's time to replace him
 			myRevertingMove.setPieceThatReplacedMyPiece(board.replacePawn(myPiece));
-		}
-		if(getMoveThatIDependUpon() != null)
-		{
-			//This is the 2-step move for a pawn and when it has been made, it won't be possible again
-			getMoveThatIDependUpon().setMoveThatDependsOnMe(null);
-			this.removeMove(board);
-		}
-		if(getMoveDependingOnMe() != null)
-		{
-			//This is the 1-step move for a pawn, this means that the 2-step move shouldn't be available anymore
-			getMoveDependingOnMe().removeMove(board);
-			setMoveThatDependsOnMe(null);
 		}
 	}
 	

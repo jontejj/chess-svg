@@ -1,6 +1,8 @@
 package com.jjonsson.chess.moves;
 
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.pieces.Pawn;
 import com.jjonsson.chess.pieces.Piece;
 
 public class PawnTakeOverMove extends PawnMove
@@ -9,7 +11,7 @@ public class PawnTakeOverMove extends PawnMove
 	public PawnTakeOverMove(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith, DependantMove moveDependingOnMe, DependantMove moveThatIDependUpon)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith, moveDependingOnMe, moveThatIDependUpon);
-		//TODO: fix better constructor for this move (it's not dependant on any other move, but it shares functionality with BlackPeasantMove)
+		//TODO: fix better constructor for this move (it's not dependent on any other move, but it shares functionality with PawnMove)
 	}
 
 	@Override
@@ -30,5 +32,14 @@ public class PawnTakeOverMove extends PawnMove
 			return true;
 		}
 	}
-
+	@Override
+	public void makeMove(ChessBoard board) throws UnavailableMoveException
+	{
+		super.makeMove(board);
+		//remove the 2-step move
+		if(myPiece instanceof Pawn)
+		{
+			((Pawn)myPiece).removeTwoStepMove(board);
+		}
+	}
 }

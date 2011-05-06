@@ -43,7 +43,8 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 	private static final String SAVE_MENU_ITEM = "Save (Ctrl + s)";
 	private static final String SAVE_AS_MENU_ITEM = "Save As (Ctrl + Shift + s)";
 	private static final String EXIT_MENU_ITEM = "Exit (Left Alt + F4)";
-	private static final String UNDO_MENU_ITEM = "Undo (Ctrl + z)";
+	private static final String UNDO_BLACK_MENU_ITEM = "Undo Black Move (Ctrl + Shift + z)";
+	private static final String UNDO_WHITE_MENU_ITEM = "Undo White Move (Ctrl + z)";
 	
 	private String lastFileChooserLocation;
 	
@@ -140,8 +141,10 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 	    
 	    JMenu actionsMenu = new JMenu("Actions");
 	    
-	    JMenuItem undo = new JMenuItem(UNDO_MENU_ITEM);
-	    actionsMenu.add(undo);
+	    JMenuItem undoBlack = new JMenuItem(UNDO_BLACK_MENU_ITEM);
+	    JMenuItem undoWhite = new JMenuItem(UNDO_WHITE_MENU_ITEM);
+	    actionsMenu.add(undoBlack);
+	    actionsMenu.add(undoWhite);
 	    
 	    menuBar.add(actionsMenu);
 	    
@@ -150,7 +153,8 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 	    saveAction.addActionListener(this);
 	    exitAction.addActionListener(this);
 	    saveAsAction.addActionListener(this);
-	    undo.addActionListener(this);
+	    undoBlack.addActionListener(this);
+	    undoWhite.addActionListener(this);
 	}
 	
 	private void save(boolean forceDialog)
@@ -211,16 +215,14 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 		}
 	}
 	
-	private void undo() 
+	private void undo(int nrOfMoves) 
 	{
-		try 
-		{
-			getBoard().undoLastMove();
-		} 
-		catch (UnavailableMoveException e) 
-		{
+		int undoneMoves = getBoard().undoMoves(nrOfMoves);
+		updateStatusBar();
+		if(undoneMoves == 0)
 			myStatusBar.setText(myGameStatus + " (Undo not possible)");
-		}
+		else
+			myStatusBar.setText(myGameStatus + " (Reverted " + undoneMoves + " moves)");
 	}
 	
 	/**
@@ -256,10 +258,14 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 		{
 			load();
 		}	
-		else if(e.getActionCommand().equals(UNDO_MENU_ITEM))
+		else if(e.getActionCommand().equals(UNDO_BLACK_MENU_ITEM))
 		{
-			undo();
+			undo(1);
 		}	
+		else if(e.getActionCommand().equals(UNDO_WHITE_MENU_ITEM))
+		{
+			undo(2);
+		}
 		else if(e.getActionCommand().equals(EXIT_MENU_ITEM))
 		{
 			exit();
@@ -335,16 +341,20 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 		{
 			switch(e.getKeyCode())
 			{
-				case KeyEvent.VK_S:
-					save(e.isShiftDown()); //Save [as]
+				case KeyEvent.VK_S: //Save [as]
+					save(e.isShiftDown()); 
 					break;
-				case KeyEvent.VK_Z:
-					undo();
+				case KeyEvent.VK_Z: //Undo moves
+					if(e.isShiftDown())
+						undo(1);
+					else
+						undo(2);
+					break;
 			}
 		}
 		else if(e.isAltDown() && e.getKeyCode() == KeyEvent.VK_F4 && !e.isShiftDown())
 		{
-			exit();
+			exit(); //Terminate program
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package com.jjonsson.chess.moves;
 
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
 
@@ -95,7 +96,15 @@ public class RevertingMove extends IndependantMove {
 	public Position getPositionIfPerformed()
 	{
 		Position curPos = myPiece.getCurrentPosition();
-		return Position.createPosition(curPos.getRow() + getRowChange() + 1, curPos.getColumn() + getColumnChange() + 1);
+		try
+		{
+			return Position.createPosition(curPos.getRow() + getRowChange() + 1, curPos.getColumn() + getColumnChange() + 1);
+		}
+		catch (InvalidPosition e)
+		{
+			//Could happen for a reverting move if the move it's connected to isn't possible to do due to it being out of bounds
+		}
+		return null;
 	}
 	
 	@Override
@@ -117,6 +126,7 @@ public class RevertingMove extends IndependantMove {
 				board.addPiece(myPieceToPlaceAtOldPosition, true, false);
 			}
 			super.makeMove(board);
+			myPiece.revertedAMove(board);
 		}
 	}
 

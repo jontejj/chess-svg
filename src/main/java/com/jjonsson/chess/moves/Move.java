@@ -1,7 +1,5 @@
 package com.jjonsson.chess.moves;
 
-import java.util.Map;
-
 import com.google.common.collect.ImmutableSet;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
@@ -339,9 +337,9 @@ public abstract class Move implements Comparable<Move>
 	 */
 	public String logMessageForLastMove() 
 	{
-		String log = myPiece.getPieceName() + ": " + getRevertingMove().getPositionIfPerformed() + " -> " + myPiece.getCurrentPosition();
+		String log = myPiece.getDisplayName() + ": " + getRevertingMove().getPositionIfPerformed() + " -> " + myPiece.getCurrentPosition();
 		if(getRevertingMove().getPieceThatITookOver() != null)
-			log += " (Took over: " + getRevertingMove().getPieceThatITookOver().getPieceName() + ")";
+			log += " (Took over: " + getRevertingMove().getPieceThatITookOver().getDisplayName() + ")";
 		return log;
 	}
 }

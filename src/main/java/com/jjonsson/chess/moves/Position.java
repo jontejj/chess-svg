@@ -1,5 +1,8 @@
 package com.jjonsson.chess.moves;
 
+import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.exceptions.InvalidPosition;
+
 public class Position implements Cloneable
 {
 	private byte myRow;
@@ -65,10 +68,34 @@ public class Position implements Cloneable
 	 * 
 	 * @param row the row for this position, valid numbers are 1-8
 	 * @param column the column for this position, valid numbers are 1-8 (A-H)
+	 * @throws InvalidPosition if one or both of the given parameters are out of range 
 	 */
-	public static Position createPosition(int row, int column)
+	public static Position createPosition(int row, int column) throws InvalidPosition
 	{
+		if(row < 1 || row > ChessBoard.BOARD_SIZE || column < 1 || column > ChessBoard.BOARD_SIZE)
+			throw new InvalidPosition(row, column);
+		
 		return new Position((byte)(row - 1), (byte)(column - 1));
+	}
+	
+	public Position up() throws InvalidPosition
+	{
+		return Position.createPosition(myRow + 2, myColumn + 1);
+	}
+	
+	public Position down() throws InvalidPosition
+	{
+		return Position.createPosition(myRow, myColumn + 1);
+	}
+	
+	public Position right() throws InvalidPosition
+	{
+		return Position.createPosition(myRow + 1, myColumn + 2);
+	}
+	
+	public Position left() throws InvalidPosition
+	{
+		return Position.createPosition(myRow + 1, myColumn);
 	}
 	
 	/**

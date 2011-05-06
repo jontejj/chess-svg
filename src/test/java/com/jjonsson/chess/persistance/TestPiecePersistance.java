@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
@@ -13,7 +14,7 @@ public class TestPiecePersistance
 {
 
 	@Test
-	public void testGetPieceFromPersistanceData()
+	public void testGetPieceFromPersistanceData() throws InvalidPosition
 	{
 		Position kingPos = Position.createPosition(5, Position.D);
 		King k = new King(kingPos, Piece.BLACK);

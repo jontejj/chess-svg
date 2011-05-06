@@ -1,16 +1,13 @@
 package com.jjonsson.chess;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.King;
-import com.jjonsson.chess.pieces.Piece;
 
 public class ChessBoardEvaluator
 {

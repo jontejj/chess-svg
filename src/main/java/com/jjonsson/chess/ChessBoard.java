@@ -10,29 +10,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Random;
 import java.util.Set;
 
-import javax.swing.JOptionPane;
-
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
-import com.google.common.collect.SortedMaps;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;
-import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
 import com.jjonsson.chess.moves.Position;
@@ -84,17 +73,19 @@ public class ChessBoard
 	private ChessState	myCurrentGameState;
 	private Set<Move> myMovesThatStopsKingFromBeingChecked;
 	
-	private Move myLastMoveCache;
-	private Move myLastMove;
+	//Manages the possibility of automatic moves (used during move reverting)
+	private boolean myAllowsMoves;
 	
 	/**
 	 * Constructs the chess board and sets all the pieces to their default locations
 	 */
 	public ChessBoard()
 	{
+		myAllowsMoves = true;
 		myMovesThatStopsKingFromBeingChecked = Collections.emptySet();
 		myBoardListeners = new HashSet<ChessBoardListener>();
 		myMoveLogger = new MoveLogger();
+		addChessBoardListener(myMoveLogger);
 		
 		myBlackPieces = new HashMap<Position, Piece>();
 		myBlackAvailableMoves = HashMultimap.create();
@@ -110,7 +101,7 @@ public class ChessBoard
 	 */
 	public Move getLastMove()
 	{
-		return myLastMove;
+		return myMoveLogger.getLastMove();
 	}
 	
 	/**
@@ -118,7 +109,6 @@ public class ChessBoard
 	 */
 	public void reset()
 	{
-		myLastMove = null;
 		clear();
 		setupWhitePieces();
 		setupBlackPieces();
@@ -290,25 +280,32 @@ public class ChessBoard
 	 */
 	private void setupWhitePieces()
 	{	
-		/* *****************************
-		  	
-		 * ******************************/
-		for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
+		try
 		{
-			addPiece(new WhitePawn(Position.createPosition(2, column)), false, true);
+			/* *****************************
+			  	
+			 * ******************************/
+			for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
+			{
+				addPiece(new WhitePawn(Position.createPosition(2, column)), false, true);
+			}
+			
+			addPiece(new Knight(Position.createPosition(1, Position.B), Piece.WHITE), false, true);
+			addPiece(new Knight(Position.createPosition(1, Position.G), Piece.WHITE), false, true);
+			
+			addPiece(new Rock(Position.createPosition(1, Position.A), Piece.WHITE), false, true);
+			addPiece(new Rock(Position.createPosition(1, Position.H), Piece.WHITE), false, true);
+			
+			addPiece(new Queen(Position.createPosition(1, Position.D), Piece.WHITE), false, true);
+			addPiece(new Bishop(Position.createPosition(1, Position.C), Piece.WHITE), false, true);
+			addPiece(new Bishop(Position.createPosition(1, Position.F), Piece.WHITE), false, true);
+			
+			addPiece(new King(Position.createPosition(1, Position.E), Piece.WHITE), false, true);
 		}
-		
-		addPiece(new Knight(Position.createPosition(1, Position.B), Piece.WHITE), false, true);
-		addPiece(new Knight(Position.createPosition(1, Position.G), Piece.WHITE), false, true);
-		
-		addPiece(new Rock(Position.createPosition(1, Position.A), Piece.WHITE), false, true);
-		addPiece(new Rock(Position.createPosition(1, Position.H), Piece.WHITE), false, true);
-		
-		addPiece(new Queen(Position.createPosition(1, Position.D), Piece.WHITE), false, true);
-		addPiece(new Bishop(Position.createPosition(1, Position.C), Piece.WHITE), false, true);
-		addPiece(new Bishop(Position.createPosition(1, Position.F), Piece.WHITE), false, true);
-		
-		addPiece(new King(Position.createPosition(1, Position.E), Piece.WHITE), false, true);
+		catch(InvalidPosition ip)
+		{
+			System.out.println("Something wrong with board setup, got " + ip);
+		}
 	}
 	
 	/**
@@ -316,22 +313,29 @@ public class ChessBoard
 	 */
 	private void setupBlackPieces()
 	{
-		for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
+		try
 		{
-			addPiece(new BlackPawn(Position.createPosition(7, column)), false, true);
+			for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
+			{
+				addPiece(new BlackPawn(Position.createPosition(7, column)), false, true);
+			}
+			
+			addPiece(new Knight(Position.createPosition(8, Position.B), Piece.BLACK), false, true);
+			addPiece(new Knight(Position.createPosition(8, Position.G), Piece.BLACK), false, true);
+			
+			addPiece(new Rock(Position.createPosition(8, Position.A), Piece.BLACK), false, true);
+			addPiece(new Rock(Position.createPosition(8, Position.H), Piece.BLACK), false, true);
+			
+			addPiece(new Queen(Position.createPosition(8, Position.D), Piece.BLACK), false, true);
+			addPiece(new Bishop(Position.createPosition(8, Position.C), Piece.BLACK), false, true);
+			addPiece(new Bishop(Position.createPosition(8, Position.F), Piece.BLACK), false, true);
+			
+			addPiece(new King(Position.createPosition(8, Position.E), Piece.BLACK), false, true);
 		}
-		
-		addPiece(new Knight(Position.createPosition(8, Position.B), Piece.BLACK), false, true);
-		addPiece(new Knight(Position.createPosition(8, Position.G), Piece.BLACK), false, true);
-		
-		addPiece(new Rock(Position.createPosition(8, Position.A), Piece.BLACK), false, true);
-		addPiece(new Rock(Position.createPosition(8, Position.H), Piece.BLACK), false, true);
-		
-		addPiece(new Queen(Position.createPosition(8, Position.D), Piece.BLACK), false, true);
-		addPiece(new Bishop(Position.createPosition(8, Position.C), Piece.BLACK), false, true);
-		addPiece(new Bishop(Position.createPosition(8, Position.F), Piece.BLACK), false, true);
-		
-		addPiece(new King(Position.createPosition(8, Position.E), Piece.BLACK), false, true);
+		catch(InvalidPosition ip)
+		{
+			System.out.println("Something wrong with board setup, got " + ip);
+		}
 	}
 	
 	public void setPossibleMoves()
@@ -531,11 +535,8 @@ public class ChessBoard
 				{
 					return m;
 				}
-				else
-				{
-					if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
+				else if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
 						return m;
-				}
 			}
 		}
 		
@@ -596,7 +597,6 @@ public class ChessBoard
 		map.put(newPosition, pieceToMove);
 		
 		myMoveLogger.movePerformed(moveToPerform);
-		myLastMoveCache = moveToPerform;
 	}
 
 	/**
@@ -636,7 +636,6 @@ public class ChessBoard
 				listener.gameStateChanged(newState);
 			}
 		}
-		myLastMove = myLastMoveCache;
 	}
 
 	public void clear()
@@ -647,10 +646,9 @@ public class ChessBoard
 		myBlackPieces.clear();
 		myBlackAvailableMoves.clear();
 		myBlackNonAvailableMoves.clear();
+		myMoveLogger.clear();
 		myWhiteKing = null;
 		myBlackKing = null;
-		myLastMove = null;
-		myLastMoveCache = null;
 	}
 
 	public void writePersistanceData(OutputStream stream) throws IOException
@@ -666,7 +664,7 @@ public class ChessBoard
 		}
 	}
 	
-	public void readPersistanceData(InputStream stream) throws IOException
+	public void readPersistanceData(InputStream stream) throws IOException, InvalidPosition
 	{
 		//Read the state of the game
 		readGameStatePersistanceData(stream);
@@ -733,19 +731,46 @@ public class ChessBoard
 			else if(state == ChessState.STALEMATE)				
 				status = "Stalemate! Draw. ";
 		}
-		if(myLastMove != null)
+		if(getLastMove() != null)
 		{
-			status += " (Last Move: " + myLastMove.logMessageForLastMove() + ")";
+			status += " (Last Move: " + getLastMove().logMessageForLastMove() + ")";
 		}
 		return status;
 	}
-
-	public void undoLastMove() throws UnavailableMoveException 
+	
+	/**
+	 * Undo the given number of moves
+	 * @param movesToUndo the number of moves to undo
+	 * @return moves that could be reverted
+	 */
+	public int undoMoves(int movesToUndo)
 	{
-		if(myLastMove == null)
-			throw new UnavailableMoveException(null);
-		
-		myLastMove.getPiece().performMove(myLastMove.getRevertingMove(), this);
+		myAllowsMoves = false;
+		int movesReverted = 0;
+		while(movesReverted < movesToUndo)
+		{
+			try
+			{
+				Move lastMove = myMoveLogger.getLastMove();
+				lastMove.getPiece().performMove(lastMove.getRevertingMove(), this);
+				myMoveLogger.popMove();
+				movesReverted++;
+			}
+			catch (Exception e)
+			{
+				break;
+			}		
+		}
+		myAllowsMoves = true;
+		return movesReverted;
+	}
+
+	/**
+	 * @return false if no automatic moves is allowed
+	 */
+	public boolean allowsMoves()
+	{
+		return myAllowsMoves;
 	}
 
 }

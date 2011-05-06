@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.ChainMove;
 import com.jjonsson.chess.moves.DependantMove;
@@ -72,6 +73,11 @@ public abstract class Piece
 		return ((getAffinity() == Piece.BLACK) ? "Black_" : "White_") + getPieceName();
 	}
 	
+	public String getDisplayName()
+	{
+		return ((getAffinity() == Piece.BLACK) ? "Black " : "White ") + getPieceName();
+	}
+	
 	public abstract String getPieceName();
 	
 	/**
@@ -102,14 +108,14 @@ public abstract class Piece
 		return persistanceData;
 	}
 	
-	public static Piece getPieceFromPersistanceData(short persistanceData)
+	public static Piece getPieceFromPersistanceData(short persistanceData) throws InvalidPosition
 	{
 		Piece piece = null;
 		//From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
 		byte row = (byte) (persistanceData >> 12);
 		byte column = (byte) (persistanceData >> 8 & 0xF);
 		
-		Position position = new Position(row, column);
+		Position position = Position.createPosition(row + 1, column + 1);
 		
 		boolean affinity = ((persistanceData & 0x0008) == 0x0008);
 		int type = persistanceData & 0x0007;
@@ -428,5 +434,12 @@ public abstract class Piece
 	public boolean isBlack()
 	{
 		return myAffinity == Piece.BLACK;
+	}
+
+	/**
+	 * Called when a move that this piece previously made has been reverted
+	 */
+	public void revertedAMove(ChessBoard board)
+	{
 	}
 }

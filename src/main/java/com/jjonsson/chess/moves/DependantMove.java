@@ -89,6 +89,7 @@ public abstract class DependantMove extends Move
 		return false;	
 	}
 	
+	@Override
 	public void updateDestination(ChessBoard board)
 	{
 		//First update destination of moves that this move is dependent on
@@ -99,7 +100,7 @@ public abstract class DependantMove extends Move
 		updateDestinationDownwards(board);
 	}
 	
-	private void updateDestinationInternal(ChessBoard board)
+	protected void updateDestinationInternal(ChessBoard board)
 	{
 		super.updateDestination(board);
 	}
@@ -122,7 +123,7 @@ public abstract class DependantMove extends Move
 		}
 	}
 	
-	private void updatePossiblityInternal(ChessBoard board)
+	protected void updatePossiblityInternal(ChessBoard board)
 	{
 		myCanBeMadeCache = canBeMadeDependantInternal(board);
 		if(myCanBeMadeCache)
@@ -252,5 +253,7 @@ public abstract class DependantMove extends Move
 		{
 			myMoveDependingOnMe.removeMove(chessBoard);
 		}
+		if(myMoveThatIDependUpon != null)
+			myMoveThatIDependUpon.setMoveThatDependsOnMe(null);
 	}
 }

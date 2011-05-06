@@ -6,6 +6,7 @@ import junit.framework.Assert;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
@@ -30,8 +31,29 @@ public class TestScenarios
 		}
 		return board;
 	}
+	
 	@Test
-	public void testMoveAvailabilityUnderFutureCheck() throws UnavailableMoveException
+	public void testPawnTakeOverMoveShouldRemoveAvailabilityOfTwoStepMove() throws UnavailableMoveException, InvalidPosition
+	{
+		ChessBoard board = loadBoard("pawn_take_over_move_should_remove_two_step_move");
+		Piece p = board.getPiece(Position.createPosition(2, Position.F));
+		if(p instanceof WhitePawn)
+		{
+			WhitePawn wp = (WhitePawn) p;
+			Move takeOverMove = wp.getAvailableMoveForPosition(Position.createPosition(3, Position.G), board);
+			Assert.assertNotNull(takeOverMove);
+			wp.performMove(takeOverMove, board);
+			Move twoStepMove = wp.getAvailableMoveForPosition(Position.createPosition(5, Position.G), board);
+			if(twoStepMove != null)
+				Assert.assertTrue("Pawn should not able to make: " + twoStepMove, !twoStepMove.canBeMade(board));
+			
+		}
+		else
+			Assert.fail("Piece under test should be a white pawn, was: " + p);
+	}
+	
+	@Test
+	public void testMoveAvailabilityUnderFutureCheck() throws UnavailableMoveException, InvalidPosition
 	{
 		ChessBoard board = loadBoard("new_move_is also_on_stopping_path_take_over_should_also_be_possible");
 		
@@ -70,9 +92,10 @@ public class TestScenarios
 	 * Tests if available moves is removed when a piece is taken and that a pawn is replaced when it reaches it's destination
 	 * @throws UnavailableMoveException 
 	 * @throws NoMovesAvailableException 
+	 * @throws InvalidPosition 
 	 */
 	@Test 
-	public void testPawnReplacementAndGameStateChanges() throws UnavailableMoveException, NoMovesAvailableException
+	public void testPawnReplacementAndGameStateChanges() throws UnavailableMoveException, NoMovesAvailableException, InvalidPosition
 	{
 		ChessBoard board = loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");		
 		Piece p = board.getPiece(Position.createPosition(7, Position.A));
@@ -112,7 +135,7 @@ public class TestScenarios
 	
 	
 	@Test
-	public void testKingPossibleMovesUnderCheck() throws UnavailableMoveException
+	public void testKingPossibleMovesUnderCheck() throws UnavailableMoveException, InvalidPosition
 	{
 		ChessBoard board = loadBoard("queen_left_move_check_king_not_possible_to_move_down");		
 		Piece p = board.getPiece(Position.createPosition(4, Position.H));
@@ -141,7 +164,7 @@ public class TestScenarios
 	}
 	
 	@Test
-	public void testTakeOverMoveShouldNotBePossible()
+	public void testTakeOverMoveShouldNotBePossible() throws InvalidPosition
 	{
 		ChessBoard board = loadBoard("knight_should_not_be_possible_to_take");		
 		Piece p = board.getPiece(Position.createPosition(8, Position.F));

@@ -15,12 +15,10 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
-
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.ChessBoardListener;
+import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.ChessWindow;
@@ -189,7 +187,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		return p;
 	}
 	
-	private Position getPositionForPoint(Point p)
+	private Position getPositionForPoint(Point p) throws InvalidPosition
 	{
 		int roundedRow = ChessBoard.BOARD_SIZE - (int)Math.floor(p.y / ChessPieceComponent.SIZE);
 		return Position.createPosition(roundedRow, p.x / ChessPieceComponent.SIZE + 1);
@@ -219,7 +217,18 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		long startNanos = System.nanoTime();
 		System.out.println("Board clicked");
 		Point p = e.getPoint();
-		Position selectedPosition = getPositionForPoint(p);
+		Position selectedPosition = null;
+		try
+		{
+			selectedPosition = getPositionForPoint(p);
+		}
+		catch (InvalidPosition e1)
+		{
+			//User must have clicked outside the board
+			System.out.println("Out of bounds: " + e1);
+			return;
+		}
+		
 		System.out.println("Point: " + p + ", Position: " + selectedPosition);
 		
 		if(myCurrentlySelectedPiece != null)
@@ -308,7 +317,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void nextPlayer()
 	{
 		setSelectedPiece(null);
-		if(getBoard().inPlay())
+		if(getBoard().inPlay() && getBoard().allowsMoves())
 		{
 			if(getBoard().getCurrentPlayer() == Piece.BLACK)
 			{

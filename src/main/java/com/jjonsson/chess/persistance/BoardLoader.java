@@ -3,14 +3,10 @@ package com.jjonsson.chess.persistance;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-
-import com.google.common.io.OutputSupplier;
 import com.jjonsson.chess.ChessBoard;
 
 public class BoardLoader
@@ -18,7 +14,7 @@ public class BoardLoader
 	/**
 	 * 
 	 * @param boardFile to file to load the board from
-	 * @return the loaded board
+	 * @return true if the board was loaded successfully
 	 */
 	public static boolean loadFileIntoBoard(InputStream input, ChessBoard boardToLoadInto)
 	{
@@ -29,10 +25,6 @@ public class BoardLoader
 			boardToLoadInto.setPossibleMoves();
 			boardToLoadInto.updateGameState();
 			return true;
-		}
-		catch (FileNotFoundException e)
-		{	
-			return false;
 		}
 		catch (Throwable t)
 		{
