@@ -20,15 +20,11 @@ public class BoardLoader
 	 * @param boardFile to file to load the board from
 	 * @return the loaded board
 	 */
-	public static boolean loadFileIntoBoard(String pathToFile, ChessBoard boardToLoadInto)
+	public static boolean loadFileIntoBoard(InputStream input, ChessBoard boardToLoadInto)
 	{
-		if(pathToFile == null)
-			return false;
-		
 		try
 		{
-			InputStream is = BoardLoader.class.getResourceAsStream(pathToFile);
-			BufferedInputStream bis = new BufferedInputStream(is);
+			BufferedInputStream bis = new BufferedInputStream(input);
 			boardToLoadInto.readPersistanceData(bis);
 			boardToLoadInto.setPossibleMoves();
 			boardToLoadInto.updateGameState();

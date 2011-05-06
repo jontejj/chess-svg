@@ -32,6 +32,10 @@ public abstract class DependantMove extends Move
 	 */
 	public boolean furtherMovesInChainMayBePossible(ChessBoard board)
 	{
+		//Check if we have gone out of the board
+		if(getPositionIfPerformed() == null)
+			return false;
+		
 		//This move relies on the possibility of the previous move in the chain
 		if(myMoveThatIDependUpon != null)
 		{
@@ -168,21 +172,25 @@ public abstract class DependantMove extends Move
 	public List<Move> getPossibleMovesThatIsDependantOnMe(ChessBoard board)
 	{
 		List<Move> dependantMoves = null;
-		//Performs a dive into the dependant moves and stops when it finds either null or when it's not possible to perform a move further down
-		DependantMove move = myMoveDependingOnMe;
-		while(move != null)
+		//Check if we have gone out of the board
+		if(myDestination != null)
 		{
-			if(move.canBeMade(board))
+			//Performs a dive into the dependant moves and stops when it finds either null or when it's not possible to perform a move further down
+			DependantMove move = myMoveDependingOnMe;
+			while(move != null)
 			{
-				if(dependantMoves == null)
-					dependantMoves = new ArrayList<Move>();
+				if(move.canBeMade(board))
+				{
+					if(dependantMoves == null)
+						dependantMoves = new ArrayList<Move>();
+					
+					dependantMoves.add(move);
+				}
+				if(!move.furtherMovesInChainMayBePossible(board))
+					break;
 				
-				dependantMoves.add(move);
+				move = move.getMoveDependingOnMe();
 			}
-			if(!move.furtherMovesInChainMayBePossible(board))
-				break;
-			
-			move = move.getMoveDependingOnMe();
 		}
 		if(dependantMoves == null)
 			return Collections.emptyList();

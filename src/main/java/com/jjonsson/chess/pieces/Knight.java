@@ -19,7 +19,7 @@ public class Knight extends Piece
 	}
 
 	@Override
-	void addPossibleMoves()
+	public void addPossibleMoves()
 	{
 		addPossibleMove(new KnightMove(1 * Move.UP, 2 * Move.LEFT, this)); //Up 1 left 2
 		addPossibleMove(new KnightMove(2 * Move.UP, 1 * Move.LEFT, this)); //Up 2 left 1
@@ -32,7 +32,7 @@ public class Knight extends Piece
 	}
 
 	@Override
-	protected String getPieceName()
+	public String getPieceName()
 	{
 		return "Knight";
 	}

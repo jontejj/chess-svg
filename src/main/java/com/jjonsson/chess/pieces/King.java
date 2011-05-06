@@ -22,7 +22,7 @@ public class King extends Piece
 		return Piece.KING_VALUE;
 	}
 
-	void addPossibleMoves()
+	public void addPossibleMoves()
 	{
 		addPossibleMove(new KingMove(1, -1, this)); //Up left
 		addPossibleMove(new KingMove(1, 0, this)); //Up
@@ -35,7 +35,7 @@ public class King extends Piece
 	}
 
 	@Override
-	protected String getPieceName()
+	public String getPieceName()
 	{
 		return "King";
 	}

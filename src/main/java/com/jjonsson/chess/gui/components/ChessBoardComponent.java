@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -137,7 +138,12 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
 				for(Move m : moves)
 				{
-					markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
+					try
+					{
+						markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
+					}
+					catch(NullPointerException npe)
+					{}
 				}
 				//Mark the selected piece
 				markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN, graphics);
@@ -210,6 +216,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			m.updateMove(getBoard());
 		}
 		getBoard().updateGameState();*/
+		long startNanos = System.nanoTime();
 		System.out.println("Board clicked");
 		Point p = e.getPoint();
 		Position selectedPosition = getPositionForPoint(p);
@@ -224,7 +231,6 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				try
 				{
 					myCurrentlySelectedPiece.performMove(m, myWindow.getBoard());
-					setSelectedPiece(null);
 					return;
 				}
 				catch (UnavailableMoveException ume)
@@ -239,6 +245,9 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		{
 			setSelectedPiece(pieceAtSelectedPosition);
 		}
+		long time = (System.nanoTime() - startNanos);
+		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(1000000000));
+		System.out.println("Seconds: " + bd.toPlainString());
 	}
 	@Override
 	public void mousePressed(MouseEvent e)
@@ -292,11 +301,13 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void loadingOfBoardDone()
 	{
 		repaint();
+		myWindow.updateStatusBar();
 	}
 
 	@Override
 	public void nextPlayer()
 	{
+		setSelectedPiece(null);
 		if(getBoard().inPlay())
 		{
 			if(getBoard().getCurrentPlayer() == Piece.BLACK)
@@ -315,24 +326,21 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				}
 			}
 		}
-		else
-		{
-			repaint();
-			ChessState state = getBoard().getCurrentState();
-			if(state == ChessState.CHECKMATE)
-			{
-				String winner = null;
-				if(getBoard().getCurrentPlayer() == Piece.BLACK)
-					winner = "White";
-				else
-					winner = "Black";
-				
-				JOptionPane.showMessageDialog(myWindow, "Checkmate! " + winner + " won.");
-			}
-			if(state == ChessState.STALEMATE)
-			{				
-				JOptionPane.showMessageDialog(myWindow, "Stalemate! Draw.");
-			}	
-		}
+		myWindow.updateStatusBar();
+	}
+
+	@Override
+	public boolean supportsPawnReplacementDialog() 
+	{
+		return true;
+	}
+
+	/**
+	 *  TODO: popup a choice
+	 */
+	@Override
+	public Piece getPawnReplacementFromDialog() 
+	{
+		return null;
 	}
 }

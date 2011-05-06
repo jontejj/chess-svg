@@ -1,7 +1,5 @@
 package com.jjonsson.chess.scenarios;
 
-import java.io.File;
-
 import org.junit.Test;
 
 import junit.framework.Assert;
@@ -25,7 +23,8 @@ public class TestScenarios
 	{
 		String scenarioFile = "/scenarios/" + testName + ".chess";
 		ChessBoard board = new ChessBoard();
-		if(!BoardLoader.loadFileIntoBoard(scenarioFile, board))
+		
+		if(!BoardLoader.loadFileIntoBoard(BoardLoader.class.getResourceAsStream(scenarioFile), board))
 		{
 			Assert.fail("Could not load:" + scenarioFile);
 		}
@@ -131,7 +130,8 @@ public class TestScenarios
 			{
 				King k = (King)p2;
 				Move downMove = k.getAvailableMoveForPosition(Position.createPosition(1, Position.E), board);
-				Assert.assertNull("Queen should be threatening this position: " + downMove, downMove);
+				if(downMove != null)
+					Assert.assertTrue("Queen should be threatening this position: " + downMove, !downMove.canBeMade(board));
 			}
 			else
 				Assert.fail("Piece under test should be a king was: " + p);
@@ -149,7 +149,8 @@ public class TestScenarios
 		{
 			King k = (King)p;
 			Move takeOverMove = k.getAvailableMoveForPosition(Position.createPosition(8, Position.E), board);
-			Assert.assertNull(takeOverMove);
+			if(takeOverMove != null)
+				Assert.assertTrue("Knight should not be able to make this move: " + takeOverMove, !takeOverMove.canBeMade(board));
 		}
 		else
 			Assert.fail("Piece under test should be a king was: " + p);

@@ -13,7 +13,7 @@ public class Queen extends Piece
 	}
 
 	@Override
-	void addPossibleMoves()
+	public void addPossibleMoves()
 	{
 		addMoveChain(Move.NO_CHANGE, Move.LEFT, ChessBoard.BOARD_SIZE);
 		addMoveChain(Move.UP, Move.LEFT, ChessBoard.BOARD_SIZE);
@@ -32,7 +32,7 @@ public class Queen extends Piece
 	}
 
 	@Override
-	protected String getPieceName()
+	public String getPieceName()
 	{
 		return "Queen";
 	}

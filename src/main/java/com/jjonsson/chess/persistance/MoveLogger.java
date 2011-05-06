@@ -73,4 +73,16 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 	public void nextPlayer()
 	{
 	}
+
+	@Override
+	public boolean supportsPawnReplacementDialog() 
+	{
+		return false;
+	}
+
+	@Override
+	public Piece getPawnReplacementFromDialog() 
+	{
+		return null;
+	}
 }

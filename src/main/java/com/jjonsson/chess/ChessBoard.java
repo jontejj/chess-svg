@@ -15,11 +15,17 @@ import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
 
+import javax.swing.JOptionPane;
+
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+import com.google.common.collect.SortedMaps;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
@@ -78,6 +84,9 @@ public class ChessBoard
 	private ChessState	myCurrentGameState;
 	private Set<Move> myMovesThatStopsKingFromBeingChecked;
 	
+	private Move myLastMoveCache;
+	private Move myLastMove;
+	
 	/**
 	 * Constructs the chess board and sets all the pieces to their default locations
 	 */
@@ -97,10 +106,19 @@ public class ChessBoard
 	}
 	
 	/**
+	 * @return the last move that was mode on this board
+	 */
+	public Move getLastMove()
+	{
+		return myLastMove;
+	}
+	
+	/**
 	 * Sets this board to it's initial state
 	 */
 	public void reset()
 	{
+		myLastMove = null;
 		clear();
 		setupWhitePieces();
 		setupBlackPieces();
@@ -186,6 +204,24 @@ public class ChessBoard
 		return myCurrentPlayer;
 	}
 	
+	/**
+	 * 
+	 * @return Black if it's blacks turn, White if it's whites turn
+	 */
+	public String getCurrentPlayerString()
+	{
+		return myCurrentPlayer ? "Black" : "White";
+	}
+	
+	/**
+	 * 
+	 * @return the inverse of getCurrentPlayerString()
+	 */
+	public String getPreviousPlayerString()
+	{
+		return myCurrentPlayer ? "White" : "Black";
+	}
+	
 	public void nextPlayer()
 	{
 		myCurrentPlayer = !myCurrentPlayer;
@@ -199,32 +235,26 @@ public class ChessBoard
 		for(ChessBoardListener listener : myBoardListeners)
 			listener.nextPlayer();
 	}
-	
+	/**
+	 * TODO: perhaps we should perform the best move?
+	 */
 	public void performRandomMove() throws NoMovesAvailableException, UnavailableMoveException
 	{
 		HashMultimap<Position, Move> availableMoves = getAvailableMoves(getCurrentPlayer());
 		
-		boolean movePerformed = false;
-		while(!movePerformed)
+		
+		List<Move> shuffledMoves = Lists.newArrayList(availableMoves.values());
+		Collections.shuffle(shuffledMoves);
+		
+		for(Move randomMove : shuffledMoves)
 		{
-			try
-			{
-				//TODO: perhaps we should perform the best move?
-				Move randomMove = Ordering.arbitrary().max(availableMoves.values());
-				Piece piece = getPiece(randomMove.getCurrentPosition());
-				if(piece == null)
-					throw new NoMovesAvailableException();
-				if(randomMove.canBeMade(this))
-				{
-					System.out.println("Performing: " + randomMove);
-					piece.performMove(randomMove, this);
-					movePerformed = true;
-					break;
-				}
-			}
-			catch(NoSuchElementException empty)
-			{
+			Piece piece = getPiece(randomMove.getCurrentPosition());
+			if(piece == null)
 				throw new NoMovesAvailableException();
+			if(randomMove.canBeMade(this))
+			{
+				piece.performMove(randomMove, this);
+				break;
 			}
 		}
 	}
@@ -321,14 +351,31 @@ public class ChessBoard
 	/**
 	 * Removes the pawn from the board and replaces him with a Queen
 	 * @param p the pawn to replace
+	 * @return the piece that replaced the pawn
 	 */
-	public void replacePawn(Piece p)
+	public Piece replacePawn(Piece pawn)
 	{
 		//Remove pawn
-		p.removeFromBoard(this);
+		pawn.removeFromBoard(this);
 		
-		//Replace him with a Queen
-		addPiece(new Queen(p.getCurrentPosition(), p.getAffinity()), true, false);
+		Piece newPiece = null;
+		
+		//Asks the GUI for a replacement pawn
+		for(ChessBoardListener cbl : myBoardListeners)
+		{
+			if(cbl.supportsPawnReplacementDialog())
+			{
+				newPiece = cbl.getPawnReplacementFromDialog();
+				break;
+			}
+		}
+		if(newPiece == null)
+		{
+			//Replace him with a Queen
+			newPiece = new Queen(pawn.getCurrentPosition(), pawn.getAffinity());
+		}
+		addPiece(newPiece, true, false);
+		return newPiece;
 	}
 	
 	public void removeAvailableMove(Position pos, Piece piece, Move move)
@@ -549,6 +596,7 @@ public class ChessBoard
 		map.put(newPosition, pieceToMove);
 		
 		myMoveLogger.movePerformed(moveToPerform);
+		myLastMoveCache = moveToPerform;
 	}
 
 	/**
@@ -588,6 +636,7 @@ public class ChessBoard
 				listener.gameStateChanged(newState);
 			}
 		}
+		myLastMove = myLastMoveCache;
 	}
 
 	public void clear()
@@ -600,6 +649,8 @@ public class ChessBoard
 		myBlackNonAvailableMoves.clear();
 		myWhiteKing = null;
 		myBlackKing = null;
+		myLastMove = null;
+		myLastMoveCache = null;
 	}
 
 	public void writePersistanceData(OutputStream stream) throws IOException
@@ -663,6 +714,38 @@ public class ChessBoard
 	public boolean inPlay()
 	{
 		return ChessState.PLAYING == getCurrentState() || ChessState.CHECK == getCurrentState();
+	}
+
+	/**
+	 * 
+	 * @return a descriptive string of the status for this board (which players turn it is etc.)
+	 */
+	public String getStatusString() 
+	{
+		String status = "";
+		if(inPlay())
+			status = getCurrentPlayerString() + "s turn";
+		else
+		{
+			ChessState state = getCurrentState();
+			if(state == ChessState.CHECKMATE)
+				status = "Checkmate. " + getPreviousPlayerString() + " won.";
+			else if(state == ChessState.STALEMATE)				
+				status = "Stalemate! Draw. ";
+		}
+		if(myLastMove != null)
+		{
+			status += " (Last Move: " + myLastMove.logMessageForLastMove() + ")";
+		}
+		return status;
+	}
+
+	public void undoLastMove() throws UnavailableMoveException 
+	{
+		if(myLastMove == null)
+			throw new UnavailableMoveException(null);
+		
+		myLastMove.getPiece().performMove(myLastMove.getRevertingMove(), this);
 	}
 
 }

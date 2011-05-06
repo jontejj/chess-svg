@@ -4,9 +4,12 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.math.BigDecimal;
 
 import org.apache.batik.swing.svg.JSVGComponent;
 import org.w3c.dom.svg.SVGDocument;
+
+import sun.java2d.Disposer;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
@@ -48,7 +51,6 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 			setBackgroundColor(); 
             
 			setLocation(getPointForPiece(myPieceToDraw));
-			setDocumentState(ALWAYS_STATIC);
 			setSVGDocument(doc);
 			addMouseListener(this);
 			myPieceToDraw.addMoveListener(this);
@@ -97,7 +99,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		{
 			System.out.println("Something wrong with" + this);
 		}
-		this.setSVGDocument(null);
+		this.dispose();
 		
 		if(this.getParent() != null)
 			this.getParent().remove(this);
@@ -227,6 +229,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	@Override
 	public void mouseClicked(MouseEvent e)
 	{
+		long startNanos = System.nanoTime();
 		/*System.out.println(myBoardComponent.getBoard().getAvailableMoves(myPieceToDraw.getCurrentPosition(), !myPieceToDraw.getAffinity()));
 		myBoardComponent.getBoard().updateGameState();
 		for(Move m : myPieceToDraw.getPossibleMoves())
@@ -246,7 +249,6 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 				try
 				{
 					currentlySelected.performMove(takeOverMove, boardComponent.getBoard());
-					boardComponent.setSelectedPiece(null);
 					return;
 				}
 				catch (UnavailableMoveException ume)
@@ -264,6 +266,9 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 				boardComponent.setSelectedPiece(this.getPiece());
 			}
 		}
+		long time = (System.nanoTime() - startNanos);
+		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(1000000000));
+		System.out.println("Seconds: " + bd.toPlainString());
 	}
 
 	@Override

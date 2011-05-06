@@ -72,7 +72,7 @@ public abstract class Piece
 		return ((getAffinity() == Piece.BLACK) ? "Black_" : "White_") + getPieceName();
 	}
 	
-	protected abstract String getPieceName();
+	public abstract String getPieceName();
 	
 	/**
 	 * 
@@ -188,9 +188,10 @@ public abstract class Piece
 	}
 	
 	/**
-	 * Method that is called from the constructor, subclasses should add all their theoretically possible moves here
+	 * Add the theoretically possible moves for this piece to the internal move list for this piece 
+	 * (Automatically called from the constructor)
 	 */
-	abstract void addPossibleMoves();
+	public abstract void addPossibleMoves();
 	
 	/**
 	 * @return a list of "in theory" possible moves that this piece can make 
@@ -335,6 +336,7 @@ public abstract class Piece
 	 */
 	public void performMove(Move move, ChessBoard boardToPerformMoveOn) throws UnavailableMoveException
 	{
+		System.out.println("Performing: " + move);
 		move.makeMove(boardToPerformMoveOn);
 		for(Move m : getPossibleMoves())
 		{

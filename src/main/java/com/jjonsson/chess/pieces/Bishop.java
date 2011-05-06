@@ -13,7 +13,7 @@ public class Bishop extends Piece
 	}
 
 	@Override
-	void addPossibleMoves()
+	public void addPossibleMoves()
 	{
 		addMoveChain(Move.UP, Move.LEFT, ChessBoard.BOARD_SIZE);
 		addMoveChain(Move.UP, Move.RIGHT, ChessBoard.BOARD_SIZE);
@@ -28,7 +28,7 @@ public class Bishop extends Piece
 	}
 
 	@Override
-	protected String getPieceName()
+	public String getPieceName()
 	{
 		return "Bishop";
 	}

@@ -41,6 +41,8 @@ public abstract class Move implements Comparable<Move>
 	 */
 	protected boolean myCanBeMadeCache;
 	
+	protected RevertingMove myRevertingMove;
+	
 	/**
 	 * 
 	 * @param rowChange the row change for this move, valid numbers are (-7) to (+7)
@@ -51,6 +53,21 @@ public abstract class Move implements Comparable<Move>
 		myRowChange = (byte)rowChange;
 		myColumnChange = (byte)columnChange;
 		myPiece = pieceThatTheMoveWillBeMadeWith;
+		setRevertingMove();
+	}
+	
+	protected void setRevertingMove()
+	{
+		myRevertingMove = new RevertingMove(this);
+	}
+	
+	/**
+	 * 
+	 * @return a move that will revert this move
+	 */
+	public RevertingMove getRevertingMove()
+	{
+		return myRevertingMove;
 	}
 	
 	/**
@@ -68,6 +85,11 @@ public abstract class Move implements Comparable<Move>
 			return myPieceAtDestination;
 		
 		return null;
+	}
+	
+	public Piece getPiece()
+	{
+		return myPiece;
 	}
 	
 	protected Piece getPieceAtDestination()
@@ -296,6 +318,7 @@ public abstract class Move implements Comparable<Move>
 		{
 			//Take over is happening
 			myPieceAtDestination.removeFromBoard(board);
+			myRevertingMove.setPieceAtOldPosition(myPieceAtDestination);
 		}
 		Position oldPosition = myPiece.getCurrentPosition().clone();
 		board.movePiece(myPiece, this);
@@ -308,5 +331,17 @@ public abstract class Move implements Comparable<Move>
 	public String toString()
 	{
 		return myPiece + ": " + myPiece.getCurrentPosition() + " -> " + getPositionIfPerformed();
+	}
+
+	/**
+	 * 
+	 * @return a message explaining what this move did
+	 */
+	public String logMessageForLastMove() 
+	{
+		String log = myPiece.getPieceName() + ": " + getRevertingMove().getPositionIfPerformed() + " -> " + myPiece.getCurrentPosition();
+		if(getRevertingMove().getPieceThatITookOver() != null)
+			log += " (Took over: " + getRevertingMove().getPieceThatITookOver().getPieceName() + ")";
+		return log;
 	}
 }

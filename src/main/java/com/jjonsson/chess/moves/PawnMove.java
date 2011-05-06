@@ -22,7 +22,7 @@ public class PawnMove extends DependantMove
 		if(isTimeForReplacement())
 		{
 			//The white/black pawn has reached the bottom/top and now it's time to replace him
-			board.replacePawn(myPiece);
+			myRevertingMove.setPieceThatReplacedMyPiece(board.replacePawn(myPiece));
 		}
 		if(getMoveThatIDependUpon() != null)
 		{

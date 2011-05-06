@@ -16,7 +16,7 @@ public class BlackPawn extends Piece
 	}
 
 	@Override
-	void addPossibleMoves()
+	public void addPossibleMoves()
 	{
 		PawnMove step1 = new PawnMove(1 * Move.DOWN, 0, this, null, null);
 		//If this isn't true then the pawn already has moved from it's initial position and the 2-step move shouln't be available then
@@ -38,7 +38,7 @@ public class BlackPawn extends Piece
 	}
 
 	@Override
-	protected String getPieceName()
+	public String getPieceName()
 	{
 		return "Pawn";
 	}
