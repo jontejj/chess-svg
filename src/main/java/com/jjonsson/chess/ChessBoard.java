@@ -1,5 +1,7 @@
 package com.jjonsson.chess;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,9 +12,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
@@ -25,6 +29,9 @@ import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.ordering.MoveOrdering;
+import com.jjonsson.chess.moves.ordering.TakeOverValueOrdering;
+import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.MoveLogger;
 import com.jjonsson.chess.pieces.Bishop;
 import com.jjonsson.chess.pieces.BlackPawn;
@@ -35,7 +42,7 @@ import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.Rock;
 import com.jjonsson.chess.pieces.WhitePawn;
 
-public class ChessBoard 
+public class ChessBoard implements Cloneable
 {
 	public static final byte BOARD_SIZE = 8;
 	
@@ -75,11 +82,12 @@ public class ChessBoard
 	
 	//Manages the possibility of automatic moves (used during move reverting)
 	private boolean myAllowsMoves;
-	
+
 	/**
-	 * Constructs the chess board and sets all the pieces to their default locations
+	 * Constructs the chess board 
+	 * @param placeInitialPieces if true, all the pieces is set to their default locations
 	 */
-	public ChessBoard()
+	public ChessBoard(boolean placeInitialPieces)
 	{
 		myAllowsMoves = true;
 		myMovesThatStopsKingFromBeingChecked = Collections.emptySet();
@@ -94,6 +102,34 @@ public class ChessBoard
 		myWhitePieces = new HashMap<Position, Piece>();
 		myWhiteAvailableMoves = HashMultimap.create();
 		myWhiteNonAvailableMoves = HashMultimap.create();
+		if(placeInitialPieces)
+			this.reset();
+	}
+	
+	/**
+	 * Makes a copy of the board without copying the listeners
+	 */
+	@Override
+	public ChessBoard clone()
+	{
+		ChessBoard newBoard = new ChessBoard(false);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
+		try
+		{
+			writePersistanceData(baos);
+			newBoard.readPersistanceData(new ByteArrayInputStream(baos.toByteArray()));
+			newBoard.setPossibleMoves();
+			newBoard.updateGameState();
+		}
+		catch (IOException e)
+		{
+			newBoard = null;
+		}
+		catch (InvalidPosition e)
+		{
+			newBoard = null;
+		}
+		return newBoard;
 	}
 	
 	/**
@@ -226,7 +262,7 @@ public class ChessBoard
 			listener.nextPlayer();
 	}
 	/**
-	 * TODO: perhaps we should perform the best move?
+	 * Performs a random move for the current player
 	 */
 	public void performRandomMove() throws NoMovesAvailableException, UnavailableMoveException
 	{
@@ -238,7 +274,7 @@ public class ChessBoard
 		
 		for(Move randomMove : shuffledMoves)
 		{
-			Piece piece = getPiece(randomMove.getCurrentPosition());
+			Piece piece = randomMove.getPiece();
 			if(piece == null)
 				throw new NoMovesAvailableException();
 			if(randomMove.canBeMade(this))
@@ -486,6 +522,17 @@ public class ChessBoard
 		return ImmutableSet.copyOf(moves);	
 	}
 	
+	/**
+	 * @param position the wanted position
+	 * @param affinity the affinity of the player that should be able to move into the position
+	 * @return the first available move for the given position and the given affinity
+	 * @throws NoSuchElementException if no move is available
+	 */
+	public Move getAvailableMove(Position position, boolean affinity) throws NoSuchElementException
+	{
+		return getAvailableMoves(position, affinity).iterator().next();	
+	}
+	
 	public HashMultimap<Position, Move> getNonAvailableMoves(boolean affinity)
 	{
 		HashMultimap<Position, Move> moves = null;
@@ -709,11 +756,6 @@ public class ChessBoard
 		}
 	}
 
-	public boolean inPlay()
-	{
-		return ChessState.PLAYING == getCurrentState() || ChessState.CHECK == getCurrentState();
-	}
-
 	/**
 	 * 
 	 * @return a descriptive string of the status for this board (which players turn it is etc.)
@@ -721,7 +763,7 @@ public class ChessBoard
 	public String getStatusString() 
 	{
 		String status = "";
-		if(inPlay())
+		if(ChessBoardEvaluator.inPlay(this))
 			status = getCurrentPlayerString() + "s turn";
 		else
 		{
@@ -745,6 +787,15 @@ public class ChessBoard
 	 */
 	public int undoMoves(int movesToUndo)
 	{
+		return undoMoves(movesToUndo, true);
+	}
+	/**
+	 * Undo the given number of moves
+	 * @param movesToUndo the number of moves to undo
+	 * @return moves that could be reverted
+	 */
+	public int undoMoves(int movesToUndo, boolean printOuts)
+	{
 		myAllowsMoves = false;
 		int movesReverted = 0;
 		while(movesReverted < movesToUndo)
@@ -752,7 +803,7 @@ public class ChessBoard
 			try
 			{
 				Move lastMove = myMoveLogger.getLastMove();
-				lastMove.getPiece().performMove(lastMove.getRevertingMove(), this);
+				lastMove.getPiece().performMove(lastMove.getRevertingMove(), this, printOuts);
 				myMoveLogger.popMove();
 				movesReverted++;
 			}

@@ -12,6 +12,7 @@ import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.persistance.BoardLoader;
+import com.jjonsson.chess.persistance.ChessFileFilter;
 import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Queen;
@@ -20,12 +21,12 @@ import com.jjonsson.chess.pieces.WhitePawn;
 public class TestScenarios
 {
 	
-	private ChessBoard loadBoard(String testName)
+	public static ChessBoard loadBoard(String testName)
 	{
-		String scenarioFile = "/scenarios/" + testName + ".chess";
-		ChessBoard board = new ChessBoard();
+		String scenarioFile = "/scenarios/" + testName + ChessFileFilter.fileEnding;
+		ChessBoard board = new ChessBoard(false);
 		
-		if(!BoardLoader.loadFileIntoBoard(BoardLoader.class.getResourceAsStream(scenarioFile), board))
+		if(!BoardLoader.loadStreamIntoBoard(BoardLoader.class.getResourceAsStream(scenarioFile), board))
 		{
 			Assert.fail("Could not load:" + scenarioFile);
 		}
@@ -79,14 +80,6 @@ public class TestScenarios
 		else
 			Assert.fail("Piece under test should be a queen was: " + p);
 	}
-
-	@Test
-	public void testStaleMate()
-	{
-		ChessBoard board = loadBoard("should_be_stalemate");
-		ChessState currentState = board.getCurrentState();
-		Assert.assertTrue("Game state should be " + ChessState.STALEMATE + ", was: " + currentState, currentState == ChessState.STALEMATE);
-	}
 	
 	/**
 	 * Tests if available moves is removed when a piece is taken and that a pawn is replaced when it reaches it's destination
@@ -124,15 +117,6 @@ public class TestScenarios
 		else
 			Assert.fail("Piece under test should be a white pawn was: " + p);
 	}
-	
-	@Test
-	public void testNotCheck()
-	{
-		ChessBoard board = loadBoard("should_not_be_check");
-		ChessState currentState = board.getCurrentState();
-		Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + currentState, currentState == ChessState.PLAYING);
-	}
-	
 	
 	@Test
 	public void testKingPossibleMovesUnderCheck() throws UnavailableMoveException, InvalidPosition

@@ -18,6 +18,33 @@ public class ChessBoardEvaluator
 		STALEMATE,
 		PLAYING
 	}
+	
+	public static long valueOfState(ChessState state)
+	{
+		switch(state)
+		{
+			case CHECKMATE:
+				return 50000;
+			case STALEMATE:
+				return -10000;
+			case CHECK:
+				return 0;
+			case PLAYING:
+				return 0;
+			default:
+				return 0;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param board
+	 * @return true if the given board still is in play
+	 */
+	public static boolean inPlay(ChessBoard board)
+	{
+		return ChessState.PLAYING == board.getCurrentState() || ChessState.CHECK == board.getCurrentState();
+	}
 
 	public static ChessState getState(ChessBoard board)
 	{

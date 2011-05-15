@@ -12,8 +12,7 @@ public class ChessGame
 	
 	public ChessGame()
 	{
-		myBoard = new ChessBoard();
-		myBoard.reset();
+		myBoard = new ChessBoard(true);
 		myWindow = new ChessWindow(this);
 	}
 	

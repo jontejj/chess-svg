@@ -5,7 +5,7 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
 
-public abstract class Move implements Comparable<Move>
+public abstract class Move
 {
 	public static final int UP = 1;
 	public static final int DOWN = -1;
@@ -144,7 +144,7 @@ public abstract class Move implements Comparable<Move>
 	
 	/**
 	 * 
-	 * @return the value for the piece at this move's destination
+	 * @return the value of the piece at this move's destination
 	 */
 	public int getTakeOverValue()
 	{
@@ -153,15 +153,6 @@ public abstract class Move implements Comparable<Move>
 			return myPieceAtDestination.getValue();
 		}
 		return 0;
-	}
-	
-	/**
-	 * Compares moves and orders them by their take over value
-	 */
-	@Override
-	public int compareTo(Move o) 
-	{
-		return this.getTakeOverValue() - o.getTakeOverValue();
 	}
 
 	/**

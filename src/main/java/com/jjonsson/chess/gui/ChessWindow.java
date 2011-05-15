@@ -216,7 +216,7 @@ public class ChessWindow extends JFrame implements ActionListener
 			{
 				try 
 				{
-					loadOk = BoardLoader.loadFileIntoBoard(new FileInputStream(selectedFile), getBoard());
+					loadOk = BoardLoader.loadStreamIntoBoard(new FileInputStream(selectedFile), getBoard());
 				} 
 				catch (FileNotFoundException e) 
 				{
@@ -244,7 +244,6 @@ public class ChessWindow extends JFrame implements ActionListener
 	
 	private void undo(int nrOfMoves) 
 	{
-		System.out.println("Undoing: " + nrOfMoves + " moves");
 		int undoneMoves = getBoard().undoMoves(nrOfMoves);
 		updateStatusBar();
 		if(undoneMoves == 0)
@@ -311,9 +310,9 @@ public class ChessWindow extends JFrame implements ActionListener
 		File selectedFile = jfc.getSelectedFile();
 		if(selectedFile != null)
 		{
-			if(!selectedFile.getAbsolutePath().endsWith(".chess"))
+			if(!selectedFile.getAbsolutePath().endsWith(ChessFileFilter.fileEnding))
 			{
-				myCurrentBoardFile = selectedFile.getAbsolutePath() + ".chess";
+				myCurrentBoardFile = selectedFile.getAbsolutePath() + ChessFileFilter.fileEnding;
 			}
 			else
 				myCurrentBoardFile = selectedFile.getAbsolutePath();

@@ -16,6 +16,8 @@ import java.util.Set;
 
 import javax.swing.JComponent;
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.ChessBoardEvaluator;
+import com.jjonsson.chess.ChessMoveEvaluator;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.ChessBoardListener;
 import com.jjonsson.chess.exceptions.InvalidPosition;
@@ -149,7 +151,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	private void markSquaresAsAvailable(Graphics2D graphics)
 	{
 		//Only draw possible moves if the game is in play
-		if(getBoard().inPlay())
+		if(ChessBoardEvaluator.inPlay(getBoard()))
 		{
 			//Mark pieces with available moves
 			Collection<Piece> currentPlayerPieces = getBoard().getPiecesForAffinity(getBoard().getCurrentPlayer());
@@ -346,13 +348,13 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void nextPlayer()
 	{
 		setSelectedPiece(null);
-		if(getBoard().inPlay() && getBoard().allowsMoves())
+		if(ChessBoardEvaluator.inPlay(getBoard()) && getBoard().allowsMoves())
 		{
 			if(getBoard().getCurrentPlayer() == Piece.BLACK)
 			{
 				try
 				{
-					getBoard().performRandomMove();
+					ChessMoveEvaluator.performBestMove(getBoard());
 				}
 				catch (NoMovesAvailableException e)
 				{

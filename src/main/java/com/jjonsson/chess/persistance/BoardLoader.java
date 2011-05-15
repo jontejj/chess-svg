@@ -16,7 +16,7 @@ public class BoardLoader
 	 * @param boardFile to file to load the board from
 	 * @return true if the board was loaded successfully
 	 */
-	public static boolean loadFileIntoBoard(InputStream input, ChessBoard boardToLoadInto)
+	public static boolean loadStreamIntoBoard(InputStream input, ChessBoard boardToLoadInto)
 	{
 		try
 		{

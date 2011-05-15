@@ -5,7 +5,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.ChessBoardEvaluator;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.ChainMove;
@@ -13,6 +16,9 @@ import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.ordering.CenterStageOrdering;
+import com.jjonsson.chess.moves.ordering.MoveOrdering;
+import com.jjonsson.chess.moves.ordering.TakeOverValueOrdering;
 
 /**
  * @author jonatanjoensson
@@ -21,12 +27,12 @@ import com.jjonsson.chess.moves.Position;
 public abstract class Piece
 {	
 	//Used to figure out the take over value of a move
-	protected static final int TOWER_VALUE = 4;
-	protected static final int KNIGHT_VALUE = 3;
-	protected static final int BISHOP_VALUE = 3;
-	protected static final int PAWN_VALUE = 1;
-	protected static final int KING_VALUE = Integer.MAX_VALUE;
-	protected static final int QUEEN_VALUE = 8;
+	public static final int TOWER_VALUE = 40;
+	public static final int KNIGHT_VALUE = 30;
+	public static final int BISHOP_VALUE = 30;
+	public static final int PAWN_VALUE = 10;
+	public static final int KING_VALUE = 80;
+	public static final int QUEEN_VALUE = 80;
 	
 	//Used to save/load a piece
 	protected static final byte BISHOP = 0;
@@ -215,7 +221,7 @@ public abstract class Piece
 	 * @return the available moves for this piece on the supplied board and within it's bounds ordered by their take over value
 	 */
 
-	public List<Move> getAvailableMoves(boolean sort, ChessBoard board) 
+	public ImmutableList<Move> getAvailableMoves(boolean sort, ChessBoard board) 
 	{
 		List<Move> availableMoves = new ArrayList<Move>();
 		ArrayList<Move> possibleMoves = getPossibleMoves();
@@ -232,11 +238,12 @@ public abstract class Piece
 			}
 		}
 		
-		//TODO: sort by what and how?
 		if(sort)
-			Collections.sort(availableMoves);
+		{
+			return MoveOrdering.instance.immutableSortedCopy(availableMoves);
+		}
 		
-		return availableMoves;
+		return ImmutableList.copyOf(availableMoves);
 	}
 	
 	/**
@@ -339,21 +346,39 @@ public abstract class Piece
 	 * Moves this Piece with the supplied move.
 	 * @param move the move to apply to this piece
 	 * @throws UnavailableMoveException  if this move isn't available right now
+	 * @return the estimated value of the move performed 
+	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
-	public void performMove(Move move, ChessBoard boardToPerformMoveOn) throws UnavailableMoveException
+	public void performMove(Move move, ChessBoard board) throws UnavailableMoveException
 	{
-		System.out.println("Performing: " + move);
-		move.makeMove(boardToPerformMoveOn);
+		performMove(move, board, true);
+	}
+	
+	/**
+	 * Moves this Piece with the supplied move.
+	 * @param move the move to apply to this piece
+	 * @param printOut true if there should be print outs about the move to the standard out stream
+	 * @throws UnavailableMoveException  if this move isn't available right now
+	 * @return the estimated value of the move performed 
+	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
+	 */
+	public void performMove(Move move, ChessBoard board, boolean printOut) throws UnavailableMoveException
+	{
+		if(printOut)
+			System.out.println("Performing: " + move);
+		
+		move.makeMove(board);
 		for(Move m : getPossibleMoves())
 		{
-			m.updateMove(boardToPerformMoveOn);
+			m.updateMove(board);
 		}
-		boardToPerformMoveOn.nextPlayer();
+		board.nextPlayer();
 		for(MoveListener m : myListeners)
 		{
 			m.movePerformed(move);
 		}
 	}
+	
 	/**
 	 * TODO: convert this into equals together with a code hashCode
 	 * @param p
