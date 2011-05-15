@@ -2,6 +2,7 @@ package com.jjonsson.chess.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -18,33 +19,33 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessGame;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.ChessFileFilter;
+import com.jjonsson.utilities.CrossPlatformUtilities;
 
-public class ChessWindow extends JFrame implements ActionListener, KeyListener
+public class ChessWindow extends JFrame implements ActionListener
 {
 	private static final long	serialVersionUID	= 1L;
 	
-	public static final int DEFAULT_WINDOW_WIDTH = 800;
-	public static final int DEFAULT_WINDOW_HEIGHT = 800;
+	public static final int DEFAULT_WINDOW_WIDTH = 700;
+	public static final int DEFAULT_WINDOW_HEIGHT = 700;
 	
-	private static final int FILE_MENU_HEIGHT = 59;
 	private static final int STATUS_BAR_HEIGHT = 20;
+	private static final int WINDOW_BORDER_SIZE = 3;
+	private static final int TITLE_BAR_HEIGHT = 22;
 	
 	private static final String NEW_MENU_ITEM = "New";
 	private static final String LOAD_MENU_ITEM = "Load";
-	private static final String SAVE_MENU_ITEM = "Save (Ctrl + s)";
-	private static final String SAVE_AS_MENU_ITEM = "Save As (Ctrl + Shift + s)";
-	private static final String EXIT_MENU_ITEM = "Exit (Left Alt + F4)";
-	private static final String UNDO_BLACK_MENU_ITEM = "Undo Black Move (Ctrl + Shift + z)";
-	private static final String UNDO_WHITE_MENU_ITEM = "Undo White Move (Ctrl + z)";
+	private static final String SAVE_MENU_ITEM = "Save";
+	private static final String SAVE_AS_MENU_ITEM = "Save As";
+	private static final String EXIT_MENU_ITEM = "Exit";
+	private static final String UNDO_BLACK_MENU_ITEM = "Undo Black Move";
+	private static final String UNDO_WHITE_MENU_ITEM = "Undo White Move";
 	
 	private String lastFileChooserLocation;
 	
@@ -63,28 +64,38 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 		myGame = chessGame;
 		
 	    this.setBackground(Color.DARK_GRAY);
-	    this.setSize(ChessWindow.DEFAULT_WINDOW_WIDTH + 3, ChessWindow.DEFAULT_WINDOW_HEIGHT + FILE_MENU_HEIGHT + STATUS_BAR_HEIGHT);
-	    
+	    createMenuBar();
+
+	    this.setSize(ChessWindow.DEFAULT_WINDOW_WIDTH + WINDOW_BORDER_SIZE, ChessWindow.DEFAULT_WINDOW_HEIGHT + WINDOW_BORDER_SIZE + getJMenuBar().getHeight() + STATUS_BAR_HEIGHT);
 	    myComponent = new ChessBoardComponent(this);
 	    this.setContentPane(myComponent);
 	    
-	    this.addWindowListener(new WindowListener(this));
-	    this.addKeyListener(this);
-	    WindowUtilities.setNativeLookAndFeel();
+	    this.addWindowListener(new WindowListener());
+	    this.addComponentListener(new ComponentAdapter(this));
 	    
-	    createMenuBar();
 	    createStatusBar();
+	}
+	
+	public Dimension getBoardComponentSize()
+	{
+		Dimension boardSize = new Dimension(getSize().width + WINDOW_BORDER_SIZE, getSize().height - getJMenuBar().getHeight() - STATUS_BAR_HEIGHT - TITLE_BAR_HEIGHT);
+		return boardSize;
 	}
 	
 	private void createStatusBar() 
 	{
 		myStatusBar = new JLabel();
+		resizeStatusBar();
 		updateStatusBar();
-		myStatusBar.setSize(ChessWindow.DEFAULT_WINDOW_WIDTH, STATUS_BAR_HEIGHT);
-		myStatusBar.setLocation(0, ChessWindow.DEFAULT_WINDOW_HEIGHT);
 		myStatusBar.setOpaque(true);
 		myStatusBar.setBackground(Color.white);
 	    add(myStatusBar, java.awt.BorderLayout.SOUTH);
+	}
+
+	private void resizeStatusBar()
+	{
+		myStatusBar.setSize(getSize().width, STATUS_BAR_HEIGHT);
+		myStatusBar.setLocation(0, getSize().height - STATUS_BAR_HEIGHT - TITLE_BAR_HEIGHT);
 	}
 
 	public void updateStatusBar()
@@ -114,9 +125,10 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 		myComponent.repaint();
 	}
 	
-	public void resizeWindow(Dimension newWindowSize)
+	public void resizeWindow()
 	{
-		myComponent.resizeBoard(newWindowSize);
+		resizeStatusBar();
+		myComponent.resizeBoard(getBoardComponentSize());
 	}
 	private void createMenuBar()
 	{
@@ -126,35 +138,50 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 	    JMenu fileMenu = new JMenu("File");
 	    
 	    JMenuItem newAction = new JMenuItem(NEW_MENU_ITEM);
-	    JMenuItem loadAction = new JMenuItem(LOAD_MENU_ITEM);
-	    JMenuItem saveAction = new JMenuItem(SAVE_MENU_ITEM);
-	    JMenuItem saveAsAction = new JMenuItem(SAVE_AS_MENU_ITEM);
-	    JMenuItem exitAction = new JMenuItem(EXIT_MENU_ITEM);
+	    newAction.setAccelerator(CrossPlatformUtilities.getNewKeyStroke());
+	    newAction.addActionListener(this);
 	    fileMenu.add(newAction);
-	    fileMenu.add(loadAction);
-	    fileMenu.add(saveAction);
-	    fileMenu.add(saveAsAction);
-	    fileMenu.addSeparator();
-	    fileMenu.add(exitAction);
 	    
-	    menuBar.add(fileMenu);
+	    JMenuItem loadAction = new JMenuItem(LOAD_MENU_ITEM);
+	    loadAction.setAccelerator(CrossPlatformUtilities.getLoadKeyStroke());
+	    loadAction.addActionListener(this);
+	    fileMenu.add(loadAction);
+	    
+	    JMenuItem saveAction = new JMenuItem(SAVE_MENU_ITEM);
+	    saveAction.setAccelerator(CrossPlatformUtilities.getSaveKeyStroke());
+	    saveAction.addActionListener(this);
+	    fileMenu.add(saveAction);
+	    
+	    JMenuItem saveAsAction = new JMenuItem(SAVE_AS_MENU_ITEM);
+	    saveAsAction.setAccelerator(CrossPlatformUtilities.getSaveAsKeyStroke());
+	    saveAsAction.addActionListener(this);
+	    fileMenu.add(saveAsAction);
+	    
+	    //Mac's already have a default menu with an exit action
+	    if(!CrossPlatformUtilities.isMac())
+	    {
+		    fileMenu.addSeparator();
+		    
+		    JMenuItem exitAction = new JMenuItem(EXIT_MENU_ITEM);
+		    exitAction.setAccelerator(CrossPlatformUtilities.getExitKeyStroke());
+		    exitAction.addActionListener(this);
+		    fileMenu.add(exitAction);
+	    }
 	    
 	    JMenu actionsMenu = new JMenu("Actions");
 	    
 	    JMenuItem undoBlack = new JMenuItem(UNDO_BLACK_MENU_ITEM);
-	    JMenuItem undoWhite = new JMenuItem(UNDO_WHITE_MENU_ITEM);
+	    undoBlack.setAccelerator(CrossPlatformUtilities.getUndoKeyStroke());
+	    undoBlack.addActionListener(this);
 	    actionsMenu.add(undoBlack);
+	    
+	    JMenuItem undoWhite = new JMenuItem(UNDO_WHITE_MENU_ITEM);
+	    undoWhite.setAccelerator(CrossPlatformUtilities.getUndoTwiceKeyStroke());
+	    undoWhite.addActionListener(this);
 	    actionsMenu.add(undoWhite);
 	    
+	    menuBar.add(fileMenu);
 	    menuBar.add(actionsMenu);
-	    
-	    newAction.addActionListener(this);
-	    loadAction.addActionListener(this);
-	    saveAction.addActionListener(this);
-	    exitAction.addActionListener(this);
-	    saveAsAction.addActionListener(this);
-	    undoBlack.addActionListener(this);
-	    undoWhite.addActionListener(this);
 	}
 	
 	private void save(boolean forceDialog)
@@ -217,12 +244,14 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 	
 	private void undo(int nrOfMoves) 
 	{
+		System.out.println("Undoing: " + nrOfMoves + " moves");
 		int undoneMoves = getBoard().undoMoves(nrOfMoves);
 		updateStatusBar();
 		if(undoneMoves == 0)
 			myStatusBar.setText(myGameStatus + " (Undo not possible)");
 		else
 			myStatusBar.setText(myGameStatus + " (Reverted " + undoneMoves + " moves)");
+		myComponent.repaint();
 	}
 	
 	/**
@@ -321,40 +350,6 @@ public class ChessWindow extends JFrame implements ActionListener, KeyListener
 			{
 			}
 			lastFileChooserLocation = path;
-		}
-	}
-
-	@Override
-	public void keyTyped(KeyEvent e) 
-	{
-	}
-
-	@Override
-	public void keyPressed(KeyEvent e) 
-	{
-	}
-
-	@Override
-	public void keyReleased(KeyEvent e) 
-	{
-		if(e.isControlDown())
-		{
-			switch(e.getKeyCode())
-			{
-				case KeyEvent.VK_S: //Save [as]
-					save(e.isShiftDown()); 
-					break;
-				case KeyEvent.VK_Z: //Undo moves
-					if(e.isShiftDown())
-						undo(1);
-					else
-						undo(2);
-					break;
-			}
-		}
-		else if(e.isAltDown() && e.getKeyCode() == KeyEvent.VK_F4 && !e.isShiftDown())
-		{
-			exit(); //Terminate program
 		}
 	}
 }

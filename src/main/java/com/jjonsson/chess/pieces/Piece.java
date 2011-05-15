@@ -439,6 +439,7 @@ public abstract class Piece
 	/**
 	 * Called when a move that this piece previously made has been reverted
 	 */
+	@SuppressWarnings("unused")
 	public void revertedAMove(ChessBoard board)
 	{
 	}

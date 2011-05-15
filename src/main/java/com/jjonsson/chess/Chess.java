@@ -1,5 +1,7 @@
 package com.jjonsson.chess;
 
+import com.jjonsson.chess.gui.WindowUtilities;
+
 public class Chess {
 
 	/**
@@ -7,6 +9,8 @@ public class Chess {
 	 */
 	public static void main(String[] args) 
 	{	
+		WindowUtilities.setNativeLookAndFeel();
+		
 		ChessGame game = new ChessGame();		
 		game.launch();
 	}

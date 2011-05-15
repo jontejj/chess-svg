@@ -23,6 +23,11 @@ public interface ChessBoardListener
 	public void nextPlayer();
 	
 	/**
+	 * Called when the requested undo command has been performed
+	 */
+	public void undoDone();
+	
+	/**
 	 * 
 	 * @return true if the listener wishes to decide which piece a pawn should be replaced with
 	 */

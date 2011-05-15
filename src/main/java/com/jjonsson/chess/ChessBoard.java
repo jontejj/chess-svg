@@ -762,6 +762,12 @@ public class ChessBoard
 			}		
 		}
 		myAllowsMoves = true;
+		
+		for(ChessBoardListener listener : myBoardListeners)
+		{
+			listener.undoDone();
+		}
+		
 		return movesReverted;
 	}
 

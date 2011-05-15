@@ -11,7 +11,6 @@ import org.w3c.dom.svg.SVGDocument;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
-import com.jjonsson.chess.gui.ChessWindow;
 import com.jjonsson.chess.gui.PieceImageCache;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.moves.Move;
@@ -22,10 +21,6 @@ import com.jjonsson.chess.pieces.Piece;
 public class ChessPieceComponent extends JSVGComponent implements MoveListener, MouseListener//, SVGLoadEventDispatcherListener, SVGDocumentLoaderListener, GVTTreeBuilderListener, GVTTreeRendererListener
 {
 	private static final long	serialVersionUID	= 3048642024943627256L;
-	
-	public static final int BORDER_SIZE = 6;
-	public static final int MARGIN = 10;
-	public static final int SIZE = ChessWindow.DEFAULT_WINDOW_WIDTH / ChessBoard.BOARD_SIZE;
 
 	private Piece myPieceToDraw;
 
@@ -44,11 +39,10 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		SVGDocument doc = PieceImageCache.getSVGForPiece(myPieceToDraw);
 		if(doc != null)
 		{
-			setSize(pieceSize(), pieceSize());
+			updateSize();
 			//Makes sure that the image is displayed without a background
 			setBackgroundColor(); 
-            
-			setLocation(getPointForPiece(myPieceToDraw));
+			
 			setSVGDocument(doc);
 			addMouseListener(this);
 			myPieceToDraw.addMoveListener(this);
@@ -63,13 +57,15 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	private Point getPointForPiece(Piece piece)
 	{
 		Position currentPosition = piece.getCurrentPosition();
-		Point p = new Point(currentPosition.getColumn() * SIZE + BORDER_SIZE + MARGIN, (ChessBoard.BOARD_SIZE - currentPosition.getRow() - 1) * SIZE + BORDER_SIZE + MARGIN);
+		Point p = new Point(currentPosition.getColumn() * myBoardComponent.getCurrentPieceSize().width + myBoardComponent.getPieceBorderSize() + myBoardComponent.getPieceMargin(), (ChessBoard.BOARD_SIZE - currentPosition.getRow() - 1) * myBoardComponent.getCurrentPieceSize().height + myBoardComponent.getPieceBorderSize() + myBoardComponent.getPieceMargin());
 		return p;
 	}
-	
-	private static final int pieceSize()
+
+	public void updateSize()
 	{
-		return ChessPieceComponent.SIZE - MARGIN * 2 - BORDER_SIZE * 2;
+
+		setSize(myBoardComponent.getCurrentPieceSize().width - myBoardComponent.getPieceBorderSize() * 2 - myBoardComponent.getPieceMargin() * 2, myBoardComponent.getCurrentPieceSize().height - myBoardComponent.getPieceBorderSize() * 2 - myBoardComponent.getPieceMargin() * 2);
+		setLocation(getPointForPiece(myPieceToDraw));
 	}
 	
 	private void setBackgroundColor()
@@ -105,124 +101,6 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		myBoardComponent = null;
 		myPieceToDraw = null;
 	}
-	/*
-	@Override
-	public void documentLoadingStarted(SVGDocumentLoaderEvent e)
-	{
-		System.out.println("Started to load document" + e);
-	}
-
-
-	@Override
-	public void documentLoadingCompleted(SVGDocumentLoaderEvent e)
-	{
-		System.out.println("Completed document loading " + e);
-	}
-
-
-	@Override
-	public void documentLoadingCancelled(SVGDocumentLoaderEvent e)
-	{
-		System.out.println("Document Loading Cancelled " + e);
-	}
-
-
-	@Override
-	public void documentLoadingFailed(SVGDocumentLoaderEvent e)
-	{
-		System.out.println("Document Loading Failed: " + e);
-	}
-
-
-	@Override
-	public void gvtRenderingPrepare(GVTTreeRendererEvent e)
-	{
-		System.out.println("Rendering in prepare phase" + e);
-	}
-
-
-	@Override
-	public void gvtRenderingStarted(GVTTreeRendererEvent e)
-	{
-		System.out.println("Rendering started phase" + e);
-	}
-
-
-	@Override
-	public void gvtRenderingCompleted(GVTTreeRendererEvent e)
-	{
-		System.out.println("Rendering complete" + e);
-	}
-
-
-	@Override
-	public void gvtRenderingCancelled(GVTTreeRendererEvent e)
-	{
-		System.out.println("Rendering cancelled" + e);
-	}
-
-
-	@Override
-	public void gvtRenderingFailed(GVTTreeRendererEvent e)
-	{
-		System.out.println("Rendering failed" + e);
-	}
-
-
-	@Override
-	public void gvtBuildStarted(GVTTreeBuilderEvent e)
-	{
-		System.out.println("gvtBuildStarted" + e);
-	}
-
-
-	@Override
-	public void gvtBuildCompleted(GVTTreeBuilderEvent e)
-	{
-		System.out.println("gvtBuildCompleted" + e);
-	}
-
-
-	@Override
-	public void gvtBuildCancelled(GVTTreeBuilderEvent e)
-	{
-		System.out.println("gvtBuildCancelled" + e);
-	}
-
-
-	@Override
-	public void gvtBuildFailed(GVTTreeBuilderEvent e)
-	{
-		System.out.println("gvtBuildFailed" + e);
-	}
-
-
-	@Override
-	public void svgLoadEventDispatchStarted(SVGLoadEventDispatcherEvent e)
-	{
-		System.out.println("svgLoadEventDispatchStarted" + e);
-	}
-
-
-	@Override
-	public void svgLoadEventDispatchCompleted(SVGLoadEventDispatcherEvent e)
-	{
-		System.out.println("svgLoadEventDispatchCompleted" + e);
-	}
-
-
-	@Override
-	public void svgLoadEventDispatchCancelled(SVGLoadEventDispatcherEvent e)
-	{
-		System.out.println("svgLoadEventDispatchCancelled" + e);
-	}
-
-
-	@Override
-	public void svgLoadEventDispatchFailed(SVGLoadEventDispatcherEvent e)
-	{
-		System.out.println("svgLoadEventDispatchFailed" + e);
-	}*/
 
 	@Override
 	public void mouseClicked(MouseEvent e)

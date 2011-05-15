@@ -103,4 +103,9 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 	{
 		return null;
 	}
+
+	@Override
+	public void undoDone()
+	{
+	}
 }

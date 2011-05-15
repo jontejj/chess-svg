@@ -36,12 +36,18 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	private Piece myCurrentlySelectedPiece;
 	
 	private ChessWindow myWindow;
+
+	private Dimension myCurrentPieceSize;
+	public int myPieceBorderSize;
+	private int myPieceMargin;
 	
 	public ChessBoardComponent(ChessWindow window)
 	{	
 		super();
 		myWindow = window;
 		pieces = new HashSet<ChessPieceComponent>();
+		setCurrentPieceSize();
+		setSize(myWindow.getBoardComponentSize());
 		addMouseListener(this);
 		getBoard().addChessBoardListener(this);
 		for(Piece p : window.getBoard().getPieces())
@@ -53,6 +59,28 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		{
 			this.add(p);
 		}
+	}
+
+	public int getPieceMargin()
+	{
+		return myPieceMargin;
+	}
+
+	public int getPieceBorderSize()
+	{
+		return myPieceBorderSize;
+	}
+
+	public Dimension getCurrentPieceSize()
+	{
+		return myCurrentPieceSize;
+	}
+	
+	private void setCurrentPieceSize()
+	{
+		myCurrentPieceSize = new Dimension(myWindow.getBoardComponentSize().width / ChessBoard.BOARD_SIZE, myWindow.getBoardComponentSize().height / ChessBoard.BOARD_SIZE);
+		myPieceMargin = (int) (myCurrentPieceSize.height * 0.1);
+		myPieceBorderSize = (int) (myCurrentPieceSize.height * 0.07);
 	}
 	
 	/**
@@ -94,27 +122,28 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	{
 		for (int row = 0;  row < ChessBoard.BOARD_SIZE;  row++ ) {
             for (int col = 0;  col < ChessBoard.BOARD_SIZE;  col++ ) {
-                int x = ChessPieceComponent.SIZE*col;
-                int y = ChessPieceComponent.SIZE*row;
+                int x = myCurrentPieceSize.width*col;
+                int y = myCurrentPieceSize.height*row;
                 if ( (row % 2) == (col % 2) )
                    g.setColor(Color.darkGray);
                 else
                    g.setColor(Color.lightGray);
-                g.fillRect(x,y,ChessPieceComponent.SIZE,ChessPieceComponent.SIZE);
+                g.fillRect(x,y,myCurrentPieceSize.width,myCurrentPieceSize.height);
             }
          }
 	}
 	/**
-	 * TODO: This doesn't seem to work
 	 * @param newWindowSize
 	 */
 	public void resizeBoard(Dimension newWindowSize)
 	{
+		setCurrentPieceSize();
 		for(ChessPieceComponent p : pieces)
 		{
-			p.setSize((int)(newWindowSize.getWidth() / ChessBoard.BOARD_SIZE), (int)(newWindowSize.getHeight() / ChessBoard.BOARD_SIZE));
+			p.updateSize();
 			p.repaint();
 		}
+		repaint();
 	}
 	
 	private void markSquaresAsAvailable(Graphics2D graphics)
@@ -172,25 +201,25 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		graphics.setColor(markingColor);
 		Point point = getInnerBorderUpperLeftCornerPointForSquare(pos);
 		//Upper line
-		graphics.fillRect(point.x, point.y, ChessPieceComponent.SIZE, ChessPieceComponent.BORDER_SIZE / 2);
+		graphics.fillRect(point.x, point.y, myCurrentPieceSize.width, myPieceBorderSize / 2);
 		//Bottom line
-		graphics.fillRect(point.x, point.y + ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.SIZE, ChessPieceComponent.BORDER_SIZE / 2);
+		graphics.fillRect(point.x, point.y + myCurrentPieceSize.height - myPieceBorderSize / 2, myCurrentPieceSize.width, myPieceBorderSize / 2);
 		//Left line
-		graphics.fillRect(point.x, point.y + ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE);
+		graphics.fillRect(point.x, point.y + myPieceBorderSize / 2, myPieceBorderSize / 2, myCurrentPieceSize.height - myPieceBorderSize);
 		//Right line
-		graphics.fillRect(point.x + ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE / 2, point.y + ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.BORDER_SIZE / 2, ChessPieceComponent.SIZE - ChessPieceComponent.BORDER_SIZE);
+		graphics.fillRect(point.x + myCurrentPieceSize.width - myPieceBorderSize / 2, point.y + myPieceBorderSize / 2, myPieceBorderSize / 2, myCurrentPieceSize.height - myPieceBorderSize);
 	}
 	
 	private Point getInnerBorderUpperLeftCornerPointForSquare(Position pos)
 	{
-		Point p = new Point(pos.getColumn() * ChessPieceComponent.SIZE, (ChessBoard.BOARD_SIZE - pos.getRow() - 1) * ChessPieceComponent.SIZE);
+		Point p = new Point(pos.getColumn() * myCurrentPieceSize.width, (ChessBoard.BOARD_SIZE - pos.getRow() - 1) * myCurrentPieceSize.height);
 		return p;
 	}
 	
 	private Position getPositionForPoint(Point p) throws InvalidPosition
 	{
-		int roundedRow = ChessBoard.BOARD_SIZE - (int)Math.floor(p.y / ChessPieceComponent.SIZE);
-		return Position.createPosition(roundedRow, p.x / ChessPieceComponent.SIZE + 1);
+		int roundedRow = ChessBoard.BOARD_SIZE - (int)Math.floor(p.y / myCurrentPieceSize.height);
+		return Position.createPosition(roundedRow, p.x / myCurrentPieceSize.width + 1);
 	}
 	
 	/**
@@ -351,5 +380,11 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public Piece getPawnReplacementFromDialog() 
 	{
 		return null;
+	}
+
+	@Override
+	public void undoDone()
+	{
+		nextPlayer();
 	}
 }
