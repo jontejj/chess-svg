@@ -17,6 +17,7 @@ import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
@@ -26,6 +27,7 @@ import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;
+import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
 import com.jjonsson.chess.moves.Position;
@@ -82,6 +84,19 @@ public class ChessBoard implements Cloneable
 	
 	//Manages the possibility of automatic moves (used during move reverting)
 	private boolean myAllowsMoves;
+	
+	private ChessBoard myOriginatingBoard;
+	
+	/**
+	 * This is a counter that keeps track of how many black moves that protects black pieces 
+	 * Note: May be more than the number of black pieces due to pieces being protected by two different moves
+	 */
+	private long myBlackProtectedPiecesCount;
+	/**
+	 * This is a counter that keeps track of how many white moves that protects white pieces 
+	 * Note: May be more than the number of white pieces due to pieces being protected by two different moves
+	 */
+	private long myWhiteProtectedPiecesCount;
 
 	/**
 	 * Constructs the chess board 
@@ -89,6 +104,7 @@ public class ChessBoard implements Cloneable
 	 */
 	public ChessBoard(boolean placeInitialPieces)
 	{
+		myOriginatingBoard = this;
 		myAllowsMoves = true;
 		myMovesThatStopsKingFromBeingChecked = Collections.emptySet();
 		myBoardListeners = new HashSet<ChessBoardListener>();
@@ -106,6 +122,11 @@ public class ChessBoard implements Cloneable
 			this.reset();
 	}
 	
+	private void setOriginatingBoard(ChessBoard board)
+	{
+		myOriginatingBoard = board;
+	}
+	
 	/**
 	 * Makes a copy of the board without copying the listeners
 	 */
@@ -113,6 +134,7 @@ public class ChessBoard implements Cloneable
 	public ChessBoard clone()
 	{
 		ChessBoard newBoard = new ChessBoard(false);
+		newBoard.setOriginatingBoard(this);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
 		try
 		{
@@ -130,6 +152,11 @@ public class ChessBoard implements Cloneable
 			newBoard = null;
 		}
 		return newBoard;
+	}
+	
+	ChessBoard getOriginatingBoard()
+	{
+		return myOriginatingBoard;
 	}
 	
 	/**
@@ -400,12 +427,13 @@ public class ChessBoard implements Cloneable
 		
 		Piece newPiece = null;
 		
-		//Asks the GUI for a replacement pawn
+		//Asks the GUI for a replacement piece
 		for(ChessBoardListener cbl : myBoardListeners)
 		{
 			if(cbl.supportsPawnReplacementDialog())
 			{
 				newPiece = cbl.getPawnReplacementFromDialog();
+				//TODO: set position
 				break;
 			}
 		}
@@ -415,6 +443,10 @@ public class ChessBoard implements Cloneable
 			newPiece = new Queen(pawn.getCurrentPosition(), pawn.getAffinity());
 		}
 		addPiece(newPiece, true, false);
+		
+		//Update moves that can reach the queen
+		this.updatePossibilityOfMovesForPosition(newPiece.getCurrentPosition());
+		
 		return newPiece;
 	}
 	
@@ -716,7 +748,7 @@ public class ChessBoard implements Cloneable
 		//Read the state of the game
 		readGameStatePersistanceData(stream);
 		
-		//Read each piece to the file
+		//Read each piece from the file
 		byte[] piece = new byte[2];
 		int readBytes = 0;
 		while(readBytes != -1)
@@ -726,7 +758,7 @@ public class ChessBoard implements Cloneable
 			{
 				Piece p = Piece.getPieceFromPersistanceData((short)(piece[0] << 8 | piece[1]));
 				if(p != null)
-					addPiece(p, false, false);
+					addPiece(p, false, true);
 			}
 		}
 	}
@@ -804,7 +836,6 @@ public class ChessBoard implements Cloneable
 			{
 				Move lastMove = myMoveLogger.getLastMove();
 				lastMove.getPiece().performMove(lastMove.getRevertingMove(), this, printOuts);
-				myMoveLogger.popMove();
 				movesReverted++;
 			}
 			catch (Exception e)
@@ -821,6 +852,37 @@ public class ChessBoard implements Cloneable
 		
 		return movesReverted;
 	}
+	
+	/**
+	 * If the given move was the last one to be made it is undone by this function
+	 * @param movesToUndo the move to undo
+	 * @return true if the move could be undone
+	 */
+	public boolean undoMove(Move moveToUndo, boolean printOuts)
+	{
+		boolean wasUndone = true;
+		
+		myAllowsMoves = false;
+		try
+		{
+			moveToUndo.getPiece().performMove(moveToUndo.getRevertingMove(), this, printOuts);
+		}
+		catch (Exception e)
+		{
+			wasUndone = false;
+		}		
+		myAllowsMoves = true;
+		
+		if(wasUndone)
+		{
+			for(ChessBoardListener listener : myBoardListeners)
+			{
+				listener.undoDone();
+			}
+		}
+		
+		return wasUndone;
+	}
 
 	/**
 	 * @return false if no automatic moves is allowed
@@ -828,6 +890,47 @@ public class ChessBoard implements Cloneable
 	public boolean allowsMoves()
 	{
 		return myAllowsMoves;
+	}
+	
+	public void newMoveEvaluationHasBeenDone(ImmutableMap<Position, String> positionScores)
+	{
+		for(ChessBoardListener cbl : myBoardListeners)
+		{
+			cbl.squareScores(positionScores);
+		}
+	}
+
+	public Move popLastMoveIfEqual(Move moveToPop)
+	{
+		Move lastMove = getLastMove();
+		if(lastMove == moveToPop)
+			return myMoveLogger.popMove();
+		
+		return null;
+	}
+
+	public void decreaseProtectedPiecesCounter(boolean affinity, int decrementValue)
+	{
+		if(affinity == Piece.BLACK)
+			myBlackProtectedPiecesCount -= decrementValue;
+		else
+			myWhiteProtectedPiecesCount -= decrementValue;
+	}
+
+	public void increaseProtectedPiecesCounter(boolean affinity, int incrementValue)
+	{
+		if(affinity == Piece.BLACK)
+			myBlackProtectedPiecesCount += incrementValue;
+		else
+			myWhiteProtectedPiecesCount += incrementValue;
+	}
+	
+	public long getProtectedPiecesCount(boolean affinity)
+	{
+		if(affinity == Piece.BLACK)
+			return myBlackProtectedPiecesCount;
+		
+		return myWhiteProtectedPiecesCount;
 	}
 
 }

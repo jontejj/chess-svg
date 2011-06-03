@@ -36,6 +36,9 @@ public class KingMove extends IndependantMove
 	{
 		myIsCheckedByAnotherMove = false;
 		Position newPosition = this.getPositionIfPerformed();
+		
+		setPieceAtDestination(board.getPiece(newPosition), board);
+		
 		if(newPosition == null)
 			return false; //The move was out of bounds
 		
@@ -48,16 +51,6 @@ public class KingMove extends IndependantMove
 			return false;
 		}
 		
-		Piece pieceAtDestination = board.getPiece(newPosition);
-		setPieceAtDestination(pieceAtDestination);
-		if(pieceAtDestination == null)
-			return true; //The space is free
-		else if(pieceAtDestination.hasSameAffinityAs(myPiece))
-			return false; //You can't take over your own pieces
-		else
-		{
-			//Take over is available
-			return true;
-		}
+		return canBeMadeEnding(board.getPiece(newPosition), board);
 	}
 }

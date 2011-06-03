@@ -26,7 +26,7 @@ public class TestCenterStageOrdering
 		
 		CenterStageOrdering ordering = new CenterStageOrdering();
 		
-		assertEquals(1, ordering.compare(pawnTwoStepMove, knightMove));
+		assertEquals(3, ordering.compare(pawnTwoStepMove, knightMove));
 		
 	}
 }

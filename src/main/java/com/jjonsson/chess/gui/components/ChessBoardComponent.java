@@ -2,6 +2,7 @@ package com.jjonsson.chess.gui.components;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -12,9 +13,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.JComponent;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessBoardEvaluator;
 import com.jjonsson.chess.ChessMoveEvaluator;
@@ -43,10 +48,15 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public int myPieceBorderSize;
 	private int myPieceMargin;
 	
+	private ImmutableMap<Position, String> myPositionScores;
+	
+	private boolean myAIdisabled;
+	
 	public ChessBoardComponent(ChessWindow window)
 	{	
 		super();
 		myWindow = window;
+		myPositionScores = ImmutableMap.of();
 		pieces = new HashSet<ChessPieceComponent>();
 		setCurrentPieceSize();
 		setSize(myWindow.getBoardComponentSize());
@@ -61,6 +71,13 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		{
 			this.add(p);
 		}
+	}
+	
+	public void setAIEnabled(boolean enable)
+	{
+		myAIdisabled = !enable;
+		//Makes the AI make a move directly if it's his turn
+		nextPlayer();
 	}
 
 	public int getPieceMargin()
@@ -118,6 +135,17 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		  setBackground(Color.darkGray);
 		  drawGrid(g2d);
 		  markSquaresAsAvailable(g2d);
+		  drawPositionScores(g2d);
+	}
+	
+	private void drawPositionScores(Graphics g)
+	{
+		ImmutableSet<Entry<Position, String>> scores  = myPositionScores.entrySet();
+		for(Entry<?, ?> entry : scores)
+		{
+			Position pos = (Position) entry.getKey();
+			drawTextInSquare(pos, entry.getValue().toString(), g);
+		}
 	}
 	
 	private void drawGrid(Graphics g)
@@ -210,6 +238,21 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		graphics.fillRect(point.x, point.y + myPieceBorderSize / 2, myPieceBorderSize / 2, myCurrentPieceSize.height - myPieceBorderSize);
 		//Right line
 		graphics.fillRect(point.x + myCurrentPieceSize.width - myPieceBorderSize / 2, point.y + myPieceBorderSize / 2, myPieceBorderSize / 2, myCurrentPieceSize.height - myPieceBorderSize);
+	}
+	
+	/**
+	 * Marks the given position with the given color on the given graphics object
+	 * @param pos the position to surround with a color
+	 * @param markingColor the color to surround the position with
+	 * @param graphics the object to draw the square on
+	 */
+	private void drawTextInSquare(Position pos, String text, Graphics graphics)
+	{
+		//graphics.setColor(markingColor);
+		graphics.setFont(Font.decode("Helvetica-BOLD-16"));
+		Point point = getInnerBorderUpperLeftCornerPointForSquare(pos);
+		
+		graphics.drawString(text, point.x, point.y + 15);
 	}
 	
 	private Point getInnerBorderUpperLeftCornerPointForSquare(Position pos)
@@ -348,7 +391,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void nextPlayer()
 	{
 		setSelectedPiece(null);
-		if(ChessBoardEvaluator.inPlay(getBoard()) && getBoard().allowsMoves())
+		if(!myAIdisabled && ChessBoardEvaluator.inPlay(getBoard()) && getBoard().allowsMoves())
 		{
 			if(getBoard().getCurrentPlayer() == Piece.BLACK)
 			{
@@ -388,5 +431,12 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void undoDone()
 	{
 		nextPlayer();
+	}
+
+	@Override
+	public void squareScores(ImmutableMap<Position, String> positionScores)
+	{
+		myPositionScores = positionScores;
+		repaint();
 	}
 }

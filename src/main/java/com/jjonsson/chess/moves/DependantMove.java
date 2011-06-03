@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.pieces.Piece;
@@ -245,15 +246,24 @@ public abstract class DependantMove extends Move
 	 * Moves depending on this one will need to be removed as well
 	 */
 	@Override
-	public void removeMove(ChessBoard chessBoard)
+	public void removeFromBoard(ChessBoard chessBoard)
 	{
+		myIsRemoved = true;
 		chessBoard.removeAvailableMove(myDestination, myPiece, this);
 		chessBoard.removeNonAvailableMove(myDestination, myPiece, this);
 		if(myMoveDependingOnMe != null)
 		{
-			myMoveDependingOnMe.removeMove(chessBoard);
+			myMoveDependingOnMe.removeFromBoard(chessBoard);
 		}
-		if(myMoveThatIDependUpon != null)
-			myMoveThatIDependUpon.setMoveThatDependsOnMe(null);
+	}
+	
+	@Override
+	public void reEnable()
+	{
+		myIsRemoved = false;
+		if(myMoveDependingOnMe != null)
+		{
+			myMoveDependingOnMe.reEnable();
+		}
 	}
 }

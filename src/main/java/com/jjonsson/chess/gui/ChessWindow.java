@@ -43,9 +43,11 @@ public class ChessWindow extends JFrame implements ActionListener
 	private static final String LOAD_MENU_ITEM = "Load";
 	private static final String SAVE_MENU_ITEM = "Save";
 	private static final String SAVE_AS_MENU_ITEM = "Save As";
+	private static final String DISABLE_AI_MENU_ITEM = "Disable Computer Player";
+	private static final String ENABLE_AI_MENU_ITEM = "Enable Computer Player";
 	private static final String EXIT_MENU_ITEM = "Exit";
-	private static final String UNDO_BLACK_MENU_ITEM = "Undo Black Move";
-	private static final String UNDO_WHITE_MENU_ITEM = "Undo White Move";
+	private static final String UNDO_BLACK_MENU_ITEM = "Undo Last Move";
+	private static final String UNDO_WHITE_MENU_ITEM = "Undo Last Two Moves";
 	
 	private String lastFileChooserLocation;
 	
@@ -157,6 +159,12 @@ public class ChessWindow extends JFrame implements ActionListener
 	    saveAsAction.addActionListener(this);
 	    fileMenu.add(saveAsAction);
 	    
+	    fileMenu.addSeparator();
+	    
+	    JMenuItem disableAI = new JMenuItem(DISABLE_AI_MENU_ITEM);
+	    disableAI.addActionListener(this);
+	    fileMenu.add(disableAI);
+	    
 	    //Mac's already have a default menu with an exit action
 	    if(!CrossPlatformUtilities.isMac())
 	    {
@@ -265,6 +273,11 @@ public class ChessWindow extends JFrame implements ActionListener
 			wl.windowClosing(we);
 		}
 	}
+	
+	private void switchAI(boolean enable)
+	{
+		myComponent.setAIEnabled(enable);
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent e)
@@ -293,6 +306,16 @@ public class ChessWindow extends JFrame implements ActionListener
 		else if(e.getActionCommand().equals(UNDO_WHITE_MENU_ITEM))
 		{
 			undo(2);
+		}
+		else if(e.getActionCommand().equals(DISABLE_AI_MENU_ITEM))
+		{
+			switchAI(false);
+			JMenuItem.class.cast(e.getSource()).setText(ENABLE_AI_MENU_ITEM);
+		}
+		else if(e.getActionCommand().equals(ENABLE_AI_MENU_ITEM))
+		{
+			switchAI(true);
+			JMenuItem.class.cast(e.getSource()).setText(DISABLE_AI_MENU_ITEM);
 		}
 		else if(e.getActionCommand().equals(EXIT_MENU_ITEM))
 		{

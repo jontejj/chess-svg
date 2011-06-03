@@ -1,6 +1,9 @@
 package com.jjonsson.chess.moves;
 
+import java.util.SortedSet;
+
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
@@ -27,7 +30,7 @@ public abstract class Move
 	/**
 	 * The piece that would be defeated if this move was performed
 	 */
-	protected Piece myPieceAtDestination;
+	private Piece myPieceAtDestination;
 	
 	/**
 	 * The cached position of this move's destination 
@@ -40,6 +43,8 @@ public abstract class Move
 	protected boolean myCanBeMadeCache;
 	
 	protected RevertingMove myRevertingMove;
+	
+	protected boolean myIsRemoved;
 	
 	/**
 	 * 
@@ -72,9 +77,60 @@ public abstract class Move
 	 * 
 	 * @param p the piece that is at the destination of this move
 	 */
-	public void setPieceAtDestination(Piece p)
+	public void setPieceAtDestination(Piece p, ChessBoard board)
 	{
-		myPieceAtDestination = p;
+		if(p != myPieceAtDestination)
+		{
+			if(myPieceAtDestination != null)
+			{
+				if(!myPieceAtDestination.hasSameAffinityAs(myPiece))
+				{
+					myPieceAtDestination.removePieceThatTakesMeOver(myPiece);
+				}
+				else
+				{
+					board.decreaseProtectedPiecesCounter(getAffinity(), myPieceAtDestination.getValue() / 100);
+				}
+			}
+			if(p != null)
+			{
+				if(!p.hasSameAffinityAs(myPiece))
+				{
+					p.addPieceThatTakesMeOver(myPiece);
+				}
+				else
+				{
+					board.increaseProtectedPiecesCounter(getAffinity(), p.getValue() / 100);
+				}
+			}
+			myPieceAtDestination = p;
+		}
+	}
+	
+	protected boolean canBeMadeDefault(ChessBoard board)
+	{
+		Position newPosition = this.getPositionIfPerformed();
+		if(newPosition == null)
+			return false; //The move was out of bounds
+		
+		return canBeMadeEnding(board.getPiece(newPosition), board);
+	}
+	
+	protected boolean canBeMadeEnding(Piece pieceAtDestination, ChessBoard board)
+	{
+		setPieceAtDestination(pieceAtDestination, board);
+		if(pieceAtDestination == null)
+			return true; //The space is free
+		else if(pieceAtDestination.hasSameAffinityAs(myPiece))
+		{
+			//For DependantMoves this also means that moves further a long this move chain won't be possible either
+			return false; //You can't take over your own pieces
+		}
+		else
+		{
+			//Take over is available
+			return true;
+		}
 	}
 	
 	public Piece getPieceBlockingMe()
@@ -224,59 +280,42 @@ public abstract class Move
 	 */
 	public abstract void updatePossibility(ChessBoard board);
 	
-	public void removeMove(ChessBoard chessBoard)
+	public void removeFromBoard(ChessBoard chessBoard)
 	{
+		myIsRemoved = true;
 		chessBoard.removeAvailableMove(myDestination, myPiece, this);
 		chessBoard.removeNonAvailableMove(myDestination, myPiece, this);
 	}
+	
+	public boolean isRemoved()
+	{
+		return myIsRemoved;
+	}
+	
+	/**
+	 * Re-enables this move so that it can be made again
+	 */
+	public void reEnable()
+	{
+		myIsRemoved = false;
+	}
+	
 	/**
 	 * Returns the cached possibility of this move (Also checks if the move is unavailable due to a check
 	 * @return true if the move is allowed to do
 	 */
 	public boolean canBeMade(ChessBoard board)
 	{
+		if(isRemoved())
+			return false;
+		
 		if(board.isMoveUnavailableDueToCheck(this))
 			return false;
 		
 		if(myCanBeMadeCache)
 		{			
-			//This checks if the move would end in check mate, because no other piece stands in the path a check-mating move that this piece stops right now
 			//TODO: could this be cached?
-			ImmutableSet<Move> kingThreateningMoves = board.getNonAvailableMoves(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity());
-			if(kingThreateningMoves.size() > 0)
-			{
-				for(Move threateningMove : kingThreateningMoves)
-				{
-					if(this.getPositionIfPerformed().equals(threateningMove.getCurrentPosition()))
-					{
-						//This is a take over move that would remove the threatening piece
-						continue;
-					}
-					if(threateningMove instanceof DependantMove)
-					{
-						DependantMove move = ((DependantMove) threateningMove).getMoveThatIDependUpon();
-						boolean myPieceIsStoppingCheckMate = false;
-						boolean anotherPieceIsStoppingCheckMate = false;
-						Position destinationForMove = null;
-						while(move != null && (destinationForMove = move.getPositionIfPerformed()) != null)
-						{
-							if(destinationForMove.equals(myPiece.getCurrentPosition()))
-								myPieceIsStoppingCheckMate = true;
-							else if(board.getPiece(destinationForMove) != null)
-								anotherPieceIsStoppingCheckMate = true;
-							else if(destinationForMove.equals(this.getPositionIfPerformed()))
-							{
-								//this(move) is on the path for the checking move even if this move is performed (i.e still stopping check mate)
-								anotherPieceIsStoppingCheckMate = true;
-							}
-							
-							move = move.getMoveThatIDependUpon();
-						}
-						if(myPieceIsStoppingCheckMate && !anotherPieceIsStoppingCheckMate)
-							return false; //This move would end in check mate, because no other piece stands in the path of the check-mating move
-					}
-				}
-			}
+			return !isMoveUnavailableDueToCheckMate(board) && myCanBeMadeCache;
 			
 			//Checks if this piece is protecting the king from being taken
 			/*Move kingThreateningMove = board.moveThreateningPosition(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity(), myPiece);
@@ -293,6 +332,48 @@ public abstract class Move
 	 */
 	protected abstract boolean canBeMadeInternal(ChessBoard board);
 	
+	/**
+	 * This checks if the move would end in check mate, because no other piece stands in the path a check-mating move that this piece stops right now
+	 */
+	public boolean isMoveUnavailableDueToCheckMate(ChessBoard board)
+	{
+		ImmutableSet<Move> kingThreateningMoves = board.getNonAvailableMoves(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity());
+		if(kingThreateningMoves.size() > 0)
+		{
+			for(Move threateningMove : kingThreateningMoves)
+			{
+				if(this.getPositionIfPerformed().equals(threateningMove.getCurrentPosition()))
+				{
+					//This is a take over move that would remove the threatening piece
+					continue;
+				}
+				if(threateningMove instanceof DependantMove)
+				{
+					DependantMove move = ((DependantMove) threateningMove).getMoveThatIDependUpon();
+					boolean myPieceIsStoppingCheckMate = false;
+					boolean anotherPieceIsStoppingCheckMate = false;
+					Position destinationForMove = null;
+					while(move != null && (destinationForMove = move.getPositionIfPerformed()) != null)
+					{
+						if(destinationForMove.equals(myPiece.getCurrentPosition()))
+							myPieceIsStoppingCheckMate = true;
+						else if(board.getPiece(destinationForMove) != null)
+							anotherPieceIsStoppingCheckMate = true;
+						else if(destinationForMove.equals(this.getPositionIfPerformed()))
+						{
+							//this(move) is on the path for the checking move even if this move is performed (i.e still stopping check mate)
+							anotherPieceIsStoppingCheckMate = true;
+						}
+						
+						move = move.getMoveThatIDependUpon();
+					}
+					if(myPieceIsStoppingCheckMate && !anotherPieceIsStoppingCheckMate)
+						return true; //This move would end in check mate, because no other piece stands in the path of the check-mating move
+				}
+			}
+		}
+		return false;
+	}
 	/**
 	 * Makes this move and updates all the moves of all the pieces that will need to be updated on the given board
 	 * @throws UnavailableMoveException if this move isn't available right now

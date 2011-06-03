@@ -104,7 +104,7 @@ public class Position implements Cloneable
 	@Override
 	public int hashCode()
 	{
-		return myRow * 1000 + myColumn;
+		return myRow * 1237 + myColumn;
 	}
 	
 	@Override
@@ -121,7 +121,7 @@ public class Position implements Cloneable
 	@Override
 	public String toString()
 	{
-		//myColumn is an invalid index there is something that is seriously wrong
+		//if myColumn is an invalid index there is something that is seriously wrong
 		return (myRow+1) + "" + columns[myColumn];
 	}
 	

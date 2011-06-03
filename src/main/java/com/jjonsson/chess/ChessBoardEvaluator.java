@@ -26,6 +26,7 @@ public class ChessBoardEvaluator
 			case CHECKMATE:
 				return 50000;
 			case STALEMATE:
+				//TODO: this could be beneficial during the end game
 				return -10000;
 			case CHECK:
 				return 0;

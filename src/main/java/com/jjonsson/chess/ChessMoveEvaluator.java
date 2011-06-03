@@ -1,19 +1,28 @@
 package com.jjonsson.chess;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
+import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.ordering.MoveOrdering;
 import com.jjonsson.chess.pieces.Piece;
 
 public class ChessMoveEvaluator
 {
+	private static long deepestSearch = 0;
+	
 	private static class SearchLimiter
 	{
+		static final long MAX_DEPTH = 2;
+		static final long MAX_BRANCH_MOVES = 30;
 		/**
 		 * Used to limit the amount of moves to evaluate
 		 */
@@ -31,8 +40,8 @@ public class ChessMoveEvaluator
 		
 		public SearchLimiter()
 		{
-			movesLeft = 1000;
-			depth = 3;
+			movesLeft = MAX_BRANCH_MOVES;
+			depth = MAX_DEPTH;
 			scoreFactor = 1;
 		}
 	}
@@ -45,26 +54,27 @@ public class ChessMoveEvaluator
 	
 	public static void performBestMove(ChessBoard board) throws NoMovesAvailableException, UnavailableMoveException
 	{
+		deepestSearch = 0;
 		ChessBoard copyOfBoard = board.clone();
-		SearchResult result = deepSearch(copyOfBoard, new SearchLimiter());
-		
-		if(result.bestMove == null)
-			throw new NoMovesAvailableException();
-		
-		Piece chosenPiece = board.getPiece(result.bestMove.getCurrentPosition());
-		
-		Move actualMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getPositionIfPerformed(), board);
-		
 		try
 		{
+			SearchResult result = deepSearch(copyOfBoard, new SearchLimiter());
+			System.out.println("Best move: " + result.bestMove);
+			Piece chosenPiece = board.getPiece(result.bestMove.getCurrentPosition());
+			//Hack to revert some weird side effect
+			result.bestMove.updateDestination(copyOfBoard);
+			Move actualMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getPositionIfPerformed(), board);
 			chosenPiece.performMove(actualMove, board);
 		}
 		catch(Throwable e)
 		{
-			e.printStackTrace();
 			//TODO: This shouldn't happen
+			e.printStackTrace();
+			
+			//In the worst case scenario we make a random move if possible
 			board.performRandomMove();
 		}
+		System.out.println("Reached " + deepestSearch + " steps ahead on the best path");
 	}
 	
 	/**
@@ -80,47 +90,122 @@ public class ChessMoveEvaluator
 	 */
 	private static SearchResult deepSearch(ChessBoard board, SearchLimiter limiter)
 	{	
+		if(SearchLimiter.MAX_DEPTH - limiter.depth > deepestSearch)
+		{
+			deepestSearch = SearchLimiter.MAX_DEPTH - limiter.depth;
+		}
 		SearchResult result = new SearchResult();
-		Collection<Move> moves = board.getAvailableMoves(board.getCurrentPlayer()).values();
-		Iterator<Move> sortedMoves = MoveOrdering.instance.greatestOf(moves, moves.size()).iterator();
+		HashMap<Position, String> positionScores = Maps.newHashMap();
+		HashMap<Position, Long> positionScoresValues = Maps.newHashMap();
 		
 		//The game doesn't allow us to traverse further
 		if(!ChessBoardEvaluator.inPlay(board))
 		{
 			//No move to return, only the game state's value
-			result.bestMoveValue = ChessBoardEvaluator.valueOfState(board.getCurrentState()) * limiter.scoreFactor;
-		}
-		//The search limiter tells us that we have gone down far enough in our search tree
-		else if(limiter.depth == 0 || limiter.movesLeft == 0)
-		{
-			if(sortedMoves.hasNext())
-			{
-				result.bestMove = sortedMoves.next();
-				result.bestMoveValue = performMoveWithMeasurements(result.bestMove, board, true) * limiter.scoreFactor;
-			}
+			result.bestMoveValue = ChessBoardEvaluator.valueOfState(board.getCurrentState());
 		}
 		else
 		{
-			while(sortedMoves.hasNext())
+			Collection<Move> moves = board.getAvailableMoves(board.getCurrentPlayer()).values();
+			Iterator<Move> sortedMoves = MoveOrdering.instance.greatestOf(moves, moves.size()).iterator();
+			
+			//The deeper we go, the less we branch, this assumes that a reasonable ordering of the moves has been made already
+			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.depth * 8, 0) + 1;
+			
+			while(sortedMoves.hasNext() && movesLeftToEvaluateOnThisBranch > 0)
 			{
-				Move move = sortedMoves.next();
-				long moveValue = performMoveWithMeasurements(move, board, false);
-				
-				if(moveValue >= result.bestMoveValue)
-				{	
-					result.bestMove = move;
-					result.bestMoveValue = moveValue * limiter.scoreFactor;
-					
-					limiter.depth--;
-					limiter.movesLeft--;
-					//Inverses the factor making it possible to evaluate a good move for the other player
-					limiter.scoreFactor *= -1;
-					result.bestMoveValue += deepSearch(board, limiter).bestMoveValue;
-					limiter.depth++;
+				if(limiter.depth == SearchLimiter.MAX_DEPTH)
+				{
+					//For each main branch we reset the moves left
+					limiter.movesLeft = SearchLimiter.MAX_BRANCH_MOVES;
 				}
-				board.undoMoves(1, false);	
+				Move move = sortedMoves.next();
+				if(limiter.depth == SearchLimiter.MAX_DEPTH)
+					System.out.println("Testing: " + move);
+				
+				boolean takeOverMove = move.isTakeOverMove();
+				long moveValue = performMoveWithMeasurements(move, board, false);
+				if(((limiter.depth >= 0 && limiter.movesLeft > 0) || 
+					(takeOverMove && limiter.scoreFactor == 1 && limiter.depth <= 0))
+						&& moveValue > Long.MIN_VALUE)
+				{
+					limiter.depth--;
+					/*if(!takeOverMove)
+						//Regular depth decrementing
+						limiter.depth--;
+					else if(limiter.scoreFactor == 1)
+						//If the opponent takes over a piece we punish that path and searches less deep there
+						limiter.depth -= 2;
+					else
+						////If we took over a piece we dig deeper into that path (the attacking strategy)
+						limiter.depth++;*/
+					
+					
+					limiter.movesLeft--;
+					limiter.scoreFactor *= -1;
+					long deepValue = deepSearch(board, limiter).bestMoveValue;
+					
+					//Underflow protection
+					if(deepValue == Long.MIN_VALUE)
+						moveValue = Long.MIN_VALUE;
+					else
+						moveValue += deepValue;
+					limiter.scoreFactor *= -1;
+					
+					//Reset depth factors for the next iteration
+					/*if(!takeOverMove)
+						limiter.depth++;
+					else if(limiter.scoreFactor == -1)
+						limiter.depth += 2;
+					else
+						limiter.depth--;*/
+					limiter.depth++;
+					movesLeftToEvaluateOnThisBranch--;
+				}
+				else if(limiter.movesLeft <= 0)
+				{
+					System.out.println("Reached moves limit");
+				}
+				if(board.undoMove(move, false))
+				{
+					//Only return the move if it was undoable because otherwise it means that it was a bad/invalid move
+					if(moveValue > result.bestMoveValue)
+					{	
+						result.bestMove = move;
+						result.bestMoveValue = moveValue;
+					}
+					
+					if(limiter.depth == SearchLimiter.MAX_DEPTH)
+					{
+						if(move.getPositionIfPerformed() != null)
+						{
+							Long curVal = positionScoresValues.get(move.getPositionIfPerformed());
+							if(curVal == null || curVal.longValue() < moveValue * limiter.scoreFactor)
+							{
+								if(move.canBeMade(board))
+								{
+									positionScores.put(move.getPositionIfPerformed(), moveValue * limiter.scoreFactor + ":" + move.getCurrentPosition());
+									positionScoresValues.put(move.getPositionIfPerformed(), moveValue * limiter.scoreFactor);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
+		if(result.bestMoveValue == Long.MIN_VALUE)
+		{
+			System.out.println("Something weird");
+		}
+		//Inverses the factor making it possible to evaluate a good move for the other player
+		result.bestMoveValue *= limiter.scoreFactor;
+		
+		if(limiter.depth == SearchLimiter.MAX_DEPTH)
+		{
+			System.out.println("Best move value: " + result.bestMoveValue);
+			board.getOriginatingBoard().newMoveEvaluationHasBeenDone(ImmutableMap.copyOf(positionScores));
+		}
+		
 		return result;
 	}
 	
@@ -140,6 +225,9 @@ public class ChessMoveEvaluator
 		int playerNrOfAvailableMoves = board.getAvailableMoves(board.getCurrentPlayer()).size();
 		int playerNrOfNonAvailableMoves = board.getNonAvailableMoves(board.getCurrentPlayer()).size();
 		
+		long otherPlayerProtectiveMoves = board.getProtectedPiecesCount(!board.getCurrentPlayer());
+		long playerProtectiveMoves = board.getProtectedPiecesCount(board.getCurrentPlayer());
+		
 		boolean didMove = false;
 		try
 		{
@@ -151,7 +239,10 @@ public class ChessMoveEvaluator
 		}
 		catch(UnavailableMoveException ume)
 		{
-			//Just continue on and evaluate how good it was for us that this move couldn't be done
+			//if(board.isMoveUnavailableDueToCheck(move) || move.isMoveUnavailableDueToCheckMate(board))
+			return Long.MIN_VALUE;
+			
+			//return 0;
 		}
 		
 		//Save some measurements for the after state (the current player has changed now so that's why the getCurrentPlayer has been inverted)
@@ -160,6 +251,8 @@ public class ChessMoveEvaluator
 		int otherPlayerNrOfNonAvailableMovesAfter = board.getNonAvailableMoves(board.getCurrentPlayer()).size();
 		int playerNrOfAvailableMovesAfter = board.getAvailableMoves(!board.getCurrentPlayer()).size();
 		int playerNrOfNonAvailableMovesAfter = board.getNonAvailableMoves(!board.getCurrentPlayer()).size();
+		long otherPlayerProtectiveMovesAfter = board.getProtectedPiecesCount(board.getCurrentPlayer());
+		long playerProtectiveMovesAfter = board.getProtectedPiecesCount(!board.getCurrentPlayer());
 		
 		//The higher the value, the better the move
 		long moveValue = takeOverValue;
@@ -168,6 +261,9 @@ public class ChessMoveEvaluator
 		moveValue += (otherPlayerNrOfNonAvailableMovesAfter - otherPlayerNrOfNonAvailableMoves);
 		moveValue += (playerNrOfAvailableMovesAfter - playerNrOfAvailableMoves);
 		moveValue += (playerNrOfNonAvailableMovesAfter - playerNrOfNonAvailableMoves);
+		
+		moveValue += (playerProtectiveMovesAfter - playerProtectiveMoves);
+		moveValue += (otherPlayerProtectiveMoves - otherPlayerProtectiveMovesAfter);
 		
 		if(undoMoveAfterMeasurement && didMove)
 			board.undoMoves(1, false);

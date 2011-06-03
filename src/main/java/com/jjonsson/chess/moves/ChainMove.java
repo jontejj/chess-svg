@@ -16,24 +16,7 @@ public class ChainMove extends DependantMove
 	@Override
 	protected boolean canBeMadeInternal(ChessBoard board)
 	{	
-		Position newPosition = this.getPositionIfPerformed();
-		if(newPosition == null)
-			return false; //The move was out of bounds
-		
-		Piece pieceAtDestination = board.getPiece(newPosition);
-		setPieceAtDestination(pieceAtDestination);
-		if(pieceAtDestination == null)
-			return true; //The space is free
-		else if(pieceAtDestination.hasSameAffinityAs(myPiece))
-		{
-			//This also means that moves further a long this move chain won't be possible either
-			return false; //You can't take over your own pieces
-		}
-		else
-		{
-			//Take over is available
-			return true;
-		}
+		return canBeMadeDefault(board);
 	}
 
 }

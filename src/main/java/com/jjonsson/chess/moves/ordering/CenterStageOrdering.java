@@ -29,7 +29,8 @@ public class CenterStageOrdering extends Ordering<Move>
 		if(leftDestination == null)
 			return 1;
 		
-		return Math.abs(leftDestination.getRow() - center) - Math.abs(rightDestination.getRow() - center);
+		return Math.abs(leftDestination.getRow() - center) - Math.abs(rightDestination.getRow() - center) +
+		(Math.abs(leftDestination.getColumn() - center) - Math.abs(rightDestination.getColumn() - center));
 	}
 
 }

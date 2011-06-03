@@ -1,6 +1,8 @@
 package com.jjonsson.chess;
 
+import com.google.common.collect.ImmutableMap;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
 
 public interface ChessBoardListener
@@ -38,4 +40,6 @@ public interface ChessBoardListener
 	 * @return null if you don't support pawn replacement dialogs
 	 */
 	public Piece getPawnReplacementFromDialog();
+	
+	public void squareScores(ImmutableMap<Position, String> positionScores);
 }

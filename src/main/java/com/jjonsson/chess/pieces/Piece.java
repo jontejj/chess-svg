@@ -2,11 +2,19 @@ package com.jjonsson.chess.pieces;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessBoardEvaluator;
 import com.jjonsson.chess.exceptions.InvalidPosition;
@@ -19,6 +27,7 @@ import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.ordering.CenterStageOrdering;
 import com.jjonsson.chess.moves.ordering.MoveOrdering;
 import com.jjonsson.chess.moves.ordering.TakeOverValueOrdering;
+import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 
 /**
  * @author jonatanjoensson
@@ -27,12 +36,12 @@ import com.jjonsson.chess.moves.ordering.TakeOverValueOrdering;
 public abstract class Piece
 {	
 	//Used to figure out the take over value of a move
-	public static final int TOWER_VALUE = 40;
-	public static final int KNIGHT_VALUE = 30;
-	public static final int BISHOP_VALUE = 30;
-	public static final int PAWN_VALUE = 10;
-	public static final int KING_VALUE = 80;
-	public static final int QUEEN_VALUE = 80;
+	public static final int TOWER_VALUE = 400;
+	public static final int KNIGHT_VALUE = 300;
+	public static final int BISHOP_VALUE = 300;
+	public static final int PAWN_VALUE = 100;
+	public static final int KING_VALUE = 800;
+	public static final int QUEEN_VALUE = 800;
 	
 	//Used to save/load a piece
 	protected static final byte BISHOP = 0;
@@ -55,6 +64,48 @@ public abstract class Piece
 	 * List of "in theory" possible moves that this piece can make 
 	 */
 	private ArrayList<Move> myPossibleMoves;
+	
+	//TODO: keep this map updated and use it in the getMoveForPosition functions
+	private HashMap<Position, Move> myMoveMap;
+	
+	private Set<Piece> myPiecesThatTakesMyPieceOver;
+	private Piece myCheapestPieceThatTakesMeOver;
+	
+	private class PieceValue implements Comparable<PieceValue>
+	{
+		
+		private Piece myPiece;
+		
+		public PieceValue(Piece piece)
+		{
+			myPiece = piece;
+		}
+		
+		public Piece getPiece()
+		{
+			return myPiece;
+		}
+		
+		@Override
+		public int hashCode()
+		{
+			return myPiece.getValue();
+		}
+		
+		@Override
+		public boolean equals(Object o)
+		{
+			return myPiece.getValue() == myPiece.getClass().cast(o).getValue();
+		}
+		
+		@Override
+		public int compareTo(PieceValue o)
+		{
+			return myPiece.getValue() - o.getPiece().getValue();
+		}
+		
+	}
+	
 	/**
 	 * 
 	 * @param startingPosition where this piece should be placed
@@ -62,11 +113,43 @@ public abstract class Piece
 	 */
 	public Piece(Position startingPosition, boolean affinity)
 	{
-		myListeners = new HashSet<MoveListener>();
-		myPossibleMoves = new ArrayList<Move>();
+		myMoveMap = Maps.newHashMap();
+		myListeners = Sets.newHashSet();
+		myPossibleMoves = Lists.newArrayList();
+		
+		myPiecesThatTakesMyPieceOver = Sets.newHashSet();
+		
 		myCurrentPosition = startingPosition;
 		myAffinity = affinity;
 		addPossibleMoves();
+	}
+	
+	public void addPieceThatTakesMeOver(Piece p)
+	{
+		if(myPiecesThatTakesMyPieceOver.add(p))
+		{
+			//The piece was added, we need to recalculate the cheapest piece that takes myPiece over
+			myCheapestPieceThatTakesMeOver = new PieceValueOrdering().min(myPiecesThatTakesMyPieceOver);
+		}
+	}
+	
+	public void removePieceThatTakesMeOver(Piece p)
+	{
+		if(myPiecesThatTakesMyPieceOver.remove(p))
+		{
+			if(myPiecesThatTakesMyPieceOver.size() > 0)
+			{
+				//The piece was removed, we need to recalculate the cheapest piece that takes myPiece over
+				myCheapestPieceThatTakesMeOver = new PieceValueOrdering().min(myPiecesThatTakesMyPieceOver);	
+			}
+			else
+				myCheapestPieceThatTakesMeOver = null;
+		}
+	}
+	
+	public Piece getCheapestPieceThatTakesMeOver()
+	{
+		return myCheapestPieceThatTakesMeOver;
 	}
 	
 	public String toString()
@@ -372,11 +455,11 @@ public abstract class Piece
 		{
 			m.updateMove(board);
 		}
-		board.nextPlayer();
 		for(MoveListener m : myListeners)
 		{
 			m.movePerformed(move);
 		}
+		board.nextPlayer();
 	}
 	
 	/**
@@ -419,26 +502,25 @@ public abstract class Piece
 		}
 	}
 
-	private void removeMoves(ChessBoard chessBoard)
+	private void removeMovesFromBoard(ChessBoard chessBoard)
 	{
 		for(Move m : myPossibleMoves)
 		{
-			m.removeMove(chessBoard);
+			m.removeFromBoard(chessBoard);
 		}
-		myPossibleMoves.clear();
 	}
 	
 	public void removeFromBoard(ChessBoard board)
-	{
+	{	
+		board.removePiece(this);
+		this.removeMovesFromBoard(board);
+	
 		Piece currentPieceAtMyPosition = board.getPiece(getCurrentPosition());
 		//This could happen if the previous piece was taken and there is a new piece that could be taken
 		if(currentPieceAtMyPosition != null && currentPieceAtMyPosition != this)
 		{
 			currentPieceAtMyPosition.removeFromBoard(board);
 		}
-		
-		board.removePiece(this);
-		this.removeMoves(board);
 		
 		Object clonedSet = myListeners.clone();
 		if(clonedSet instanceof HashSet<?>)
@@ -467,5 +549,13 @@ public abstract class Piece
 	@SuppressWarnings("unused")
 	public void revertedAMove(ChessBoard board)
 	{
+	}
+
+	public void reEnablePossibleMoves()
+	{
+		for(Move m : myPossibleMoves)
+		{
+			m.reEnable();
+		}
 	}
 }

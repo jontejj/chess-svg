@@ -6,12 +6,14 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.NoSuchElementException;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.InputSupplier;
 import com.google.common.io.OutputSupplier;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.ChessBoardListener;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
+import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.Piece;
 
@@ -40,7 +42,7 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 	
 	public Move getLastMove()
 	{
-		return myMoveHistory.peek();
+		return myMoveHistory.peekFirst();
 	}
 	
 	public void writeMoves(OutputSupplier<OutputStream> out)
@@ -106,6 +108,11 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 
 	@Override
 	public void undoDone()
+	{
+	}
+
+	@Override
+	public void squareScores(ImmutableMap<Position, String> positionScores)
 	{
 	}
 }

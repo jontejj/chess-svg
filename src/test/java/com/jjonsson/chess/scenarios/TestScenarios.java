@@ -97,6 +97,7 @@ public class TestScenarios
 			WhitePawn pawn = (WhitePawn)p;
 			Move replacementMove = pawn.getAvailableMoveForPosition(Position.createPosition(8, Position.B), board);
 			Assert.assertNotNull(replacementMove);
+			
 			//Takes over the rock, replacing the pawn with a queen, checking the black king
 			pawn.performMove(replacementMove, board);
 			
@@ -107,7 +108,10 @@ public class TestScenarios
 			Assert.assertNotNull(defendingKnight);
 			Move defendingMove = defendingKnight.getAvailableMoveForPosition(Position.createPosition(8, Position.B), board);
 			Assert.assertNotNull(defendingMove);
+			
+			//Take over the queen
 			defendingKnight.performMove(defendingMove, board);
+			
 			currentState = board.getCurrentState();
 			Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + currentState, currentState == ChessState.PLAYING);
 			board.performRandomMove();

@@ -1,8 +1,6 @@
 package com.jjonsson.chess.moves;
 
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
-import com.jjonsson.chess.pieces.Pawn;
 import com.jjonsson.chess.pieces.Piece;
 
 public class PawnTakeOverMove extends PawnMove
@@ -21,7 +19,7 @@ public class PawnTakeOverMove extends PawnMove
 		Position newPosition = this.getPositionIfPerformed();
 		
 		Piece pieceAtDestination = board.getPiece(newPosition);
-		setPieceAtDestination(pieceAtDestination);
+		setPieceAtDestination(pieceAtDestination, board);
 		if(pieceAtDestination == null)
 			return false; //The space is free but this move requires a take over
 		else if(pieceAtDestination.hasSameAffinityAs(myPiece))
@@ -30,16 +28,6 @@ public class PawnTakeOverMove extends PawnMove
 		{
 			//Take over is available
 			return true;
-		}
-	}
-	@Override
-	public void makeMove(ChessBoard board) throws UnavailableMoveException
-	{
-		super.makeMove(board);
-		//remove the 2-step move
-		if(myPiece instanceof Pawn)
-		{
-			((Pawn)myPiece).removeTwoStepMove(board);
 		}
 	}
 }

@@ -2,6 +2,7 @@ package com.jjonsson.chess.moves;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.pieces.Pawn;
 import com.jjonsson.chess.pieces.Piece;
 
 public abstract class PawnMove extends DependantMove
@@ -13,6 +14,7 @@ public abstract class PawnMove extends DependantMove
 
 	/**
 	 * Makes this move and checks if the pawn has reached the bottom of the board, if so then it replaces that piece with a queen
+	 * <br>When a pawn move is made it means that the 2-step move shouldn't be available anymore
 	 * @throws UnavailableMoveException  if this move isn't available right now
 	 */
 	public void makeMove(ChessBoard board) throws UnavailableMoveException
@@ -24,6 +26,7 @@ public abstract class PawnMove extends DependantMove
 			//The white/black pawn has reached the bottom/top and now it's time to replace him
 			myRevertingMove.setPieceThatReplacedMyPiece(board.replacePawn(myPiece));
 		}
+		Pawn.class.cast(myPiece).removeTwoStepMove(board);
 	}
 	
 	private boolean isTimeForReplacement()

@@ -1,8 +1,10 @@
 package com.jjonsson.chess.pieces;
 
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.PawnMove;
+import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTwoStepMove;
 import com.jjonsson.chess.moves.Position;
 
@@ -10,10 +12,21 @@ public abstract class Pawn extends Piece
 {
 
 	private PawnTwoStepMove myTwoStepMove;
+	private PawnOneStepMove myOneStepMove;
 	
 	public Pawn(Position startingPosition, boolean affinity)
 	{
 		super(startingPosition, affinity);
+	}
+
+	public void setOneStepMove(PawnOneStepMove oneStepMove)
+	{
+		myOneStepMove = oneStepMove;
+	}
+	
+	public PawnOneStepMove getOneStepMove()
+	{
+		return myOneStepMove;
 	}
 	
 	public void setTwoStepMove(PawnTwoStepMove move)
@@ -46,17 +59,10 @@ public abstract class Pawn extends Piece
 	
 	public void removeTwoStepMove(ChessBoard board)
 	{
-		for(Move m : getPossibleMoves())
+		if(!myTwoStepMove.isRemoved())
 		{
-			if(m instanceof PawnMove)
-			{
-				PawnMove pm = (PawnMove)m;
-				if(pm.getMoveDependingOnMe() != null)
-				{
-					pm.getMoveDependingOnMe().removeMove(board);
-					pm.setMoveThatDependsOnMe(null);
-				}
-			}
+			myOneStepMove.setMoveThatDependsOnMe(null);
+			myTwoStepMove.removeFromBoard(board);
 		}
 	}
 	
@@ -66,6 +72,14 @@ public abstract class Pawn extends Piece
 	public void revertedAMove(ChessBoard board)
 	{
 		if(isAtStartingRow())
-			getTwoStepMove().possibleAgain(board);
+		{
+			if(myTwoStepMove.isRemoved())
+			{
+				//The two step move can now be re-enabled
+				myTwoStepMove.reEnable();
+				myOneStepMove.setMoveThatDependsOnMe(myTwoStepMove);
+				myTwoStepMove.updateMove(board);
+			}
+		}
 	}
 }

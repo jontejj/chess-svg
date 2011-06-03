@@ -19,10 +19,10 @@ public class WhitePawn extends Pawn
 	public void addPossibleMoves()
 	{
 		PawnMove step1 = new PawnOneStepMove(1 * Move.UP, 0, this, null, null);
+		PawnMove step2 = new PawnTwoStepMove(2 * Move.UP, 0, this, null, step1);
 		//If this isn't true then the pawn already has moved from it's initial position and the 2-step move shouln't be available then
 		if(isAtStartingRow())
 		{
-			PawnMove step2 = new PawnTwoStepMove(2 * Move.UP, 0, this, null, step1);
 			step1.setMoveThatDependsOnMe(step2);
 		}
 		
