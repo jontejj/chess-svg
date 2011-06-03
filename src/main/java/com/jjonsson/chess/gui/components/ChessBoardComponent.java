@@ -370,6 +370,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void gameStateChanged(ChessState newState)
 	{
 		System.out.println(newState);
+		myWindow.updateStatusBar();
 	}
 
 	@Override
@@ -396,21 +397,31 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		{
 			if(getBoard().getCurrentPlayer() == Piece.BLACK)
 			{
-				try
+				myWindow.setResultOfInteraction("Thinking ...");
+				//Run in a seperate thread to let the eventQueue run along
+				new Thread()
 				{
-					ChessMoveEvaluator.performBestMove(getBoard());
-				}
-				catch (NoMovesAvailableException e)
-				{
-					e.printStackTrace();
-				}
-				catch (UnavailableMoveException e)
-				{
-					e.printStackTrace();
-				}
+					@Override
+					public void run()
+					{
+						try
+						{
+							ChessMoveEvaluator.performBestMove(getBoard());
+						}
+						catch (NoMovesAvailableException e)
+						{
+							e.printStackTrace();
+						}
+						catch (UnavailableMoveException e)
+						{
+							e.printStackTrace();
+						}
+						myWindow.updateStatusBar();
+						repaint();
+					}
+				}.start();
 			}
 		}
-		myWindow.updateStatusBar();
 	}
 
 	@Override
@@ -437,7 +448,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void squareScores(ImmutableMap<Position, String> positionScores)
 	{
-		myPositionScores = positionScores;
+		//myPositionScores = positionScores;
 		repaint();
 	}
 }

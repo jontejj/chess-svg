@@ -82,6 +82,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	{	
 		setBackgroundColor();
 		setLocation(getPointForPiece(myPieceToDraw));
+		repaint();
 	}
 
 	@Override

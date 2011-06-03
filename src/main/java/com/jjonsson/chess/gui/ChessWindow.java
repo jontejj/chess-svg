@@ -195,16 +195,24 @@ public class ChessWindow extends JFrame implements ActionListener
 			selectFile("Save Chess File");
 		
 		if(BoardLoader.saveBoard(getBoard(), myCurrentBoardFile))
-			myStatusBar.setText(myGameStatus + " (Saved successfully)");
+			setResultOfInteraction("Saved successfully");
 		else
-			myStatusBar.setText(myGameStatus + " (Save failed)");
-			
+			setResultOfInteraction("Save failed");		
 	}
 	
 	private void newGame()
 	{
 		myComponent.clear();
 		myGame.getBoard().reset();
+	}
+	
+	/**
+	 * Sets the text within the parentheses of the status bar
+	 * @param msg
+	 */
+	public void setResultOfInteraction(String msg)
+	{
+		myStatusBar.setText(myGameStatus + " (" + msg + ")");
 	}
 	
 	private void load()
@@ -238,10 +246,10 @@ public class ChessWindow extends JFrame implements ActionListener
 			myComponent.loadingOfBoardDone();
 			
 			if(loadOk)
-				myStatusBar.setText(myGameStatus + " (Load Ok)");
+				setResultOfInteraction("Load Ok");
 			else
 			{
-				myStatusBar.setText(myGameStatus + " (Load Cancelled)");
+				setResultOfInteraction("Load Cancelled");
 				newGame();
 			}
 		}
@@ -252,9 +260,9 @@ public class ChessWindow extends JFrame implements ActionListener
 		int undoneMoves = getBoard().undoMoves(nrOfMoves);
 		updateStatusBar();
 		if(undoneMoves == 0)
-			myStatusBar.setText(myGameStatus + " (Undo not possible)");
+			setResultOfInteraction("Undo not possible");
 		else
-			myStatusBar.setText(myGameStatus + " (Reverted " + undoneMoves + " moves)");
+			setResultOfInteraction("Reverted " + undoneMoves + " moves");
 		myComponent.repaint();
 	}
 	
