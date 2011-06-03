@@ -1,22 +1,15 @@
 package com.jjonsson.chess.pieces;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.ChessBoardEvaluator;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.ChainMove;
@@ -24,9 +17,7 @@ import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.moves.ordering.CenterStageOrdering;
 import com.jjonsson.chess.moves.ordering.MoveOrdering;
-import com.jjonsson.chess.moves.ordering.TakeOverValueOrdering;
 import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 
 /**
@@ -71,47 +62,18 @@ public abstract class Piece
 	private Set<Piece> myPiecesThatTakesMyPieceOver;
 	private Piece myCheapestPieceThatTakesMeOver;
 	
-	private class PieceValue implements Comparable<PieceValue>
-	{
-		
-		private Piece myPiece;
-		
-		public PieceValue(Piece piece)
-		{
-			myPiece = piece;
-		}
-		
-		public Piece getPiece()
-		{
-			return myPiece;
-		}
-		
-		@Override
-		public int hashCode()
-		{
-			return myPiece.getValue();
-		}
-		
-		@Override
-		public boolean equals(Object o)
-		{
-			return myPiece.getValue() == myPiece.getClass().cast(o).getValue();
-		}
-		
-		@Override
-		public int compareTo(PieceValue o)
-		{
-			return myPiece.getValue() - o.getPiece().getValue();
-		}
-		
-	}
+	/**
+	 * The board that this piece is placed on
+	 */
+	private ChessBoard myBoard;
+	
 	
 	/**
 	 * 
 	 * @param startingPosition where this piece should be placed
 	 * @param affinity true if this piece belongs to the black player false otherwise
 	 */
-	public Piece(Position startingPosition, boolean affinity)
+	public Piece(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
 	{
 		myMoveMap = Maps.newHashMap();
 		myListeners = Sets.newHashSet();
@@ -121,7 +83,13 @@ public abstract class Piece
 		
 		myCurrentPosition = startingPosition;
 		myAffinity = affinity;
+		myBoard = boardPieceIsToBePlacedOn;
 		addPossibleMoves();
+	}
+	
+	public ChessBoard getBoard()
+	{
+		return myBoard;
 	}
 	
 	public void addPieceThatTakesMeOver(Piece p)
@@ -196,8 +164,15 @@ public abstract class Piece
 		persistanceData |= getPersistanceIdentifier();
 		return persistanceData;
 	}
-	
-	public static Piece getPieceFromPersistanceData(short persistanceData) throws InvalidPosition
+	/**
+	 * 
+	 * @param persistanceData the bits to read piece information from
+	 * <br>From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
+	 * @param board the board the piece is going to be placed on
+	 * @return a newly constructed piece
+	 * @throws InvalidPosition
+	 */
+	public static Piece getPieceFromPersistanceData(short persistanceData, ChessBoard board) throws InvalidPosition
 	{
 		Piece piece = null;
 		//From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
@@ -212,25 +187,25 @@ public abstract class Piece
 		switch(type)
 		{
 			case BISHOP:
-				piece = new Bishop(position, affinity);
+				piece = new Bishop(position, affinity, board);
 				break;
 			case QUEEN:
-				piece = new Queen(position, affinity);
+				piece = new Queen(position, affinity, board);
 				break;
 			case ROCK:
-				piece = new Rock(position, affinity);
+				piece = new Rock(position, affinity, board);
 				break;
 			case KING:
-				piece = new King(position, affinity);
+				piece = new King(position, affinity, board);
 				break;
 			case KNIGHT:
-				piece = new Knight(position, affinity);
+				piece = new Knight(position, affinity, board);
 				break;
 			case PAWN:
 				if(affinity == BLACK)
-					piece = new BlackPawn(position);
+					piece = new BlackPawn(position, board);
 				else
-					piece = new WhitePawn(position);
+					piece = new WhitePawn(position, board);
 				break;
 		}
 		
@@ -306,7 +281,7 @@ public abstract class Piece
 
 	public ImmutableList<Move> getAvailableMoves(boolean sort, ChessBoard board) 
 	{
-		List<Move> availableMoves = new ArrayList<Move>();
+		List<Move> availableMoves = Lists.newArrayList();
 		ArrayList<Move> possibleMoves = getPossibleMoves();
 		
 		for(Move m : possibleMoves)
@@ -338,7 +313,7 @@ public abstract class Piece
 
 	public List<Move> getNonAvailableMoves(ChessBoard board) 
 	{
-		List<Move> nonAvailableMoves = new ArrayList<Move>();
+		List<Move> nonAvailableMoves = Lists.newArrayList();
 		ArrayList<Move> possibleMoves = getPossibleMoves();
 		
 		for(Move m : possibleMoves)

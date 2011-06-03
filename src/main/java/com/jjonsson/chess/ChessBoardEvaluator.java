@@ -1,10 +1,10 @@
 package com.jjonsson.chess;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.King;
@@ -54,7 +54,7 @@ public class ChessBoardEvaluator
 		if(movesThreateningKing.size() > 0)
 		{
 			List<Move> kingMoves = currentKing.getAvailableMoves(false, board);
-			Set<Move> movesStoppingCheck = new HashSet<Move>();
+			Set<Move> movesStoppingCheck = Sets.newHashSet();
 			int stoppableMoves = 0;
 			for(Move threateningMove : movesThreateningKing)
 			{

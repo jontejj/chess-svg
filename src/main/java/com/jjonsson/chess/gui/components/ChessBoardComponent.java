@@ -10,7 +10,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -20,6 +19,7 @@ import javax.swing.JComponent;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessBoardEvaluator;
 import com.jjonsson.chess.ChessMoveEvaluator;
@@ -57,7 +57,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		super();
 		myWindow = window;
 		myPositionScores = ImmutableMap.of();
-		pieces = new HashSet<ChessPieceComponent>();
+		pieces = Sets.newHashSet();
 		setCurrentPieceSize();
 		setSize(myWindow.getBoardComponentSize());
 		addMouseListener(this);
@@ -383,6 +383,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void loadingOfBoardDone()
 	{
+		nextPlayer();
 		repaint();
 		myWindow.updateStatusBar();
 	}

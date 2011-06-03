@@ -1,6 +1,5 @@
 package com.jjonsson.chess.moves;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -184,7 +183,7 @@ public abstract class DependantMove extends Move
 				if(move.canBeMade(board))
 				{
 					if(dependantMoves == null)
-						dependantMoves = new ArrayList<Move>();
+						dependantMoves = Lists.newArrayList();
 					
 					dependantMoves.add(move);
 				}
@@ -209,7 +208,7 @@ public abstract class DependantMove extends Move
 			return Collections.emptyList();
 		}
 		
-		List<Move> dependantMoves = new ArrayList<Move>();
+		List<Move> dependantMoves = Lists.newArrayList();
 		while(move != null)
 		{
 			if(!move.canBeMade(board))

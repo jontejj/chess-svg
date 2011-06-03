@@ -1,9 +1,6 @@
 package com.jjonsson.chess.moves;
 
-import java.util.SortedSet;
-
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Ordering;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
@@ -81,6 +78,7 @@ public abstract class Move
 	{
 		if(p != myPieceAtDestination)
 		{
+			//Clear old
 			if(myPieceAtDestination != null)
 			{
 				if(!myPieceAtDestination.hasSameAffinityAs(myPiece))
@@ -92,6 +90,7 @@ public abstract class Move
 					board.decreaseProtectedPiecesCounter(getAffinity(), myPieceAtDestination.getValue() / 100);
 				}
 			}
+			//Update new
 			if(p != null)
 			{
 				if(!p.hasSameAffinityAs(myPiece))

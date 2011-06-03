@@ -9,6 +9,7 @@ import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.w3c.dom.svg.SVGDocument;
 
+import com.google.common.collect.Maps;
 import com.jjonsson.chess.pieces.Piece;
 
 public class PieceImageCache
@@ -16,7 +17,7 @@ public class PieceImageCache
 
 	private static SAXSVGDocumentFactory svgFactory = new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());
 	
-	private static HashMap<String, SVGDocument> pieceCache = new HashMap<String, SVGDocument>();
+	private static HashMap<String, SVGDocument> pieceCache = Maps.newHashMap();
 	public static SVGDocument getSVGForPiece(Piece p)
 	{
 		SVGDocument cachedDocument = pieceCache.get(p.getIdentifier());

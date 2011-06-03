@@ -7,9 +7,9 @@ import com.jjonsson.chess.moves.Position;
 public class Bishop extends Piece
 {
 
-	public Bishop(Position startingPosition, boolean affinity)
+	public Bishop(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
 	{
-		super(startingPosition, affinity);
+		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
 
 	@Override

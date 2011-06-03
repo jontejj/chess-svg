@@ -7,9 +7,9 @@ import com.jjonsson.chess.moves.Position;
 public class Rock extends Piece
 {
 
-	public Rock(Position startingPosition, boolean affinity)
+	public Rock(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
 	{
-		super(startingPosition, affinity);
+		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
 
 	@Override

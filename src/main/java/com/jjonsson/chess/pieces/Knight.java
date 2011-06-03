@@ -1,5 +1,6 @@
 package com.jjonsson.chess.pieces;
 
+import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.KnightMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
@@ -7,9 +8,9 @@ import com.jjonsson.chess.moves.Position;
 public class Knight extends Piece 
 {
 
-	public Knight(Position startingPosition, boolean affinity) 
+	public Knight(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn) 
 	{
-		super(startingPosition, affinity);
+		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
 
 	@Override

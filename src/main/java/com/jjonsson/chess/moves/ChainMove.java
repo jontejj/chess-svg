@@ -2,7 +2,6 @@ package com.jjonsson.chess.moves;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.DependantMove;
-import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
 
 public class ChainMove extends DependantMove

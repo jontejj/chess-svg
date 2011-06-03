@@ -1,5 +1,6 @@
 package com.jjonsson.chess.pieces;
 
+import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnOneStepMove;
@@ -10,9 +11,9 @@ import com.jjonsson.chess.moves.Position;
 public class WhitePawn extends Pawn
 {
 	private static final byte WHITE_PAWN_STARTING_ROW = 1;
-	public WhitePawn(Position startingPosition)
+	public WhitePawn(Position startingPosition, ChessBoard boardPieceIsToBePlacedOn)
 	{
-		super(startingPosition, Piece.WHITE);
+		super(startingPosition, Piece.WHITE, boardPieceIsToBePlacedOn);
 	}
 
 	@Override

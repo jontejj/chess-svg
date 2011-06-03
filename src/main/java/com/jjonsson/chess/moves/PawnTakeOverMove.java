@@ -30,4 +30,18 @@ public class PawnTakeOverMove extends PawnMove
 			return true;
 		}
 	}
+	
+	/**
+	 * Overridden to prioritize moves that takes pawns further
+	 * @return the value of the piece at this move's destination
+	 */
+	@Override
+	public int getTakeOverValue()
+	{
+		if(isTakeOverMove())
+		{
+			return getPieceAtDestination().getValue() + 10;
+		}
+		return 0;
+	}
 }

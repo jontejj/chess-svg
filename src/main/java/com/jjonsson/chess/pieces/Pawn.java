@@ -1,9 +1,6 @@
 package com.jjonsson.chess.pieces;
 
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.moves.DependantMove;
-import com.jjonsson.chess.moves.Move;
-import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTwoStepMove;
 import com.jjonsson.chess.moves.Position;
@@ -14,9 +11,9 @@ public abstract class Pawn extends Piece
 	private PawnTwoStepMove myTwoStepMove;
 	private PawnOneStepMove myOneStepMove;
 	
-	public Pawn(Position startingPosition, boolean affinity)
+	public Pawn(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
 	{
-		super(startingPosition, affinity);
+		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
 
 	public void setOneStepMove(PawnOneStepMove oneStepMove)

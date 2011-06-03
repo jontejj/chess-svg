@@ -1,5 +1,6 @@
 package com.jjonsson.chess.pieces;
 
+import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Position;
 
@@ -11,9 +12,9 @@ public class King extends Piece
 	 * @param startingPosition where this king should be placed
 	 * @param affinity true if this piece belongs to the black player false otherwise
 	 */
-	public King(Position startingPosition, boolean affinity)
+	public King(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
 	{
-		super(startingPosition, affinity);
+		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
 
 	@Override

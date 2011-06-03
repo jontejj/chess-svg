@@ -5,21 +5,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
@@ -27,13 +26,9 @@ import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;
-import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
 import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.moves.ordering.MoveOrdering;
-import com.jjonsson.chess.moves.ordering.TakeOverValueOrdering;
-import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.MoveLogger;
 import com.jjonsson.chess.pieces.Bishop;
 import com.jjonsson.chess.pieces.BlackPawn;
@@ -106,16 +101,16 @@ public class ChessBoard implements Cloneable
 	{
 		myOriginatingBoard = this;
 		myAllowsMoves = true;
-		myMovesThatStopsKingFromBeingChecked = Collections.emptySet();
-		myBoardListeners = new HashSet<ChessBoardListener>();
+		myMovesThatStopsKingFromBeingChecked = ImmutableSet.of();
+		myBoardListeners = Sets.newHashSet();
 		myMoveLogger = new MoveLogger();
 		addChessBoardListener(myMoveLogger);
 		
-		myBlackPieces = new HashMap<Position, Piece>();
+		myBlackPieces = Maps.newHashMap();
 		myBlackAvailableMoves = HashMultimap.create();
 		myBlackNonAvailableMoves = HashMultimap.create();
 		
-		myWhitePieces = new HashMap<Position, Piece>();
+		myWhitePieces = Maps.newHashMap();
 		myWhiteAvailableMoves = HashMultimap.create();
 		myWhiteNonAvailableMoves = HashMultimap.create();
 		if(placeInitialPieces)
@@ -350,20 +345,20 @@ public class ChessBoard implements Cloneable
 			 * ******************************/
 			for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
 			{
-				addPiece(new WhitePawn(Position.createPosition(2, column)), false, true);
+				addPiece(new WhitePawn(Position.createPosition(2, column), this), false, true);
 			}
 			
-			addPiece(new Knight(Position.createPosition(1, Position.B), Piece.WHITE), false, true);
-			addPiece(new Knight(Position.createPosition(1, Position.G), Piece.WHITE), false, true);
+			addPiece(new Knight(Position.createPosition(1, Position.B), Piece.WHITE, this), false, true);
+			addPiece(new Knight(Position.createPosition(1, Position.G), Piece.WHITE, this), false, true);
 			
-			addPiece(new Rock(Position.createPosition(1, Position.A), Piece.WHITE), false, true);
-			addPiece(new Rock(Position.createPosition(1, Position.H), Piece.WHITE), false, true);
+			addPiece(new Rock(Position.createPosition(1, Position.A), Piece.WHITE, this), false, true);
+			addPiece(new Rock(Position.createPosition(1, Position.H), Piece.WHITE, this), false, true);
 			
-			addPiece(new Queen(Position.createPosition(1, Position.D), Piece.WHITE), false, true);
-			addPiece(new Bishop(Position.createPosition(1, Position.C), Piece.WHITE), false, true);
-			addPiece(new Bishop(Position.createPosition(1, Position.F), Piece.WHITE), false, true);
+			addPiece(new Queen(Position.createPosition(1, Position.D), Piece.WHITE, this), false, true);
+			addPiece(new Bishop(Position.createPosition(1, Position.C), Piece.WHITE, this), false, true);
+			addPiece(new Bishop(Position.createPosition(1, Position.F), Piece.WHITE, this), false, true);
 			
-			addPiece(new King(Position.createPosition(1, Position.E), Piece.WHITE), false, true);
+			addPiece(new King(Position.createPosition(1, Position.E), Piece.WHITE, this), false, true);
 		}
 		catch(InvalidPosition ip)
 		{
@@ -380,20 +375,20 @@ public class ChessBoard implements Cloneable
 		{
 			for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
 			{
-				addPiece(new BlackPawn(Position.createPosition(7, column)), false, true);
+				addPiece(new BlackPawn(Position.createPosition(7, column), this), false, true);
 			}
 			
-			addPiece(new Knight(Position.createPosition(8, Position.B), Piece.BLACK), false, true);
-			addPiece(new Knight(Position.createPosition(8, Position.G), Piece.BLACK), false, true);
+			addPiece(new Knight(Position.createPosition(8, Position.B), Piece.BLACK, this), false, true);
+			addPiece(new Knight(Position.createPosition(8, Position.G), Piece.BLACK, this), false, true);
 			
-			addPiece(new Rock(Position.createPosition(8, Position.A), Piece.BLACK), false, true);
-			addPiece(new Rock(Position.createPosition(8, Position.H), Piece.BLACK), false, true);
+			addPiece(new Rock(Position.createPosition(8, Position.A), Piece.BLACK, this), false, true);
+			addPiece(new Rock(Position.createPosition(8, Position.H), Piece.BLACK, this), false, true);
 			
-			addPiece(new Queen(Position.createPosition(8, Position.D), Piece.BLACK), false, true);
-			addPiece(new Bishop(Position.createPosition(8, Position.C), Piece.BLACK), false, true);
-			addPiece(new Bishop(Position.createPosition(8, Position.F), Piece.BLACK), false, true);
+			addPiece(new Queen(Position.createPosition(8, Position.D), Piece.BLACK, this), false, true);
+			addPiece(new Bishop(Position.createPosition(8, Position.C), Piece.BLACK, this), false, true);
+			addPiece(new Bishop(Position.createPosition(8, Position.F), Piece.BLACK, this), false, true);
 			
-			addPiece(new King(Position.createPosition(8, Position.E), Piece.BLACK), false, true);
+			addPiece(new King(Position.createPosition(8, Position.E), Piece.BLACK, this), false, true);
 		}
 		catch(InvalidPosition ip)
 		{
@@ -440,7 +435,7 @@ public class ChessBoard implements Cloneable
 		if(newPiece == null)
 		{
 			//Replace him with a Queen
-			newPiece = new Queen(pawn.getCurrentPosition(), pawn.getAffinity());
+			newPiece = new Queen(pawn.getCurrentPosition(), pawn.getAffinity(), this);
 		}
 		addPiece(newPiece, true, false);
 		
@@ -636,6 +631,48 @@ public class ChessBoard implements Cloneable
 	}
 	
 	/**
+	 * This method checks for a how many moves that could reach the given position by the other player in one move and take over a piece standing there
+	 * @param position the position to check
+	 * @param affinity the affinity of the threatening player
+	 * @return a move if the player with the given affinity could move into position in one move, otherwise null
+	 */
+	public int getNumberOfMovesThreateningPosition(Position position, boolean affinity, Piece pieceThatWonders)
+	{
+		int numberOfMoves = 0;
+		ImmutableSet<Move> moves = getAvailableMoves(position, affinity);
+		
+		//Pieces may be able to move into this position if a piece moves there so 
+		//we check all pieces that has a currently non possible move that leads to this position
+		ImmutableSet<Move> possibleTakeOverMoves = getNonAvailableMoves(position, affinity);
+		
+		if(possibleTakeOverMoves != null)
+		{
+			for(Move m : possibleTakeOverMoves)
+			{
+				if(m instanceof PawnTakeOverMove)
+				{
+					numberOfMoves++;
+				}
+				else if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
+					numberOfMoves++;
+			}
+		}
+		
+		Iterator<Move> iterator = moves.iterator();
+		while(iterator.hasNext())
+		{
+			Move threateningMove = iterator.next();
+			//A pawn move can't be made if there is something standing in this square and thus is it not threatening this square
+			if(!(threateningMove instanceof PawnMove))
+			{
+				numberOfMoves++;
+			}
+		}
+		
+		return numberOfMoves;
+	}
+	
+	/**
 	 * 
 	 * @param position the threatened position
 	 * @param affinity the affinity of the player that should threaten the position
@@ -661,7 +698,7 @@ public class ChessBoard implements Cloneable
 	
 	public List<Piece> getPieces()
 	{
-		List<Piece> list = new ArrayList<Piece>();
+		List<Piece> list = Lists.newArrayList();
 		list.addAll(myBlackPieces.values());
 		list.addAll(myWhitePieces.values());
 		return list;
@@ -756,8 +793,9 @@ public class ChessBoard implements Cloneable
 			readBytes = stream.read(piece);
 			if(readBytes == 2)
 			{
-				Piece p = Piece.getPieceFromPersistanceData((short)(piece[0] << 8 | piece[1]));
-				if(p != null)
+				Piece p = Piece.getPieceFromPersistanceData((short)(piece[0] << 8 | piece[1]), this);
+				//Don't place a piece where one is already placed
+				if(p != null && this.getPiece(p.getCurrentPosition()) == null)
 					addPiece(p, false, true);
 			}
 		}

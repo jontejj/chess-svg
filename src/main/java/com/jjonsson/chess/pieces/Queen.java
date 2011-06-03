@@ -7,9 +7,9 @@ import com.jjonsson.chess.moves.Position;
 public class Queen extends Piece
 {
 
-	public Queen(Position startingPosition, boolean affinity)
+	public Queen(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
 	{
-		super(startingPosition, affinity);
+		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
 
 	@Override

@@ -7,7 +7,6 @@ import java.util.NoSuchElementException;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
@@ -60,10 +59,10 @@ public class ChessMoveEvaluator
 		{
 			SearchResult result = deepSearch(copyOfBoard, new SearchLimiter());
 			System.out.println("Best move: " + result.bestMove);
+			System.out.println("Best move value: " + result.bestMoveValue);
 			Piece chosenPiece = board.getPiece(result.bestMove.getCurrentPosition());
-			//Hack to revert some weird side effect
-			result.bestMove.updateDestination(copyOfBoard);
 			Move actualMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getPositionIfPerformed(), board);
+			
 			chosenPiece.performMove(actualMove, board);
 		}
 		catch(Throwable e)
@@ -74,7 +73,7 @@ public class ChessMoveEvaluator
 			//In the worst case scenario we make a random move if possible
 			board.performRandomMove();
 		}
-		System.out.println("Reached " + deepestSearch + " steps ahead on the best path");
+		System.out.println("Reached " + deepestSearch + " steps ahead on the deepest path");
 	}
 	
 	/**
@@ -162,10 +161,6 @@ public class ChessMoveEvaluator
 					limiter.depth++;
 					movesLeftToEvaluateOnThisBranch--;
 				}
-				else if(limiter.movesLeft <= 0)
-				{
-					System.out.println("Reached moves limit");
-				}
 				if(board.undoMove(move, false))
 				{
 					//Only return the move if it was undoable because otherwise it means that it was a bad/invalid move
@@ -193,16 +188,11 @@ public class ChessMoveEvaluator
 				}
 			}
 		}
-		if(result.bestMoveValue == Long.MIN_VALUE)
-		{
-			System.out.println("Something weird");
-		}
 		//Inverses the factor making it possible to evaluate a good move for the other player
 		result.bestMoveValue *= limiter.scoreFactor;
 		
 		if(limiter.depth == SearchLimiter.MAX_DEPTH)
 		{
-			System.out.println("Best move value: " + result.bestMoveValue);
 			board.getOriginatingBoard().newMoveEvaluationHasBeenDone(ImmutableMap.copyOf(positionScores));
 		}
 		
@@ -216,7 +206,7 @@ public class ChessMoveEvaluator
 	 * @return the estimated value of the move performed 
 	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
-	public static long performMoveWithMeasurements(Move move, ChessBoard board, boolean undoMoveAfterMeasurement)
+	private static long performMoveWithMeasurements(Move move, ChessBoard board, boolean undoMoveAfterMeasurement)
 	{
 		//Save some measurements for the before state
 		int takeOverValue = move.getTakeOverValue();

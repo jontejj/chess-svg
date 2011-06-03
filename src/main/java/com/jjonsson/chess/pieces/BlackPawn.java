@@ -1,5 +1,6 @@
 package com.jjonsson.chess.pieces;
 
+import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
@@ -12,9 +13,9 @@ public class BlackPawn extends Pawn
 
 	private static final byte	BLACK_PAWN_STARTING_ROW	= 6;
 
-	public BlackPawn(Position startingPosition)
+	public BlackPawn(Position startingPosition, ChessBoard boardPieceIsToBePlacedOn)
 	{
-		super(startingPosition, Piece.BLACK);
+		super(startingPosition, Piece.BLACK, boardPieceIsToBePlacedOn);
 	}
 
 	@Override
