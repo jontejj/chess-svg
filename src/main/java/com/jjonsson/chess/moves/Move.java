@@ -27,7 +27,7 @@ public abstract class Move
 	/**
 	 * The piece that would be defeated if this move was performed
 	 */
-	private Piece myPieceAtDestination;
+	protected Piece myPieceAtDestination;
 	
 	/**
 	 * The cached position of this move's destination 

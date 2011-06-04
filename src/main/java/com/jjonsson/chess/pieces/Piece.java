@@ -421,7 +421,7 @@ public abstract class Piece
 	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
 	public void performMove(Move move, ChessBoard board, boolean printOut) throws UnavailableMoveException
-	{
+	{		
 		if(printOut)
 			System.out.println("Performing: " + move);
 		

@@ -19,6 +19,7 @@ public class CrossPlatformUtilities
 	public static final int	LOAD		= 4;
 	public static final int	UNDO		= 5;
 	public static final int	UNDO_TWICE	= 6;
+	public static final int SHOW_HINT	= 7;
 	
 	static
 	{
@@ -100,6 +101,9 @@ public class CrossPlatformUtilities
 				keyCode = KeyEvent.VK_Z;
 				keyModifiers |= java.awt.event.InputEvent.SHIFT_MASK;
 				break;
+			case SHOW_HINT:
+				keyCode = KeyEvent.VK_I;
+				break;
 			case EXIT:
 				if(isMac)
 					keyCode = KeyEvent.VK_Q;
@@ -144,6 +148,10 @@ public class CrossPlatformUtilities
 					action = LOAD;
 					break;
 					
+				case KeyEvent.VK_I:
+					action = SHOW_HINT;
+					break;
+					
 				case KeyEvent.VK_Z:
 					if(event.isShiftDown())
 						action = UNDO;
@@ -165,5 +173,10 @@ public class CrossPlatformUtilities
 			action = EXIT;
 		
 		return action;
+	}
+
+	public static KeyStroke getShowHintKeyStroke()
+	{
+		return getKeyStrokeForAction(SHOW_HINT);
 	}
 }

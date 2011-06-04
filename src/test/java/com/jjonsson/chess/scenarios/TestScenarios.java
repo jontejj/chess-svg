@@ -1,5 +1,7 @@
 package com.jjonsson.chess.scenarios;
 
+import static junit.framework.Assert.assertNull;
+
 import org.junit.Test;
 
 import junit.framework.Assert;
@@ -165,5 +167,21 @@ public class TestScenarios
 		}
 		else
 			Assert.fail("Piece under test should be a king was: " + p);
+	}
+	
+	@Test
+	public void testPawnTwoStepMoveShouldNotBeAbleToPassThroughAPiece() throws InvalidPosition, UnavailableMoveException
+	{
+		ChessBoard board = loadBoard("pawn_two_step_move_should_not_be_able_to_pass_by_king_and_protect_him");		
+		Queen q = Queen.class.cast(board.getPiece(Position.createPosition(6, Position.D)));
+
+		Move checkMove = q.getAvailableMoveForPosition(Position.createPosition(5, Position.E), board);
+		q.performMove(checkMove, board);
+		
+		WhitePawn wp = WhitePawn.class.cast(board.getPiece(Position.createPosition(2, Position.E)));
+
+		Move unavailableMove = wp.getAvailableMoveForPosition(Position.createPosition(4, Position.E), board);
+		
+		assertNull("PawnTwoStepMove should not be able to pass through a piece", unavailableMove);
 	}
 }

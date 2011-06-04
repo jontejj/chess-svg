@@ -51,19 +51,41 @@ public class ChessMoveEvaluator
 		public long bestMoveValue = Long.MIN_VALUE;
 	}
 	
-	public static void performBestMove(ChessBoard board) throws NoMovesAvailableException, UnavailableMoveException
+	/**
+	 * Performs a focused search (not all moves are evaluated) and tries to return the best move available
+	 * @param board
+	 * @return the best move for the current player on the given board
+	 */
+	public static Move getBestMove(ChessBoard board)
 	{
+		Move bestMove = null;
 		deepestSearch = 0;
 		ChessBoard copyOfBoard = board.clone();
 		try
 		{
-			SearchResult result = deepSearch(copyOfBoard, new SearchLimiter());
+			SearchLimiter limiter = new SearchLimiter();
+			SearchResult result = deepSearch(copyOfBoard, limiter);
 			System.out.println("Best move: " + result.bestMove);
 			System.out.println("Best move value: " + result.bestMoveValue);
 			Piece chosenPiece = board.getPiece(result.bestMove.getCurrentPosition());
-			Move actualMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getPositionIfPerformed(), board);
-			
-			chosenPiece.performMove(actualMove, board);
+			bestMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getPositionIfPerformed(), board);
+			System.out.println("Reached " + deepestSearch + " steps ahead on the deepest path");
+		}
+		catch(Throwable e)
+		{
+			//TODO: This shouldn't happen unless it's the end of the game
+			e.printStackTrace();
+		}
+		
+		return bestMove;
+	}
+	
+	public static void performBestMove(ChessBoard board) throws NoMovesAvailableException, UnavailableMoveException
+	{
+		try
+		{
+			Move bestMove = getBestMove(board);
+			bestMove.getPiece().performMove(bestMove, board);
 		}
 		catch(Throwable e)
 		{
@@ -73,7 +95,6 @@ public class ChessMoveEvaluator
 			//In the worst case scenario we make a random move if possible
 			board.performRandomMove();
 		}
-		System.out.println("Reached " + deepestSearch + " steps ahead on the deepest path");
 	}
 	
 	/**
@@ -109,7 +130,7 @@ public class ChessMoveEvaluator
 			Iterator<Move> sortedMoves = MoveOrdering.instance.greatestOf(moves, moves.size()).iterator();
 			
 			//The deeper we go, the less we branch, this assumes that a reasonable ordering of the moves has been made already
-			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.depth * 8, 0) + 1;
+			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.depth * 8, 0) + 2;
 			
 			while(sortedMoves.hasNext() && movesLeftToEvaluateOnThisBranch > 0)
 			{
@@ -132,7 +153,7 @@ public class ChessMoveEvaluator
 					/*if(!takeOverMove)
 						//Regular depth decrementing
 						limiter.depth--;
-					else if(limiter.scoreFactor == 1)
+					else if(limiter.scoreFactor == -1)
 						//If the opponent takes over a piece we punish that path and searches less deep there
 						limiter.depth -= 2;
 					else
@@ -143,6 +164,9 @@ public class ChessMoveEvaluator
 					limiter.movesLeft--;
 					limiter.scoreFactor *= -1;
 					long deepValue = deepSearch(board, limiter).bestMoveValue;
+					limiter.scoreFactor *= -1;
+					
+					deepValue *= limiter.scoreFactor;
 					
 					//Underflow protection
 					if(deepValue == Long.MIN_VALUE)
@@ -158,6 +182,7 @@ public class ChessMoveEvaluator
 						limiter.depth += 2;
 					else
 						limiter.depth--;*/
+					
 					limiter.depth++;
 					movesLeftToEvaluateOnThisBranch--;
 				}
@@ -175,12 +200,12 @@ public class ChessMoveEvaluator
 						if(move.getPositionIfPerformed() != null)
 						{
 							Long curVal = positionScoresValues.get(move.getPositionIfPerformed());
-							if(curVal == null || curVal.longValue() < moveValue * limiter.scoreFactor)
+							if(curVal == null || moveValue > curVal.longValue())
 							{
 								if(move.canBeMade(board))
 								{
-									positionScores.put(move.getPositionIfPerformed(), moveValue * limiter.scoreFactor + ":" + move.getCurrentPosition());
-									positionScoresValues.put(move.getPositionIfPerformed(), moveValue * limiter.scoreFactor);
+									positionScores.put(move.getPositionIfPerformed(), moveValue + ":" + move.getCurrentPosition());
+									positionScoresValues.put(move.getPositionIfPerformed(), moveValue);
 								}
 							}
 						}

@@ -20,7 +20,9 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.ChessGame;
+import com.jjonsson.chess.ChessMoveEvaluator;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
+import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.ChessFileFilter;
 import com.jjonsson.utilities.CrossPlatformUtilities;
@@ -45,6 +47,7 @@ public class ChessWindow extends JFrame implements ActionListener
 	private static final String EXIT_MENU_ITEM = "Exit";
 	private static final String UNDO_BLACK_MENU_ITEM = "Undo Last Move";
 	private static final String UNDO_WHITE_MENU_ITEM = "Undo Last Two Moves";
+	private static final String SHOW_HINT_MENU_ITEM = "Show Hint";
 	
 	private String lastFileChooserLocation;
 	
@@ -185,6 +188,13 @@ public class ChessWindow extends JFrame implements ActionListener
 	    undoWhite.addActionListener(this);
 	    actionsMenu.add(undoWhite);
 	    
+	    fileMenu.addSeparator();
+	    
+	    JMenuItem showHint = new JMenuItem(SHOW_HINT_MENU_ITEM);
+	    showHint.setAccelerator(CrossPlatformUtilities.getShowHintKeyStroke());
+	    showHint.addActionListener(this);
+	    actionsMenu.add(showHint);
+	    
 	    menuBar.add(fileMenu);
 	    menuBar.add(actionsMenu);
 	}
@@ -312,6 +322,10 @@ public class ChessWindow extends JFrame implements ActionListener
 		{
 			undo(2);
 		}
+		else if(e.getActionCommand().equals(SHOW_HINT_MENU_ITEM))
+		{
+			showHint();
+		}
 		else if(e.getActionCommand().equals(DISABLE_AI_MENU_ITEM))
 		{
 			switchAI(false);
@@ -326,6 +340,11 @@ public class ChessWindow extends JFrame implements ActionListener
 		{
 			exit();
 		}
+	}
+
+	private void showHint()
+	{
+		myComponent.showHint();
 	}
 
 	private File selectFile(String buttonText)

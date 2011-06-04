@@ -29,6 +29,7 @@ import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.ChessWindow;
+import com.jjonsson.chess.gui.Settings;
 import com.jjonsson.chess.gui.WindowUtilities;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
@@ -51,6 +52,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	private ImmutableMap<Position, String> myPositionScores;
 	
 	private boolean myAIdisabled;
+	
+	private Move myHintMove;
 	
 	public ChessBoardComponent(ChessWindow window)
 	{	
@@ -135,11 +138,22 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		  setBackground(Color.darkGray);
 		  drawGrid(g2d);
 		  markSquaresAsAvailable(g2d);
-		  drawPositionScores(g2d);
+		  
+		  if(Settings.DEBUG)
+		  {
+			  drawPositionScores(g2d);
+		  }
+		  
+		  if(myHintMove != null)
+		  {
+			  markSquare(myHintMove.getCurrentPosition(), Color.GREEN, g2d);
+			  markSquare(myHintMove.getPositionIfPerformed(), Color.ORANGE, g2d);
+		  }
 	}
 	
 	private void drawPositionScores(Graphics g)
 	{
+		g.setColor(Color.MAGENTA);
 		ImmutableSet<Entry<Position, String>> scores  = myPositionScores.entrySet();
 		for(Entry<?, ?> entry : scores)
 		{
@@ -173,6 +187,12 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			p.updateSize();
 			p.repaint();
 		}
+		repaint();
+	}
+	
+	public void showHint()
+	{
+		myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
 		repaint();
 	}
 	
@@ -393,6 +413,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void nextPlayer()
 	{
 		setSelectedPiece(null);
+		myHintMove = null;
+		myWindow.updateStatusBar();
 		if(!myAIdisabled && ChessBoardEvaluator.inPlay(getBoard()) && getBoard().allowsMoves())
 		{
 			if(getBoard().getCurrentPlayer() == Piece.BLACK)
@@ -448,7 +470,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void squareScores(ImmutableMap<Position, String> positionScores)
 	{
-		//myPositionScores = positionScores;
+		myPositionScores = positionScores;
 		repaint();
 	}
 }
