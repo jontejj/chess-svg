@@ -9,7 +9,7 @@ public class PawnTakeOverMove extends PawnMove
 	public PawnTakeOverMove(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith, DependantMove moveDependingOnMe, DependantMove moveThatIDependUpon)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith, moveDependingOnMe, moveThatIDependUpon);
-		//TODO: fix better constructor for this move (it's not dependent on any other move, but it shares functionality with PawnMove)
+		//TODO(jontejj): fix better constructor for this move (it's not dependent on any other move, but it shares functionality with PawnMove)
 	}
 
 	@Override

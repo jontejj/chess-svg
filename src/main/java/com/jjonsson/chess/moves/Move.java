@@ -12,6 +12,7 @@ public abstract class Move
 	public static final int LEFT = -1;
 	public static final int RIGHT = 1;
 	public static final int	NO_CHANGE = 0;
+	
 	/**
 	 * A positive change means that the piece is moving upwards the board
 	 */
@@ -84,10 +85,11 @@ public abstract class Move
 				if(!myPieceAtDestination.hasSameAffinityAs(myPiece))
 				{
 					myPieceAtDestination.removePieceThatTakesMeOver(myPiece);
+					board.decreaseTakeOverPiecesCounter(getAffinity(), myPieceAtDestination.getTakeOverImportanceValue());
 				}
 				else
 				{
-					board.decreaseProtectedPiecesCounter(getAffinity(), myPieceAtDestination.getValue() / 100);
+					board.decreaseProtectedPiecesCounter(getAffinity(), myPieceAtDestination.getProtectImportanceValue());
 				}
 			}
 			//Update new
@@ -96,10 +98,11 @@ public abstract class Move
 				if(!p.hasSameAffinityAs(myPiece))
 				{
 					p.addPieceThatTakesMeOver(myPiece);
+					board.increaseTakeOverPiecesCounter(getAffinity(), p.getTakeOverImportanceValue());
 				}
 				else
 				{
-					board.increaseProtectedPiecesCounter(getAffinity(), p.getValue() / 100);
+					board.increaseProtectedPiecesCounter(getAffinity(), p.getProtectImportanceValue());
 				}
 			}
 			myPieceAtDestination = p;
@@ -284,6 +287,7 @@ public abstract class Move
 		myIsRemoved = true;
 		chessBoard.removeAvailableMove(myDestination, myPiece, this);
 		chessBoard.removeNonAvailableMove(myDestination, myPiece, this);
+		setPieceAtDestination(null, chessBoard);
 	}
 	
 	public boolean isRemoved()
@@ -313,7 +317,7 @@ public abstract class Move
 		
 		if(myCanBeMadeCache)
 		{			
-			//TODO: could this be cached?
+			//TODO(jontejj): could this be cached?
 			return !isMoveUnavailableDueToCheckMate(board) && myCanBeMadeCache;
 			
 			//Checks if this piece is protecting the king from being taken

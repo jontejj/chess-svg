@@ -21,19 +21,9 @@ public abstract class Pawn extends Piece
 		myOneStepMove = oneStepMove;
 	}
 	
-	public PawnOneStepMove getOneStepMove()
-	{
-		return myOneStepMove;
-	}
-	
 	public void setTwoStepMove(PawnTwoStepMove move)
 	{
 		myTwoStepMove = move;
-	}
-	
-	public PawnTwoStepMove getTwoStepMove()
-	{
-		return myTwoStepMove;
 	}
 
 	@Override

@@ -230,7 +230,7 @@ public class ChessWindow extends JFrame implements ActionListener
 		File selectedFile = selectFile("Load Chess File");
 		if(myCurrentBoardFile != null)
 		{
-			//TODO: make a copy of the previous board, in case something goes wrong with the loading
+			//TODO(jontejj): make a copy of the previous board, in case something goes wrong with the loading
 			getBoard().clear();
 			myComponent.clear();
 			boolean loadOk = false;

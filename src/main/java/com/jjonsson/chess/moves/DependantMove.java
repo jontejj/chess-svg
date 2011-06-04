@@ -51,7 +51,7 @@ public abstract class DependantMove extends Move
 	@Override
 	public boolean isPieceBlockingMe()
 	{
-		//TODO: Could this be cached?
+		//TODO(jontejj): Could this be cached?
 		DependantMove move = this;
 		while(move != null)
 		{
@@ -247,9 +247,7 @@ public abstract class DependantMove extends Move
 	@Override
 	public void removeFromBoard(ChessBoard chessBoard)
 	{
-		myIsRemoved = true;
-		chessBoard.removeAvailableMove(myDestination, myPiece, this);
-		chessBoard.removeNonAvailableMove(myDestination, myPiece, this);
+		super.removeFromBoard(chessBoard);
 		if(myMoveDependingOnMe != null)
 		{
 			myMoveDependingOnMe.removeFromBoard(chessBoard);

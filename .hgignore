@@ -9,5 +9,6 @@ build/*
 .metadata/*
 .settings/*
 target/*/*.class
+target/*/*.*
 syntax: glob
 .DS_Store

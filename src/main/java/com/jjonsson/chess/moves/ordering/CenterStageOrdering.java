@@ -8,7 +8,8 @@ import com.jjonsson.chess.moves.Position;
 /**
  * Orders moves by how near the center of the board they are (Often considered a good heuristic in chess)
  * @author jonatanjoensson
- *
+ * @throws NullPointerException as moves without a destination aren't supposed to be compared with this 
+ * Ordering no handling of it is made either
  */
 public class CenterStageOrdering extends Ordering<Move>
 {
@@ -23,11 +24,7 @@ public class CenterStageOrdering extends Ordering<Move>
 	public int compare(Move left, Move right)
 	{
 		Position rightDestination = left.getPositionIfPerformed();
-		if(rightDestination == null)
-			return -1;
 		Position leftDestination = right.getPositionIfPerformed();
-		if(leftDestination == null)
-			return 1;
 		
 		return Math.abs(leftDestination.getRow() - center) - Math.abs(rightDestination.getRow() - center) +
 		(Math.abs(leftDestination.getColumn() - center) - Math.abs(rightDestination.getColumn() - center));

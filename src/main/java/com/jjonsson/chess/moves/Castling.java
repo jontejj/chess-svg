@@ -20,7 +20,7 @@ public class Castling extends IndependantMove
 	@Override
 	protected boolean canBeMadeInternal(ChessBoard board)
 	{
-		// TODO Auto-generated method stub
+		// TODO(jontejj): Implement move
 		return false;
 	}
 

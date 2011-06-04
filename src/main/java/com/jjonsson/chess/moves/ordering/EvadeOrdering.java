@@ -20,7 +20,7 @@ public class EvadeOrdering extends Ordering<Move>
 		Piece pieceThreateningRightPiece = right.getPiece().getCheapestPieceThatTakesMeOver();
 		if(pieceThreateningLeftPiece != null && pieceThreateningRightPiece != null)
 		{
-			//TODO: if this is expensive it needs to be cached in a better way, but how?
+			//TODO(jontejj): if this is expensive it needs to be cached in a better way, but how?
 			int movesThreateningLeftDestination = left.getPiece().getBoard().getNumberOfMovesThreateningPosition(left.getPositionIfPerformed(), !left.getAffinity(), left.getPiece());
 			int movesThreateningRightDestination = right.getPiece().getBoard().getNumberOfMovesThreateningPosition(right.getPositionIfPerformed(), !right.getAffinity(), right.getPiece());
 			

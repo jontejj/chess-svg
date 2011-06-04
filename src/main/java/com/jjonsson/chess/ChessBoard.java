@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.primitives.UnsignedBytes;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
@@ -92,6 +93,16 @@ public class ChessBoard implements Cloneable
 	 * Note: May be more than the number of white pieces due to pieces being protected by two different moves
 	 */
 	private long myWhiteProtectedPiecesCount;
+	
+	/**
+	 * This is a counter that keeps track of the accumulated (for the current state) take over value for all black moves
+	 */
+	private long myBlackTakeOverPiecesCount;
+	
+	/**
+	 * This is a counter that keeps track of the accumulated (for the current state) take over value for all white moves
+	 */
+	private long myWhiteTakeOverPiecesCount;
 
 	/**
 	 * Constructs the chess board 
@@ -273,7 +284,7 @@ public class ChessBoard implements Cloneable
 	public void nextPlayer()
 	{
 		myCurrentPlayer = !myCurrentPlayer;
-		//TODO: could this be cached?
+		//TODO(jontejj): could this be cached?
 		for(Move m : getKing(myCurrentPlayer).getPossibleMoves())
 		{
 			m.updateMove(this);
@@ -428,7 +439,7 @@ public class ChessBoard implements Cloneable
 			if(cbl.supportsPawnReplacementDialog())
 			{
 				newPiece = cbl.getPawnReplacementFromDialog();
-				//TODO: set position
+				//TODO(jontejj): set position
 				break;
 			}
 		}
@@ -525,6 +536,11 @@ public class ChessBoard implements Cloneable
 		return myWhitePieces.values();	
 	}
 	
+	/**
+	 * Note that this may contain false positives as the game may be in check.
+	 * @param affinity the affinity of the player's moves that should be returned
+	 * @return
+	 */
 	public HashMultimap<Position, Move> getAvailableMoves(boolean affinity)
 	{
 		if(affinity == Piece.WHITE)
@@ -534,7 +550,7 @@ public class ChessBoard implements Cloneable
 	}
 	
 	/**
-	 * 
+	 * Note that this may contain false positives as the game may be in check.
 	 * @param position the wanted position
 	 * @param affinity the affinity of the player that should be able to move into the position
 	 */
@@ -550,6 +566,7 @@ public class ChessBoard implements Cloneable
 	}
 	
 	/**
+	 * Note that this may return a false positive as the game may be in check.
 	 * @param position the wanted position
 	 * @param affinity the affinity of the player that should be able to move into the position
 	 * @return the first available move for the given position and the given affinity
@@ -754,6 +771,9 @@ public class ChessBoard implements Cloneable
 		}
 	}
 
+	/**
+	 * Removes all the pieces from the board
+	 */
 	public void clear()
 	{
 		myWhitePieces.clear();
@@ -969,6 +989,30 @@ public class ChessBoard implements Cloneable
 			return myBlackProtectedPiecesCount;
 		
 		return myWhiteProtectedPiecesCount;
+	}
+	
+	public void decreaseTakeOverPiecesCounter(boolean affinity, int decrementValue)
+	{
+		if(affinity == Piece.BLACK)
+			myBlackTakeOverPiecesCount -= decrementValue;
+		else
+			myWhiteTakeOverPiecesCount -= decrementValue;
+	}
+
+	public void increaseTakeOverPiecesCounter(boolean affinity, int incrementValue)
+	{
+		if(affinity == Piece.BLACK)
+			myBlackTakeOverPiecesCount += incrementValue;
+		else
+			myWhiteTakeOverPiecesCount += incrementValue;
+	}
+	
+	public long getTakeOverPiecesCount(boolean affinity)
+	{
+		if(affinity == Piece.BLACK)
+			return myBlackTakeOverPiecesCount;
+		
+		return myWhiteTakeOverPiecesCount;
 	}
 
 }

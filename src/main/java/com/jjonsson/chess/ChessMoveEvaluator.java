@@ -73,7 +73,7 @@ public class ChessMoveEvaluator
 		}
 		catch(Throwable e)
 		{
-			//TODO: This shouldn't happen unless it's the end of the game
+			//TODO(jontejj): This shouldn't happen unless it's the end of the game
 			e.printStackTrace();
 		}
 		
@@ -89,7 +89,7 @@ public class ChessMoveEvaluator
 		}
 		catch(Throwable e)
 		{
-			//TODO: This shouldn't happen
+			//TODO(jontejj): This shouldn't happen
 			e.printStackTrace();
 			
 			//In the worst case scenario we make a random move if possible
@@ -134,6 +134,8 @@ public class ChessMoveEvaluator
 			
 			while(sortedMoves.hasNext() && movesLeftToEvaluateOnThisBranch > 0)
 			{
+				//TODO(jontejj): how to search deeper when time allows us to
+				//TODO(jontejj): detect loops where the same moves are made over and over again
 				if(limiter.depth == SearchLimiter.MAX_DEPTH)
 				{
 					//For each main branch we reset the moves left
@@ -226,6 +228,10 @@ public class ChessMoveEvaluator
 	
 	/**
 	 * Performs the given move and returns a measurement of how good it was
+	 * <br>The measurements are: 
+	 * The differences in available moves and non available moves, 
+	 * how many pieces that are protected by other pieces,
+	 * how many pieces that can be taken over by the other player
 	 * @param move the move to perform (if it isn't available right now
 	 * @param undoMoveAfterMeasurement true if you only want the value of the move without it actually being performed
 	 * @return the estimated value of the move performed 
@@ -233,6 +239,7 @@ public class ChessMoveEvaluator
 	 */
 	private static long performMoveWithMeasurements(Move move, ChessBoard board, boolean undoMoveAfterMeasurement)
 	{
+		//TODO(jontejj): measure how far the pawns has reached (useful during the end game)
 		//Save some measurements for the before state
 		int takeOverValue = move.getTakeOverValue();
 		int otherPlayerNrOfAvailableMoves = board.getAvailableMoves(!board.getCurrentPlayer()).size();
@@ -243,14 +250,12 @@ public class ChessMoveEvaluator
 		long otherPlayerProtectiveMoves = board.getProtectedPiecesCount(!board.getCurrentPlayer());
 		long playerProtectiveMoves = board.getProtectedPiecesCount(board.getCurrentPlayer());
 		
-		boolean didMove = false;
+		long otherPlayerTakeOverCount = board.getTakeOverPiecesCount(!board.getCurrentPlayer());
+		long playerTakeOverCount = board.getTakeOverPiecesCount(board.getCurrentPlayer());
+
 		try
 		{
-			if(move.getPiece() != null)
-			{
-				move.getPiece().performMove(move, board, false);
-				didMove = true;
-			}
+			move.getPiece().performMove(move, board, false);
 		}
 		catch(UnavailableMoveException ume)
 		{
@@ -266,8 +271,12 @@ public class ChessMoveEvaluator
 		int otherPlayerNrOfNonAvailableMovesAfter = board.getNonAvailableMoves(board.getCurrentPlayer()).size();
 		int playerNrOfAvailableMovesAfter = board.getAvailableMoves(!board.getCurrentPlayer()).size();
 		int playerNrOfNonAvailableMovesAfter = board.getNonAvailableMoves(!board.getCurrentPlayer()).size();
+		
 		long otherPlayerProtectiveMovesAfter = board.getProtectedPiecesCount(board.getCurrentPlayer());
 		long playerProtectiveMovesAfter = board.getProtectedPiecesCount(!board.getCurrentPlayer());
+		
+		long otherPlayerTakeOverCountAfter = board.getTakeOverPiecesCount(board.getCurrentPlayer());
+		long playerTakeOverCountAfter = board.getTakeOverPiecesCount(!board.getCurrentPlayer());
 		
 		//The higher the value, the better the move
 		long moveValue = takeOverValue;
@@ -280,8 +289,11 @@ public class ChessMoveEvaluator
 		moveValue += (playerProtectiveMovesAfter - playerProtectiveMoves);
 		moveValue += (otherPlayerProtectiveMoves - otherPlayerProtectiveMovesAfter);
 		
-		if(undoMoveAfterMeasurement && didMove)
-			board.undoMoves(1, false);
+		moveValue += (playerTakeOverCountAfter - playerTakeOverCount);
+		moveValue += (otherPlayerTakeOverCount - otherPlayerTakeOverCountAfter);
+		
+		if(undoMoveAfterMeasurement)
+			board.undoMove(move, false);
 		
 		return moveValue;
 	}

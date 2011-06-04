@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 import java.util.NoSuchElementException;
 
 import org.junit.Test;
-
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
@@ -29,6 +28,13 @@ public class TestUndoMoves
 		assertTrue(pawnTwoStepMove.canBeMade(board));
 		
 		
+	}
+	
+	@Test
+	public void testUndoNotAvailable()
+	{
+		ChessBoard board = new ChessBoard(true);
+		assertEquals(0, board.undoMoves(1, false));
 	}
 	
 	@Test

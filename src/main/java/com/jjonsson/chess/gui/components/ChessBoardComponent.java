@@ -192,8 +192,17 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	public void showHint()
 	{
-		myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
-		repaint();
+		myWindow.setResultOfInteraction("Thinking of a hint");
+		new Thread()
+		{
+			@Override
+			public void run()
+			{
+				myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
+				myWindow.setResultOfInteraction("Hint: " + myHintMove);
+				repaint();
+			}
+		}.start();
 	}
 	
 	private void markSquaresAsAvailable(Graphics2D graphics)
@@ -272,7 +281,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		graphics.setFont(Font.decode("Helvetica-BOLD-16"));
 		Point point = getInnerBorderUpperLeftCornerPointForSquare(pos);
 		
-		graphics.drawString(text, point.x, point.y + 15);
+		graphics.drawString(text, point.x + getPieceBorderSize(), point.y + getPieceBorderSize()*4);
 	}
 	
 	private Point getInnerBorderUpperLeftCornerPointForSquare(Position pos)
@@ -353,29 +362,13 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		System.out.println("Seconds: " + bd.toPlainString());
 	}
 	@Override
-	public void mousePressed(MouseEvent e)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+	public void mousePressed(MouseEvent e){}
 	@Override
-	public void mouseReleased(MouseEvent e)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+	public void mouseReleased(MouseEvent e){}
 	@Override
-	public void mouseEntered(MouseEvent e)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+	public void mouseEntered(MouseEvent e){}
 	@Override
-	public void mouseExited(MouseEvent e)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+	public void mouseExited(MouseEvent e){}
 
 	@Override
 	public void piecePlaced(Piece p)
@@ -417,6 +410,15 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		myWindow.updateStatusBar();
 		if(!myAIdisabled && ChessBoardEvaluator.inPlay(getBoard()) && getBoard().allowsMoves())
 		{
+			/*try
+			{
+				Thread.sleep(3000);
+			}
+			catch (InterruptedException e1)
+			{
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}*/
 			if(getBoard().getCurrentPlayer() == Piece.BLACK)
 			{
 				myWindow.setResultOfInteraction("Thinking ...");
@@ -453,7 +455,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	}
 
 	/**
-	 *  TODO: popup a choice
+	 *  TODO(jontejj): popup a choice
 	 */
 	@Override
 	public Piece getPawnReplacementFromDialog() 

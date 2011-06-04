@@ -34,6 +34,16 @@ public abstract class Piece
 	public static final int KING_VALUE = 800;
 	public static final int QUEEN_VALUE = 800;
 	
+	/**
+	 * Defines how important is to have many take over alternatives
+	 */
+	protected static final double TAKE_OVER_ACCUMULATOR_IMPORTANCE_FACTOR = 0.1;
+	
+	/**
+	 * Defines how important it is to protect your own pieces
+	 */
+	protected static final double PROTECTIVE_MOVE_ACCUMULATOR_IMPORTANCE_FACTOR = 0.01;
+	
 	//Used to save/load a piece
 	protected static final byte BISHOP = 0;
 	protected static final byte PAWN = 1;
@@ -56,7 +66,7 @@ public abstract class Piece
 	 */
 	private ArrayList<Move> myPossibleMoves;
 	
-	//TODO: keep this map updated and use it in the getMoveForPosition functions
+	//TODO(jontejj): keep this map updated and use it in the getMoveForPosition functions
 	private HashMap<Position, Move> myMoveMap;
 	
 	private Set<Piece> myPiecesThatTakesMyPieceOver;
@@ -349,7 +359,7 @@ public abstract class Piece
 		
 		for(Move m : getAvailableMoves(false, board))
 		{
-			//TODO: faster iteration (ie a map)
+			//TODO(jontejj): faster iteration (ie a map)
 			if(m.getPositionIfPerformed().equals(pos))
 			{
 				return m;
@@ -390,6 +400,16 @@ public abstract class Piece
 	 * @return the value for this piece
 	 */
 	public abstract int getValue();
+	
+	public int getTakeOverImportanceValue()
+	{
+		return (int) (getValue() * TAKE_OVER_ACCUMULATOR_IMPORTANCE_FACTOR);
+	}
+	
+	public int getProtectImportanceValue()
+	{
+		return (int) (getValue() * PROTECTIVE_MOVE_ACCUMULATOR_IMPORTANCE_FACTOR);
+	}
 	
 	/**
 	 * 
@@ -438,7 +458,7 @@ public abstract class Piece
 	}
 	
 	/**
-	 * TODO: convert this into equals together with a code hashCode
+	 * TODO(jontejj): convert this into equals together with a code hashCode
 	 * @param p
 	 * @return if the given piece has the same location, affinity and type
 	 */
