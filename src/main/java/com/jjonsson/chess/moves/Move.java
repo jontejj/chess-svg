@@ -414,4 +414,27 @@ public abstract class Move
 			log += " (Took over: " + getRevertingMove().getPieceThatITookOver().getDisplayName() + ")";
 		return log;
 	}
+
+	/**
+	 * Returns the sum of getTakeOverImportanceValue for all the pieces that can take over the piece at my destination
+	 * @return
+	 */
+	public long getAccumulatedTakeOverValuesForPieceAtDestination()
+	{
+		if(isTakeOverMove())
+		{
+			return getPieceAtDestination().getAccumulatedTakeOverImportanceValue();
+		}
+		return 0;
+	}
+
+	/**
+	 * 
+	 * @return if this move was the last one to be made this will 
+	 * return the position where the piece previously was at, if it wasn't the returned position will be erroronous
+	 */
+	public Position getOldPosition()
+	{
+		return getRevertingMove().getPositionIfPerformed();
+	}
 }

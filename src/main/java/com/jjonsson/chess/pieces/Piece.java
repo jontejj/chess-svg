@@ -17,6 +17,7 @@ import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.moves.ordering.MoveOrdering;
 import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 
@@ -71,6 +72,8 @@ public abstract class Piece
 	
 	private Set<Piece> myPiecesThatTakesMyPieceOver;
 	private Piece myCheapestPieceThatTakesMeOver;
+	
+	private boolean myIsRemoved;
 	
 	/**
 	 * The board that this piece is placed on
@@ -411,6 +414,11 @@ public abstract class Piece
 		return (int) (getValue() * PROTECTIVE_MOVE_ACCUMULATOR_IMPORTANCE_FACTOR);
 	}
 	
+	public long getAccumulatedTakeOverImportanceValue()
+	{
+		return myPiecesThatTakesMyPieceOver.size() * getTakeOverImportanceValue();
+	}
+	
 	/**
 	 * 
 	 * @return true if this piece is black, false if it's white
@@ -452,7 +460,7 @@ public abstract class Piece
 		}
 		
 		//Update old position
-		board.updatePossibilityOfMovesForPosition(move.getRevertingMove().getPositionIfPerformed());
+		board.updatePossibilityOfMovesForPosition(move.getOldPosition());
 		//Update new position
 		board.updatePossibilityOfMovesForPosition(getCurrentPosition());
 		
@@ -515,6 +523,7 @@ public abstract class Piece
 	{	
 		board.removePiece(this);
 		this.removeMovesFromBoard(board);
+		myIsRemoved = true;
 	
 		Piece currentPieceAtMyPosition = board.getPiece(getCurrentPosition());
 		//This could happen if the previous piece was taken and there is a new piece that could be taken
@@ -532,6 +541,11 @@ public abstract class Piece
 					((MoveListener)listener).pieceRemoved(this);
 			}
 		}
+	}
+	
+	public boolean isRemoved()
+	{
+		return myIsRemoved;
 	}
 
 	public boolean isWhite()
@@ -552,11 +566,18 @@ public abstract class Piece
 	{
 	}
 
+	/**
+	 * This causes the piece to be able to move again but only if it was removed previously
+	 */
 	public void reEnablePossibleMoves()
 	{
-		for(Move m : myPossibleMoves)
+		if(isRemoved())
 		{
-			m.reEnable();
+			for(Move m : myPossibleMoves)
+			{
+				m.reEnable();
+			}
+			myIsRemoved = false;
 		}
 	}
 }

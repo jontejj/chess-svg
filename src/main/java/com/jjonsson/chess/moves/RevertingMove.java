@@ -98,6 +98,7 @@ public class RevertingMove extends IndependantMove {
 		Position curPos = myPiece.getCurrentPosition();
 		try
 		{
+			//TODO(jontejj): this could be cached
 			return Position.createPosition(curPos.getRow() + getRowChange() + 1, curPos.getColumn() + getColumnChange() + 1);
 		}
 		catch (InvalidPosition e)
@@ -137,6 +138,16 @@ public class RevertingMove extends IndependantMove {
 		}
 		else
 			throw new UnavailableMoveException(this);
+	}
+	
+	/**
+	 * 
+	 * @return if this move was the last one to be made this will return the position where the piece previously was at
+	 */
+	@Override
+	public Position getOldPosition()
+	{
+		return myMoveToRevert.getPositionIfPerformed();
 	}
 
 }

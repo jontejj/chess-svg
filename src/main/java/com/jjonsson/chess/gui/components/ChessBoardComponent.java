@@ -34,7 +34,6 @@ import com.jjonsson.chess.gui.WindowUtilities;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
-import com.jjonsson.chess.scenarios.TestScenarios;
 
 public class ChessBoardComponent extends JComponent implements MouseListener, ChessBoardListener
 {
@@ -138,7 +137,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		  g2d.setRenderingHints(WindowUtilities.getRenderingHints());
 		  setBackground(Color.darkGray);
 		  drawGrid(g2d);
-		  markSquaresAsAvailable(g2d);
+		  //markSquaresAsAvailable(g2d);
+		  markSelectedSquare(g2d);
 		  
 		  if(Settings.DEBUG)
 		  {
@@ -151,7 +151,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			  markSquare(myHintMove.getPositionIfPerformed(), Color.ORANGE, g2d);
 		  }
 	}
-	
+
 	private void drawPositionScores(Graphics g)
 	{
 		g.setColor(Color.MAGENTA);
@@ -218,23 +218,6 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				if(p.canMakeAMove(getBoard()))
 					markSquare(p.getCurrentPosition(),Color.MAGENTA, graphics);
 			}	
-			
-			if(myCurrentlySelectedPiece != null)
-			{
-				//Mark available moves for the selected piece
-				List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
-				for(Move m : moves)
-				{
-					try
-					{
-						markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
-					}
-					catch(NullPointerException npe)
-					{}
-				}
-				//Mark the selected piece
-				markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN, graphics);
-			}
 		}
 		/*
 		//Mark Square Testing
@@ -248,6 +231,31 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		markSquare(Position.createPosition(3, Position.B), Color.pink);
 		markSquare(Position.createPosition(3, Position.C), Color.WHITE);
 		*/
+	}
+	
+	
+	private void markSelectedSquare(Graphics2D graphics)
+	{
+		if(ChessBoardEvaluator.inPlay(getBoard()))
+		{
+			if(myCurrentlySelectedPiece != null)
+			{
+				//Mark available moves for the selected piece
+				/*List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
+				for(Move m : moves)
+				{
+					try
+					{
+						markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
+					}
+					catch(NullPointerException npe)
+					{}
+				}*/
+				
+				//Mark the selected piece
+				markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN, graphics);
+			}
+		}
 	}
 	
 	/**
@@ -429,10 +437,6 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 							ChessMoveEvaluator.performBestMove(getBoard());
 						}
 						catch (NoMovesAvailableException e)
-						{
-							e.printStackTrace();
-						}
-						catch (UnavailableMoveException e)
 						{
 							e.printStackTrace();
 						}

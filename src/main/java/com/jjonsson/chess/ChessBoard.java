@@ -296,7 +296,7 @@ public class ChessBoard implements Cloneable
 	/**
 	 * Performs a random move for the current player
 	 */
-	public void performRandomMove() throws NoMovesAvailableException, UnavailableMoveException
+	public void performRandomMove() throws NoMovesAvailableException
 	{
 		HashMultimap<Position, Move> availableMoves = getAvailableMoves(getCurrentPlayer());
 		
@@ -304,16 +304,23 @@ public class ChessBoard implements Cloneable
 		List<Move> shuffledMoves = Lists.newArrayList(availableMoves.values());
 		Collections.shuffle(shuffledMoves);
 		
-		for(Move randomMove : shuffledMoves)
+		try
 		{
-			Piece piece = randomMove.getPiece();
-			if(piece == null)
-				throw new NoMovesAvailableException();
-			if(randomMove.canBeMade(this))
+			for(Move randomMove : shuffledMoves)
 			{
-				piece.performMove(randomMove, this);
-				break;
+				Piece piece = randomMove.getPiece();
+				if(piece == null)
+					throw new NoMovesAvailableException();
+				if(randomMove.canBeMade(this))
+				{
+					piece.performMove(randomMove, this);
+					break;
+				}
 			}
+		}
+		catch(UnavailableMoveException ume)
+		{
+			throw new NoMovesAvailableException();
 		}
 	}
 	

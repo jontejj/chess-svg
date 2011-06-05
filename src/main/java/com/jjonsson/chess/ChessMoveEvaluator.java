@@ -80,7 +80,7 @@ public class ChessMoveEvaluator
 		return bestMove;
 	}
 	
-	public static void performBestMove(ChessBoard board) throws NoMovesAvailableException, UnavailableMoveException
+	public static void performBestMove(ChessBoard board) throws NoMovesAvailableException
 	{
 		try
 		{
@@ -242,6 +242,8 @@ public class ChessMoveEvaluator
 		//TODO(jontejj): measure how far the pawns has reached (useful during the end game)
 		//Save some measurements for the before state
 		int takeOverValue = move.getTakeOverValue();
+		long accumulatedTakeOverValue = move.getAccumulatedTakeOverValuesForPieceAtDestination();
+		
 		int otherPlayerNrOfAvailableMoves = board.getAvailableMoves(!board.getCurrentPlayer()).size();
 		int otherPlayerNrOfNonAvailableMoves = board.getNonAvailableMoves(!board.getCurrentPlayer()).size();
 		int playerNrOfAvailableMoves = board.getAvailableMoves(board.getCurrentPlayer()).size();
@@ -289,9 +291,9 @@ public class ChessMoveEvaluator
 		moveValue += (playerProtectiveMovesAfter - playerProtectiveMoves);
 		moveValue += (otherPlayerProtectiveMoves - otherPlayerProtectiveMovesAfter);
 		
-		moveValue += (playerTakeOverCountAfter - playerTakeOverCount);
+		moveValue += (playerTakeOverCountAfter - playerTakeOverCount + accumulatedTakeOverValue);
 		moveValue += (otherPlayerTakeOverCount - otherPlayerTakeOverCountAfter);
-		
+
 		if(undoMoveAfterMeasurement)
 			board.undoMove(move, false);
 		
