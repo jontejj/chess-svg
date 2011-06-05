@@ -1,6 +1,8 @@
 package com.jjonsson.chess;
 
 import com.jjonsson.chess.gui.ChessWindow;
+import com.jjonsson.chess.pieces.Piece;
+import com.jjonsson.chess.scenarios.TestScenarios;
 
 public class ChessGame 
 {

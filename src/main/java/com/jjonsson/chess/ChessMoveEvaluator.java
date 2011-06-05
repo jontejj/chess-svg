@@ -142,8 +142,8 @@ public class ChessMoveEvaluator
 					limiter.movesLeft = SearchLimiter.MAX_BRANCH_MOVES;
 				}
 				Move move = sortedMoves.next();
-				if(limiter.depth == SearchLimiter.MAX_DEPTH)
-					System.out.println("Testing: " + move);
+				//if(limiter.depth == SearchLimiter.MAX_DEPTH)
+				//	System.out.println("Testing: " + move);
 				
 				boolean takeOverMove = move.isTakeOverMove();
 				long moveValue = performMoveWithMeasurements(move, board, false);

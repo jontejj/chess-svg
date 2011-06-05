@@ -34,6 +34,7 @@ import com.jjonsson.chess.gui.WindowUtilities;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
+import com.jjonsson.chess.scenarios.TestScenarios;
 
 public class ChessBoardComponent extends JComponent implements MouseListener, ChessBoardListener
 {
@@ -141,7 +142,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		  
 		  if(Settings.DEBUG)
 		  {
-			  drawPositionScores(g2d);
+			  //drawPositionScores(g2d);
 		  }
 		  
 		  if(myHintMove != null)
@@ -312,11 +313,6 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void mouseClicked(MouseEvent e)
 	{
-		/*for(Move m : myCurrentlySelectedPiece.getPossibleMoves())
-		{
-			m.updateMove(getBoard());
-		}
-		getBoard().updateGameState();*/
 		long startNanos = System.nanoTime();
 		System.out.println("Board clicked");
 		Point p = e.getPoint();
@@ -445,6 +441,20 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 					}
 				}.start();
 			}
+			/*else
+			{
+				//just for fun
+				try
+				{
+					getBoard().performRandomMove();
+				}
+				catch (NoMovesAvailableException e)
+				{
+				}
+				catch (UnavailableMoveException e)
+				{
+				}
+			}*/
 		}
 	}
 

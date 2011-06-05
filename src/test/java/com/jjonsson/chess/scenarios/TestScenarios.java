@@ -45,7 +45,7 @@ public class TestScenarios
 			WhitePawn wp = (WhitePawn) p;
 			Move takeOverMove = wp.getAvailableMoveForPosition(Position.createPosition(3, Position.G), board);
 			Assert.assertNotNull(takeOverMove);
-			wp.performMove(takeOverMove, board);
+			wp.performMove(takeOverMove, board, false);
 			Move twoStepMove = wp.getAvailableMoveForPosition(Position.createPosition(5, Position.G), board);
 			if(twoStepMove != null)
 				Assert.assertTrue("Pawn should not able to make: " + twoStepMove, !twoStepMove.canBeMade(board));
@@ -72,7 +72,7 @@ public class TestScenarios
 			Assert.assertNotNull(stoppingMove);
 			ChessState currentState = board.getCurrentState();
 			Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + currentState, currentState == ChessState.PLAYING);
-			q.performMove(takeOverMove, board);
+			q.performMove(takeOverMove, board, false);
 			currentState = board.getCurrentState();
 			Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + currentState, currentState == ChessState.PLAYING);
 			Assert.assertTrue("When move has been made the current position for the move should have changed", !oldQueenPosition.equals(takeOverMove.getCurrentPosition()));
@@ -101,7 +101,7 @@ public class TestScenarios
 			Assert.assertNotNull(replacementMove);
 			
 			//Takes over the rock, replacing the pawn with a queen, checking the black king
-			pawn.performMove(replacementMove, board);
+			pawn.performMove(replacementMove, board, false);
 			
 			ChessState currentState = board.getCurrentState();
 			Assert.assertTrue("Game state should be " + ChessState.CHECK + ", was: " + currentState, currentState == ChessState.CHECK);
@@ -112,7 +112,7 @@ public class TestScenarios
 			Assert.assertNotNull(defendingMove);
 			
 			//Take over the queen
-			defendingKnight.performMove(defendingMove, board);
+			defendingKnight.performMove(defendingMove, board, false);
 			
 			currentState = board.getCurrentState();
 			Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + currentState, currentState == ChessState.PLAYING);
@@ -134,7 +134,7 @@ public class TestScenarios
 			Queen q = (Queen)p;
 			Move takeOverMove = q.getAvailableMoveForPosition(Position.createPosition(4, Position.E), board);
 			Assert.assertNotNull(takeOverMove);
-			q.performMove(takeOverMove, board);
+			q.performMove(takeOverMove, board, false);
 
 			ChessState currentState = board.getCurrentState();
 			Assert.assertTrue("Game state should be " + ChessState.CHECK + ", was: " + currentState, currentState == ChessState.CHECK);
@@ -176,12 +176,32 @@ public class TestScenarios
 		Queen q = Queen.class.cast(board.getPiece(Position.createPosition(6, Position.D)));
 
 		Move checkMove = q.getAvailableMoveForPosition(Position.createPosition(5, Position.E), board);
-		q.performMove(checkMove, board);
+		q.performMove(checkMove, board, false);
 		
 		WhitePawn wp = WhitePawn.class.cast(board.getPiece(Position.createPosition(2, Position.E)));
 
 		Move unavailableMove = wp.getAvailableMoveForPosition(Position.createPosition(4, Position.E), board);
 		
 		assertNull("PawnTwoStepMove should not be able to pass through a piece", unavailableMove);
+	}
+	
+	@Test
+	public void testPawnForwardMoveShouldNotProtectPieces() throws InvalidPosition, UnavailableMoveException
+	{
+		ChessBoard board = loadBoard("queen_to_3D_should_not_checkmate");
+		Queen q = Queen.class.cast(board.getPiece(Position.createPosition(3, Position.B)));
+		Move checkingMove = q.getAvailableMoveForPosition(Position.createPosition(3, Position.D), board);
+		q.performMove(checkingMove, board, false);
+		
+		ChessState checkState = board.getCurrentState();
+		Assert.assertTrue("Game state should be " + ChessState.CHECK + ", was: " + checkState, checkState == ChessState.CHECK);
+		
+		King k = King.class.cast(board.getPiece(Position.createPosition(2, Position.E)));
+		Move takeQueenMove = k.getAvailableMoveForPosition(Position.createPosition(3, Position.D), board);
+		k.performMove(takeQueenMove, board, false);
+		
+		ChessState playingState = board.getCurrentState();
+		Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + playingState, playingState == ChessState.PLAYING);
+		
 	}
 }

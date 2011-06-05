@@ -450,6 +450,12 @@ public abstract class Piece
 		{
 			m.updateMove(board);
 		}
+		
+		//Update old position
+		board.updatePossibilityOfMovesForPosition(move.getRevertingMove().getPositionIfPerformed());
+		//Update new position
+		board.updatePossibilityOfMovesForPosition(getCurrentPosition());
+		
 		for(MoveListener m : myListeners)
 		{
 			m.movePerformed(move);

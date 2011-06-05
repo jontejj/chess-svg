@@ -242,7 +242,7 @@ public abstract class Move
 	 */
 	public void updateDestination(ChessBoard board)
 	{
-		myPieceAtDestination = null;
+		setPieceAtDestination(null, board);
 		if(myDestination != null)
 		{
 			//The old destination where this move previously took us, remove it
@@ -393,11 +393,8 @@ public abstract class Move
 			myPieceAtDestination.removeFromBoard(board);
 			myRevertingMove.setPieceAtOldPosition(myPieceAtDestination);
 		}
-		Position oldPosition = myPiece.getCurrentPosition().clone();
 		board.movePiece(myPiece, this);
 		myPiece.getCurrentPosition().applyMove(this);
-		board.updatePossibilityOfMovesForPosition(oldPosition);
-		board.updatePossibilityOfMovesForPosition(myPiece.getCurrentPosition());
 	}
 	
 	@Override

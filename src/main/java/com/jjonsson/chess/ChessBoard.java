@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.primitives.UnsignedBytes;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
@@ -626,6 +625,10 @@ public class ChessBoard implements Cloneable
 				{
 					return m;
 				}
+				else if(m instanceof PawnMove)
+				{
+					//No threatening move
+				}
 				else if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
 						return m;
 			}
@@ -669,6 +672,10 @@ public class ChessBoard implements Cloneable
 				if(m instanceof PawnTakeOverMove)
 				{
 					numberOfMoves++;
+				}
+				else if(m instanceof PawnMove)
+				{
+					//No threatening move
 				}
 				else if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
 					numberOfMoves++;
