@@ -15,7 +15,6 @@ public class KingMove extends IndependantMove
 
 	/**
 	 * If this is true then the reason for this move not being available is that a move from the other player could reach the same destination
-	 * @return
 	 */
 	public boolean isCheckedByAnotherMove()
 	{
@@ -35,9 +34,6 @@ public class KingMove extends IndependantMove
 	{
 		myIsCheckedByAnotherMove = false;
 		Position newPosition = this.getPositionIfPerformed();
-		
-		setPieceAtDestination(board.getPiece(newPosition), board);
-		
 		if(newPosition == null)
 			return false; //The move was out of bounds
 		
@@ -50,6 +46,6 @@ public class KingMove extends IndependantMove
 			return false;
 		}
 		
-		return canBeMadeEnding(board.getPiece(newPosition), board);
+		return canBeMadeEnding();
 	}
 }

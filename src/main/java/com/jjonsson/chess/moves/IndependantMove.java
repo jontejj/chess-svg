@@ -16,9 +16,9 @@ public abstract class IndependantMove extends Move
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
 	}
 	
-	@Override
 	public void updatePossibility(ChessBoard board)
 	{
+		myOldCanBeMadeCache = myCanBeMadeCache;
 		myCanBeMadeCache = canBeMadeInternal(board);
 		
 		if(myCanBeMadeCache)
@@ -35,5 +35,9 @@ public abstract class IndependantMove extends Move
 			board.addNonAvailableMove(myDestination, myPiece, this);
 		}
 	}
-
+	
+	public boolean isPieceBlockingMe(Position ignoreIfPositionIsBlocked, Position ignoreIfPositionIsBlocked2)
+	{
+		return false;
+	}
 }

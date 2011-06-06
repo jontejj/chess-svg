@@ -71,10 +71,10 @@ public class TestScenarios
 			Assert.assertNotNull(takeOverMove);
 			Assert.assertNotNull(stoppingMove);
 			ChessState currentState = board.getCurrentState();
-			Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + currentState, currentState == ChessState.PLAYING);
+			Assert.assertTrue("Game state", currentState == ChessState.PLAYING);
 			q.performMove(takeOverMove, board, false);
 			currentState = board.getCurrentState();
-			Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + currentState, currentState == ChessState.PLAYING);
+			Assert.assertTrue("Game state", currentState == ChessState.PLAYING);
 			Assert.assertTrue("When move has been made the current position for the move should have changed", !oldQueenPosition.equals(takeOverMove.getCurrentPosition()));
 			Piece pieceAtNewLocation = board.getPiece(takeOverMove.getCurrentPosition());
 			Assert.assertEquals("The board's piece at: " + takeOverMove.getCurrentPosition() + "was not right" , pieceAtNewLocation, q);
@@ -104,7 +104,7 @@ public class TestScenarios
 			pawn.performMove(replacementMove, board, false);
 			
 			ChessState currentState = board.getCurrentState();
-			Assert.assertTrue("Game state should be " + ChessState.CHECK + ", was: " + currentState, currentState == ChessState.CHECK);
+			Assert.assertTrue("Game state", currentState == ChessState.CHECK);
 			
 			Piece defendingKnight = board.getPiece(Position.createPosition(6, Position.C));
 			Assert.assertNotNull(defendingKnight);
@@ -115,10 +115,10 @@ public class TestScenarios
 			defendingKnight.performMove(defendingMove, board, false);
 			
 			currentState = board.getCurrentState();
-			Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + currentState, currentState == ChessState.PLAYING);
+			Assert.assertTrue("Game state", currentState == ChessState.PLAYING);
 			board.performRandomMove();
 			currentState = board.getCurrentState();
-			Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + currentState, currentState == ChessState.PLAYING);
+			Assert.assertTrue("Game state", currentState == ChessState.PLAYING);
 		}
 		else
 			Assert.fail("Piece under test should be a white pawn was: " + p);
@@ -137,7 +137,7 @@ public class TestScenarios
 			q.performMove(takeOverMove, board, false);
 
 			ChessState currentState = board.getCurrentState();
-			Assert.assertTrue("Game state should be " + ChessState.CHECK + ", was: " + currentState, currentState == ChessState.CHECK);
+			Assert.assertTrue("Game state", currentState == ChessState.CHECK);
 			Piece p2 = board.getPiece(Position.createPosition(2, Position.E));
 			if(p2 instanceof King)
 			{
@@ -194,14 +194,14 @@ public class TestScenarios
 		q.performMove(checkingMove, board, false);
 		
 		ChessState checkState = board.getCurrentState();
-		Assert.assertTrue("Game state should be " + ChessState.CHECK + ", was: " + checkState, checkState == ChessState.CHECK);
+		Assert.assertTrue("Game state", checkState == ChessState.CHECK);
 		
 		King k = King.class.cast(board.getPiece(Position.createPosition(2, Position.E)));
 		Move takeQueenMove = k.getAvailableMoveForPosition(Position.createPosition(3, Position.D), board);
 		k.performMove(takeQueenMove, board, false);
 		
 		ChessState playingState = board.getCurrentState();
-		Assert.assertTrue("Game state should be " + ChessState.PLAYING + ", was: " + playingState, playingState == ChessState.PLAYING);
+		Assert.assertTrue("Game state", playingState == ChessState.PLAYING);
 		
 	}
 }

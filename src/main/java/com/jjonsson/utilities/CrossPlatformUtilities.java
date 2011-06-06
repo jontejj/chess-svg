@@ -123,7 +123,7 @@ public class CrossPlatformUtilities
 	/**
 	 * Can be used if you wan't to implement KeyListener instead of ActionListener
 	 * @param event
-	 * @return
+	 * @return one of the public constants from this class as an identifier 
 	 */
 	public static int getActionFromKeyEvent(KeyEvent event)
 	{

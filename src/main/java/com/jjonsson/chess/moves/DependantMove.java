@@ -28,7 +28,7 @@ public abstract class DependantMove extends Move
 	/**
 	 * Checks if it's necessary to look further down the move chain for possible moves
 	 * @param board
-	 * @return
+	 * @return true if moves depending on this move may be made
 	 */
 	public boolean furtherMovesInChainMayBePossible(ChessBoard board)
 	{
@@ -40,7 +40,7 @@ public abstract class DependantMove extends Move
 		if(myMoveThatIDependUpon != null)
 		{
 			//Some previous move may have been either a take over or if a piece standing in the way, this means this move won't be possible 
-			if(isPieceBlockingMe())
+			if(isAMoveThatIDependOnBlocked())
 				return false;
 			
 			if(board.getCurrentState() != ChessState.CHECK && !myMoveThatIDependUpon.canBeMade(board))
@@ -48,11 +48,11 @@ public abstract class DependantMove extends Move
 		}
 		return true;
 	}
-	@Override
-	public boolean isPieceBlockingMe()
+
+	private boolean isAMoveThatIDependOnBlocked()
 	{
 		//TODO(jontejj): Could this be cached?
-		DependantMove move = this;
+		DependantMove move = this.getMoveThatIDependUpon();
 		while(move != null)
 		{
 			//No jumping over pieces
@@ -64,7 +64,6 @@ public abstract class DependantMove extends Move
 		return false;
 	}
 	
-	@Override
 	public boolean isPieceBlockingMe(Position ignoreIfPositionIsBlocked, Position ignoreIfPositionIsBlocked2)
 	{
 		DependantMove move = this;
@@ -122,24 +121,6 @@ public abstract class DependantMove extends Move
 			myMoveDependingOnMe.updateDestinationDownwards(board);
 		}
 	}
-	
-	protected void updatePossiblityInternal(ChessBoard board)
-	{
-		myCanBeMadeCache = canBeMadeDependantInternal(board);
-		if(myCanBeMadeCache)
-		{
-			if(myDestination == null)
-			{
-				System.out.println(this + "Shouldn't be possible to do");
-			}
-			//The move is now possible
-			board.addAvailableMove(myDestination, myPiece, this);
-		}
-		else
-		{
-			board.addNonAvailableMove(myDestination, myPiece, this);
-		}
-	}
 
 	@Override
 	public void updatePossibility(ChessBoard board)
@@ -161,12 +142,65 @@ public abstract class DependantMove extends Move
 		}
 	}
 	
+	private void updatePossiblityInternal(ChessBoard board)
+	{
+		myOldCanBeMadeCache = myCanBeMadeCache;
+		myCanBeMadeCache = canBeMadeDependantInternal(board);
+		if(myCanBeMadeCache)
+		{
+			if(myDestination == null)
+			{
+				System.out.println(this + "Shouldn't be possible to do");
+			}
+			//The move is now possible
+			board.addAvailableMove(myDestination, myPiece, this);
+		}
+		else
+		{
+			board.addNonAvailableMove(myDestination, myPiece, this);
+		}
+	}
+
 	private void updatePossibilityDownwards(ChessBoard board)
 	{
 		if(myMoveDependingOnMe != null)
 		{
 			myMoveDependingOnMe.updatePossiblityInternal(board);
 			myMoveDependingOnMe.updatePossibilityDownwards(board);
+		}
+	}
+	
+	@Override
+	protected void syncCountersWithBoard(ChessBoard board)
+	{
+		//First sync moves that this move is dependent on
+		syncCountersWithBoardUpwards(board);
+		//Sync myself
+		syncCountersWithBoardInternal(board);
+		//Sync moves that is dependent on this move
+		syncCountersWithBoardDownwards(board);
+	}
+	
+	private void syncCountersWithBoardUpwards(ChessBoard board)
+	{
+		if(myMoveThatIDependUpon != null)
+		{	
+			myMoveThatIDependUpon.syncCountersWithBoardUpwards(board);
+			myMoveThatIDependUpon.syncCountersWithBoardInternal(board);
+		}
+	}
+
+	private void syncCountersWithBoardInternal(ChessBoard board)
+	{
+		super.syncCountersWithBoard(board);
+	}
+
+	private void syncCountersWithBoardDownwards(ChessBoard board)
+	{
+		if(myMoveDependingOnMe != null)
+		{
+			myMoveDependingOnMe.syncCountersWithBoardInternal(board);
+			myMoveDependingOnMe.syncCountersWithBoardDownwards(board);
 		}
 	}
 	

@@ -3,5 +3,8 @@ com.jjonsson.chess.exceptions
 com.jjonsson.chess.gui
 com.jjonsson.chess.gui.components
 com.jjonsson.chess.moves
+com.jjonsson.chess.moves.ordering
 com.jjonsson.chess.persistance
 com.jjonsson.chess.pieces
+com.jjonsson.chess.pieces.ordering
+com.jjonsson.utilities

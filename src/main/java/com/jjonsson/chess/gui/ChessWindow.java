@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import javax.swing.Icon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -46,6 +47,10 @@ public class ChessWindow extends JFrame implements ActionListener
 	private static final String UNDO_BLACK_MENU_ITEM = "Undo Last Move";
 	private static final String UNDO_WHITE_MENU_ITEM = "Undo Last Two Moves";
 	private static final String SHOW_HINT_MENU_ITEM = "Show Hint";
+
+	private static final String	SHOW_AVAILABLE_CLICKS_MENU_ITEM	= "Show Available Clicks";
+
+	private static final String	HIDE_AVAILABLE_CLICKS_MENU_ITEM	= "Hide Available Clicks";
 	
 	private String lastFileChooserLocation;
 	
@@ -114,11 +119,7 @@ public class ChessWindow extends JFrame implements ActionListener
 	{
 		return myGame.getBoard();
 	}
-	
-	/**
-	 * 
-	 * @param game
-	 */
+
 	public void displayGame()
 	{
 		this.setVisible(true);
@@ -193,8 +194,23 @@ public class ChessWindow extends JFrame implements ActionListener
 	    showHint.addActionListener(this);
 	    actionsMenu.add(showHint);
 	    
+	    JMenu settingsMenu = new JMenu("Settings");
+	    
+	    JMenuItem showAvailableClicks = null;
+	    if(Settings.DEBUG)
+	    {
+		    showAvailableClicks = new JMenuItem(HIDE_AVAILABLE_CLICKS_MENU_ITEM);
+	    }
+	    else 
+	    	showAvailableClicks = new JMenuItem(SHOW_AVAILABLE_CLICKS_MENU_ITEM);
+	    
+		showAvailableClicks.addActionListener(this);
+		settingsMenu.add(showAvailableClicks);
+	    
+	    
 	    menuBar.add(fileMenu);
 	    menuBar.add(actionsMenu);
+	    menuBar.add(settingsMenu);
 	}
 	
 	private void save(boolean forceDialog)
@@ -333,6 +349,16 @@ public class ChessWindow extends JFrame implements ActionListener
 		{
 			switchAI(true);
 			JMenuItem.class.cast(e.getSource()).setText(DISABLE_AI_MENU_ITEM);
+		}
+		else if(e.getActionCommand().equals(SHOW_AVAILABLE_CLICKS_MENU_ITEM))
+		{
+			myComponent.showAvailableClicks(true);
+			JMenuItem.class.cast(e.getSource()).setText(HIDE_AVAILABLE_CLICKS_MENU_ITEM);
+		}
+		else if(e.getActionCommand().equals(HIDE_AVAILABLE_CLICKS_MENU_ITEM))
+		{
+			myComponent.showAvailableClicks(false);
+			JMenuItem.class.cast(e.getSource()).setText(SHOW_AVAILABLE_CLICKS_MENU_ITEM);
 		}
 		else if(e.getActionCommand().equals(EXIT_MENU_ITEM))
 		{

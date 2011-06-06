@@ -55,9 +55,16 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	private Move myHintMove;
 	
+	private boolean myShowAvailableClicks;
+	
 	public ChessBoardComponent(ChessWindow window)
 	{	
 		super();
+		if(Settings.DEBUG)
+		{
+			myShowAvailableClicks = true;
+		}
+		
 		myWindow = window;
 		myPositionScores = ImmutableMap.of();
 		pieces = Sets.newHashSet();
@@ -137,7 +144,11 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		  g2d.setRenderingHints(WindowUtilities.getRenderingHints());
 		  setBackground(Color.darkGray);
 		  drawGrid(g2d);
-		  //markSquaresAsAvailable(g2d);
+		  if(myShowAvailableClicks)
+		  {
+			  markPiecesAsAvailable(g2d);
+			  markAvailableSquares(g2d);
+		  }
 		  markSelectedSquare(g2d);
 		  
 		  if(Settings.DEBUG)
@@ -200,13 +211,39 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			public void run()
 			{
 				myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
-				myWindow.setResultOfInteraction("Hint: " + myHintMove);
-				repaint();
+				if(myHintMove != null)
+				{
+					myWindow.setResultOfInteraction("Hint: " + myHintMove);
+					//Makes it easy to make the move
+					setSelectedPiece(myHintMove.getPiece());
+					repaint();
+				}
+				else
+				{
+					myWindow.setResultOfInteraction("No hint could be found");
+				}
 			}
 		}.start();
 	}
 	
-	private void markSquaresAsAvailable(Graphics2D graphics)
+	/**
+	 * 
+	 * @param show true if the available clicks should be marked, false if they shouldn't
+	 */
+	public void showAvailableClicks(boolean show)
+	{
+		if(show != myShowAvailableClicks)
+		{
+			myShowAvailableClicks = show;
+			repaint();
+		}
+	}
+	
+	/**
+	 * Marks pieces that can make a move
+	 * @param graphics
+	 */
+	private void markPiecesAsAvailable(Graphics2D graphics)
 	{
 		//Only draw possible moves if the game is in play
 		if(ChessBoardEvaluator.inPlay(getBoard()))
@@ -233,28 +270,33 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		*/
 	}
 	
+	/**
+	 * Marks the squares available for the selected piece
+	 * @param graphics
+	 */
+	private void markAvailableSquares(Graphics2D graphics)
+	{
+		if(ChessBoardEvaluator.inPlay(getBoard()) && myCurrentlySelectedPiece != null)
+		{
+			//Mark available moves for the selected piece
+			List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
+			for(Move m : moves)
+			{
+				try
+				{
+					markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
+				}
+				catch(NullPointerException npe){}
+			}
+		}
+	}
 	
 	private void markSelectedSquare(Graphics2D graphics)
 	{
-		if(ChessBoardEvaluator.inPlay(getBoard()))
+		if(ChessBoardEvaluator.inPlay(getBoard()) && myCurrentlySelectedPiece != null)
 		{
-			if(myCurrentlySelectedPiece != null)
-			{
-				//Mark available moves for the selected piece
-				/*List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
-				for(Move m : moves)
-				{
-					try
-					{
-						markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
-					}
-					catch(NullPointerException npe)
-					{}
-				}*/
-				
-				//Mark the selected piece
-				markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN, graphics);
-			}
+			//Mark the selected piece
+			markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN, graphics);
 		}
 	}
 	
@@ -316,7 +358,14 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		myCurrentlySelectedPiece = p;
 		
 		if(oldPiece != myCurrentlySelectedPiece)
+		{
+			//If we choose another piece the hint move should disappear
+			if(myHintMove != null && myHintMove.getPiece() != p)
+			{
+				myHintMove = null;
+			}
 			repaint();
+		}
 	}
 	@Override
 	public void mouseClicked(MouseEvent e)

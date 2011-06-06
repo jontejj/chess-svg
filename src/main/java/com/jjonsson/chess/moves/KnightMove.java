@@ -13,7 +13,7 @@ public class KnightMove extends IndependantMove
 
 	public boolean canBeMadeInternal(ChessBoard board) 
 	{
-		return canBeMadeDefault(board);
+		return canBeMadeDefault();
 	}
 
 }

@@ -59,4 +59,13 @@ public class TestPersistance
 	}
 	
 
+	@Test
+	public void testLoadBoard() throws InvalidPosition
+	{
+		//Load a board and make changes to it
+		ChessBoard board = TestScenarios.loadBoard("king_to_3D_should_not_be_possible");
+		King whiteKing = King.class.cast(board.getPiece(Position.createPosition(2, Position.E)));
+		
+		assertNull(whiteKing.getAvailableMoveForPosition(Position.createPosition(3, Position.D), board));
+	}
 }

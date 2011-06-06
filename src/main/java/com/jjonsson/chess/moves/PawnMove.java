@@ -38,10 +38,6 @@ public abstract class PawnMove extends DependantMove
 	@Override
 	protected boolean canBeMadeInternal(ChessBoard board)
 	{
-		//No bounds checking needs to be done because a pawn will be replaced by another piece before then
-		Position newPosition = this.getPositionIfPerformed();
-		
-		setPieceAtDestination(board.getPiece(newPosition), board);
 		if(getPieceAtDestination() == null)
 			return true; //The space is free
 		

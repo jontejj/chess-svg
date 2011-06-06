@@ -54,7 +54,7 @@ public class ChessMoveEvaluator
 	/**
 	 * Performs a focused search (not all moves are evaluated) and tries to return the best move available
 	 * @param board
-	 * @return the best move for the current player on the given board
+	 * @return the best move for the current player on the given board or null if no move was found
 	 */
 	public static Move getBestMove(ChessBoard board)
 	{

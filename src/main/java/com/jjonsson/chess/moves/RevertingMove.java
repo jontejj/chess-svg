@@ -113,9 +113,6 @@ public class RevertingMove extends IndependantMove {
 	{
 		if(canBeMade(board))
 		{
-			//A reverting move will always leave a free square thus will there never be a piece at the destination
-			myMoveToRevert.setPieceAtDestination(null, board);
-			
 			//If a pawn was replaced by another piece
 			if(myPieceThatReplacedMyPiece != null)
 				myPieceThatReplacedMyPiece.removeFromBoard(board);

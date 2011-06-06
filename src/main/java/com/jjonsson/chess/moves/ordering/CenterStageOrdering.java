@@ -7,9 +7,8 @@ import com.jjonsson.chess.moves.Position;
 
 /**
  * Orders moves by how near the center of the board they are (Often considered a good heuristic in chess)
+ * <br>Note: This throws NullPointerException if the destination of the moves to order is null
  * @author jonatanjoensson
- * @throws NullPointerException as moves without a destination aren't supposed to be compared with this 
- * Ordering no handling of it is made either
  */
 public class CenterStageOrdering extends Ordering<Move>
 {

@@ -9,6 +9,9 @@ build/*
 .metadata/*
 .settings/*
 target/*/*.class
-target/*/*.*
+target/?(?!site)/*.*
+save_games/*
+temp_save_test
+design/*
 syntax: glob
 .DS_Store

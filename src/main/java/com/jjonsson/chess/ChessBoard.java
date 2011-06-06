@@ -419,6 +419,10 @@ public class ChessBoard implements Cloneable
 			p.initilizePossibilityOfMoves(this);
 		for(Piece p : myBlackPieces.values())
 			p.initilizePossibilityOfMoves(this);
+		
+		//The king's moves needs to be evaluated one more time as they rely on that all other moves have been updated
+		myWhiteKing.initilizePossibilityOfMoves(this);
+		myBlackKing.initilizePossibilityOfMoves(this);
 	}
 	
 	public void removePiece(Piece p)
@@ -428,8 +432,8 @@ public class ChessBoard implements Cloneable
 	}
 	
 	/**
-	 * Removes the pawn from the board and replaces him with a Queen
-	 * @param p the pawn to replace
+	 * Removes the pawn from the board and replaces him with a new piece
+	 * @param pawn the pawn to replace
 	 * @return the piece that replaced the pawn
 	 */
 	public Piece replacePawn(Piece pawn)
@@ -545,7 +549,7 @@ public class ChessBoard implements Cloneable
 	/**
 	 * Note that this may contain false positives as the game may be in check.
 	 * @param affinity the affinity of the player's moves that should be returned
-	 * @return
+	 * @return the available moves for the given affinity
 	 */
 	public HashMultimap<Position, Move> getAvailableMoves(boolean affinity)
 	{
@@ -927,7 +931,7 @@ public class ChessBoard implements Cloneable
 	
 	/**
 	 * If the given move was the last one to be made it is undone by this function
-	 * @param movesToUndo the move to undo
+	 * @param moveToUndo the move to undo
 	 * @return true if the move could be undone
 	 */
 	public boolean undoMove(Move moveToUndo, boolean printOuts)

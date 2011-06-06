@@ -30,6 +30,8 @@ public abstract class Move
 	 */
 	protected Piece myPieceAtDestination;
 	
+	protected Piece myOldPieceAtDestination;
+	
 	/**
 	 * The cached position of this move's destination 
 	 */
@@ -39,6 +41,11 @@ public abstract class Move
 	 * Cached decision of whether or not this move can be made
 	 */
 	protected boolean myCanBeMadeCache;
+	
+	/**
+	 * The previous decision of whether or not this move can be made
+	 */
+	protected boolean myOldCanBeMadeCache;
 	
 	protected RevertingMove myRevertingMove;
 	
@@ -75,55 +82,24 @@ public abstract class Move
 	 * 
 	 * @param p the piece that is at the destination of this move
 	 */
-	public void setPieceAtDestination(Piece p, ChessBoard board)
+	public void setPieceAtDestination(Piece p)
 	{
-		if(p != myPieceAtDestination)
-		{
-			//Clear old
-			if(myPieceAtDestination != null)
-			{
-				if(!myPieceAtDestination.hasSameAffinityAs(myPiece))
-				{
-					myPieceAtDestination.removePieceThatTakesMeOver(myPiece);
-					board.decreaseTakeOverPiecesCounter(getAffinity(), myPieceAtDestination.getTakeOverImportanceValue());
-				}
-				else
-				{
-					board.decreaseProtectedPiecesCounter(getAffinity(), myPieceAtDestination.getProtectImportanceValue());
-				}
-			}
-			//Update new
-			if(p != null)
-			{
-				if(!p.hasSameAffinityAs(myPiece))
-				{
-					p.addPieceThatTakesMeOver(myPiece);
-					board.increaseTakeOverPiecesCounter(getAffinity(), p.getTakeOverImportanceValue());
-				}
-				else
-				{
-					board.increaseProtectedPiecesCounter(getAffinity(), p.getProtectImportanceValue());
-				}
-			}
-			myPieceAtDestination = p;
-		}
+		myPieceAtDestination = p;
 	}
 	
-	protected boolean canBeMadeDefault(ChessBoard board)
+	protected boolean canBeMadeDefault()
 	{
-		Position newPosition = this.getPositionIfPerformed();
-		if(newPosition == null)
+		if(this.getPositionIfPerformed() == null)
 			return false; //The move was out of bounds
 		
-		return canBeMadeEnding(board.getPiece(newPosition), board);
+		return canBeMadeEnding();
 	}
 	
-	protected boolean canBeMadeEnding(Piece pieceAtDestination, ChessBoard board)
+	protected boolean canBeMadeEnding()
 	{
-		setPieceAtDestination(pieceAtDestination, board);
-		if(pieceAtDestination == null)
+		if(getPieceAtDestination() == null)
 			return true; //The space is free
-		else if(pieceAtDestination.hasSameAffinityAs(myPiece))
+		else if(getPieceAtDestination().hasSameAffinityAs(myPiece))
 		{
 			//For DependantMoves this also means that moves further a long this move chain won't be possible either
 			return false; //You can't take over your own pieces
@@ -153,21 +129,13 @@ public abstract class Move
 		return myPieceAtDestination;
 	}
 	
-	public boolean isPieceBlockingMe()
-	{
-		return getPieceBlockingMe() != null;
-	}
-	
 	/**
 	 * Override this for moves depending on other pieces not standing in the way
 	 * @param ignoreIfPositionIsBlocked this position should not be considered when checking for blocking pieces (i.e simulating a pass-through piece)
 	 * @param ignoreIfPositionIsBlocked2 this position should not be considered when checking for blocking pieces (i.e simulating that the piece asking is hovering)
-	 * @return
+	 * @return true if this move isn't possible to do because of piece standing in the way
 	 */
-	public boolean isPieceBlockingMe(Position ignoreIfPositionIsBlocked, Position ignoreIfPositionIsBlocked2)
-	{
-		return false;
-	}
+	public abstract boolean isPieceBlockingMe(Position ignoreIfPositionIsBlocked, Position ignoreIfPositionIsBlocked2);
 	
 	/**
 	 * 
@@ -242,7 +210,7 @@ public abstract class Move
 	 */
 	public void updateDestination(ChessBoard board)
 	{
-		setPieceAtDestination(null, board);
+		myOldPieceAtDestination = myPieceAtDestination;
 		if(myDestination != null)
 		{
 			//The old destination where this move previously took us, remove it
@@ -264,6 +232,8 @@ public abstract class Move
 		}
 		else
 			myDestination = new Position(newRow, newColumn);
+		
+		setPieceAtDestination(board.getPiece(myDestination));
 	}
 	
 	/**
@@ -274,10 +244,45 @@ public abstract class Move
 	{
 		this.updateDestination(board);
 		this.updatePossibility(board);
+		this.syncCountersWithBoard(board);
 	}
 	
+	protected void syncCountersWithBoard(ChessBoard board)
+	{
+		//Only update the counters if there has been a change
+		if(myOldPieceAtDestination != myPieceAtDestination || myOldCanBeMadeCache != myCanBeMadeCache)
+		{
+			//Clear old
+			if(myOldPieceAtDestination != null)
+			{
+				if(!myOldPieceAtDestination.hasSameAffinityAs(myPiece))
+				{
+					myOldPieceAtDestination.removePieceThatTakesMeOver(myPiece);
+					board.decreaseTakeOverPiecesCounter(getAffinity(), myOldPieceAtDestination.getTakeOverImportanceValue());
+				}
+				else
+				{
+					board.decreaseProtectedPiecesCounter(getAffinity(), myOldPieceAtDestination.getProtectImportanceValue());
+				}
+			}
+			//Update new
+			if(myPieceAtDestination != null)
+			{
+				if(!myPieceAtDestination.hasSameAffinityAs(myPiece))
+				{
+					myPieceAtDestination.addPieceThatTakesMeOver(myPiece);
+					board.increaseTakeOverPiecesCounter(getAffinity(), myPieceAtDestination.getTakeOverImportanceValue());
+				}
+				else
+				{
+					board.increaseProtectedPiecesCounter(getAffinity(), myPieceAtDestination.getProtectImportanceValue());
+				}
+			}
+		}
+	}
+
 	/**
-	 * Due to changes on the board this move's possiblity needs to be re-evaluated
+	 * Due to changes on the board this move's possibility needs to be re-evaluated
 	 * @param board
 	 */
 	public abstract void updatePossibility(ChessBoard board);
@@ -287,7 +292,11 @@ public abstract class Move
 		myIsRemoved = true;
 		chessBoard.removeAvailableMove(myDestination, myPiece, this);
 		chessBoard.removeNonAvailableMove(myDestination, myPiece, this);
-		setPieceAtDestination(null, chessBoard);
+		myOldCanBeMadeCache = myCanBeMadeCache;
+		myCanBeMadeCache = false;
+		myOldPieceAtDestination = myPieceAtDestination;
+		myPieceAtDestination = null;
+		syncCountersWithBoard(chessBoard);
 	}
 	
 	public boolean isRemoved()
@@ -416,8 +425,7 @@ public abstract class Move
 	}
 
 	/**
-	 * Returns the sum of getTakeOverImportanceValue for all the pieces that can take over the piece at my destination
-	 * @return
+	 * @return the sum of getTakeOverImportanceValue for all the pieces that can take over the piece at my destination
 	 */
 	public long getAccumulatedTakeOverValuesForPieceAtDestination()
 	{
@@ -429,7 +437,6 @@ public abstract class Move
 	}
 
 	/**
-	 * 
 	 * @return if this move was the last one to be made this will 
 	 * return the position where the piece previously was at, if it wasn't the returned position will be erroronous
 	 */

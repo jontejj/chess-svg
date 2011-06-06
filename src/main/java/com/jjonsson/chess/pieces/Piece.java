@@ -432,7 +432,6 @@ public abstract class Piece
 	 * Moves this Piece with the supplied move.
 	 * @param move the move to apply to this piece
 	 * @throws UnavailableMoveException  if this move isn't available right now
-	 * @return the estimated value of the move performed 
 	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
 	public void performMove(Move move, ChessBoard board) throws UnavailableMoveException
@@ -444,8 +443,7 @@ public abstract class Piece
 	 * Moves this Piece with the supplied move.
 	 * @param move the move to apply to this piece
 	 * @param printOut true if there should be print outs about the move to the standard out stream
-	 * @throws UnavailableMoveException  if this move isn't available right now
-	 * @return the estimated value of the move performed 
+	 * @throws UnavailableMoveException  if this move isn't available right now 
 	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
 	public void performMove(Move move, ChessBoard board, boolean printOut) throws UnavailableMoveException

@@ -15,7 +15,7 @@ public class ChainMove extends DependantMove
 	@Override
 	protected boolean canBeMadeInternal(ChessBoard board)
 	{	
-		return canBeMadeDefault(board);
+		return canBeMadeDefault();
 	}
 
 }

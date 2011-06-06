@@ -20,12 +20,13 @@ public class PawnOneStepMove extends PawnMove
 		return false;
 	}
 	
+	
 	/**
 	 * Overridden to not accumulate takeover/protecting values as this move can't either protect nor take over a piece
 	 */
-	@Override
-	public void setPieceAtDestination(Piece p, ChessBoard board)
+	@Override 
+	protected void syncCountersWithBoard(ChessBoard board)
 	{
-		myPieceAtDestination = p;
+		
 	}
 }

@@ -12,8 +12,8 @@ import com.jjonsson.chess.ChessBoard;
 public class BoardLoader
 {
 	/**
-	 * 
-	 * @param boardFile to file to load the board from
+	 * @param input the stream to load the board from
+	 * @param boardToLoadInto the board to load the board into
 	 * @return true if the board was loaded successfully
 	 */
 	public static boolean loadStreamIntoBoard(InputStream input, ChessBoard boardToLoadInto)
@@ -35,7 +35,7 @@ public class BoardLoader
 	/**
 	 * 
 	 * @param board the board to save
-	 * @param toFile the file to save the board to
+	 * @param pathToFile a path to the file to save the board to
 	 * @return true if the board was successfully written to the given file
 	 */
 	public static boolean saveBoard(ChessBoard board, String pathToFile)

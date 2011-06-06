@@ -15,14 +15,9 @@ public class PawnTakeOverMove extends PawnMove
 	@Override
 	public boolean canBeMadeInternal(ChessBoard board)
 	{
-		//No bounds checking needs to be done because a pawn will be replaced by another piece before then
-		Position newPosition = this.getPositionIfPerformed();
-		
-		Piece pieceAtDestination = board.getPiece(newPosition);
-		setPieceAtDestination(pieceAtDestination, board);
-		if(pieceAtDestination == null)
+		if(getPieceAtDestination() == null)
 			return false; //The space is free but this move requires a take over
-		else if(pieceAtDestination.hasSameAffinityAs(myPiece))
+		else if(getPieceAtDestination().hasSameAffinityAs(myPiece))
 			return false; //You can't take over your own pieces
 		else
 		{
