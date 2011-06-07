@@ -18,7 +18,6 @@ public abstract class IndependantMove extends Move
 	
 	public void updatePossibility(ChessBoard board)
 	{
-		myOldCanBeMadeCache = myCanBeMadeCache;
 		myCanBeMadeCache = canBeMadeInternal(board);
 		
 		if(myCanBeMadeCache)

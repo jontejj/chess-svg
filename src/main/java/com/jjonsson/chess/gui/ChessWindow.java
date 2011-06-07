@@ -158,12 +158,6 @@ public class ChessWindow extends JFrame implements ActionListener
 	    saveAsAction.addActionListener(this);
 	    fileMenu.add(saveAsAction);
 	    
-	    fileMenu.addSeparator();
-	    
-	    JMenuItem disableAI = new JMenuItem(DISABLE_AI_MENU_ITEM);
-	    disableAI.addActionListener(this);
-	    fileMenu.add(disableAI);
-	    
 	    //Mac's already have a default menu with an exit action
 	    if(!CrossPlatformUtilities.isMac())
 	    {
@@ -206,6 +200,10 @@ public class ChessWindow extends JFrame implements ActionListener
 	    
 		showAvailableClicks.addActionListener(this);
 		settingsMenu.add(showAvailableClicks);
+		
+	    JMenuItem disableAI = new JMenuItem(DISABLE_AI_MENU_ITEM);
+	    disableAI.addActionListener(this);
+	    settingsMenu.add(disableAI);
 	    
 	    
 	    menuBar.add(fileMenu);

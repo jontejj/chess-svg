@@ -43,9 +43,9 @@ public abstract class Move
 	protected boolean myCanBeMadeCache;
 	
 	/**
-	 * The previous decision of whether or not this move can be made
+	 * True if the syncCountersWithBoard function changed the counters on the board
 	 */
-	protected boolean myOldCanBeMadeCache;
+	private boolean myChangedCountersDuringLastSync;
 	
 	protected RevertingMove myRevertingMove;
 	
@@ -250,10 +250,10 @@ public abstract class Move
 	protected void syncCountersWithBoard(ChessBoard board)
 	{
 		//Only update the counters if there has been a change
-		if(myOldPieceAtDestination != myPieceAtDestination || myOldCanBeMadeCache != myCanBeMadeCache)
+		if(myOldPieceAtDestination != myPieceAtDestination || myChangedCountersDuringLastSync)
 		{
 			//Clear old
-			if(myOldPieceAtDestination != null)
+			if(myOldPieceAtDestination != null && myChangedCountersDuringLastSync)
 			{
 				if(!myOldPieceAtDestination.hasSameAffinityAs(myPiece))
 				{
@@ -265,17 +265,27 @@ public abstract class Move
 					board.decreaseProtectedPiecesCounter(getAffinity(), myOldPieceAtDestination.getProtectImportanceValue());
 				}
 			}
+			myChangedCountersDuringLastSync = false;
 			//Update new
 			if(myPieceAtDestination != null)
 			{
 				if(!myPieceAtDestination.hasSameAffinityAs(myPiece))
 				{
-					myPieceAtDestination.addPieceThatTakesMeOver(myPiece);
-					board.increaseTakeOverPiecesCounter(getAffinity(), myPieceAtDestination.getTakeOverImportanceValue());
+					if(myCanBeMadeCache)
+					{
+						myPieceAtDestination.addPieceThatTakesMeOver(myPiece);
+						board.increaseTakeOverPiecesCounter(getAffinity(), myPieceAtDestination.getTakeOverImportanceValue());
+						myChangedCountersDuringLastSync = true;
+					}	
 				}
 				else
 				{
-					board.increaseProtectedPiecesCounter(getAffinity(), myPieceAtDestination.getProtectImportanceValue());
+					//You are only protecting a piece if you can move there when the piece you protect doesn't stand there
+					if(!this.isPieceBlockingMe(getCurrentPosition(), myPieceAtDestination.getCurrentPosition()))
+					{
+						board.increaseProtectedPiecesCounter(getAffinity(), myPieceAtDestination.getProtectImportanceValue());
+						myChangedCountersDuringLastSync = true;
+					}
 				}
 			}
 		}
@@ -292,7 +302,6 @@ public abstract class Move
 		myIsRemoved = true;
 		chessBoard.removeAvailableMove(myDestination, myPiece, this);
 		chessBoard.removeNonAvailableMove(myDestination, myPiece, this);
-		myOldCanBeMadeCache = myCanBeMadeCache;
 		myCanBeMadeCache = false;
 		myOldPieceAtDestination = myPieceAtDestination;
 		myPieceAtDestination = null;

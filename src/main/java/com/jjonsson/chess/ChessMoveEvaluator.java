@@ -162,10 +162,10 @@ public class ChessMoveEvaluator
 						////If we took over a piece we dig deeper into that path (the attacking strategy)
 						limiter.depth++;*/
 					
-					
 					limiter.movesLeft--;
 					limiter.scoreFactor *= -1;
-					long deepValue = deepSearch(board, limiter).bestMoveValue;
+					SearchResult deepResult = deepSearch(board, limiter);
+					long deepValue = deepResult.bestMoveValue;
 					limiter.scoreFactor *= -1;
 					
 					deepValue *= limiter.scoreFactor;

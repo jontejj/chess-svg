@@ -144,7 +144,6 @@ public abstract class DependantMove extends Move
 	
 	private void updatePossiblityInternal(ChessBoard board)
 	{
-		myOldCanBeMadeCache = myCanBeMadeCache;
 		myCanBeMadeCache = canBeMadeDependantInternal(board);
 		if(myCanBeMadeCache)
 		{
