@@ -494,7 +494,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 					}
 				}.start();
 			}
-			/*else
+			else
 			{
 				//just for fun
 				try
@@ -504,10 +504,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				catch (NoMovesAvailableException e)
 				{
 				}
-				catch (UnavailableMoveException e)
-				{
-				}
-			}*/
+			}
 		}
 	}
 

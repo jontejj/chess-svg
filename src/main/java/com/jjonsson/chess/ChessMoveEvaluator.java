@@ -132,7 +132,7 @@ public class ChessMoveEvaluator
 			//The deeper we go, the less we branch, this assumes that a reasonable ordering of the moves has been made already
 			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.depth * 8, 0) + 2;
 			
-			while(sortedMoves.hasNext() && movesLeftToEvaluateOnThisBranch > 0)
+			while(sortedMoves.hasNext())
 			{
 				//TODO(jontejj): how to search deeper when time allows us to
 				if(limiter.depth == SearchLimiter.MAX_DEPTH)
@@ -146,9 +146,10 @@ public class ChessMoveEvaluator
 				
 				boolean takeOverMove = move.isTakeOverMove();
 				long moveValue = performMoveWithMeasurements(move, board, false);
-				if(((limiter.depth >= 0 && limiter.movesLeft > 0) || 
-					(takeOverMove && limiter.scoreFactor == 1 && limiter.depth <= 0))
-						&& moveValue > Long.MIN_VALUE)
+				if((((limiter.depth >= 0 && limiter.movesLeft > 0) 
+					|| (takeOverMove && limiter.scoreFactor == 1 && limiter.depth <= 0))
+					&& moveValue > Long.MIN_VALUE) 
+					&& movesLeftToEvaluateOnThisBranch > 0)
 				{
 					limiter.depth--;
 					/*if(!takeOverMove)
