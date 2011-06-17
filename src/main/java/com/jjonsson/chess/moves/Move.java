@@ -52,6 +52,11 @@ public abstract class Move
 	protected boolean myIsRemoved;
 	
 	/**
+	 * Holds the number of moves made with this move
+	 */
+	private long myMovesMade;
+	
+	/**
 	 * 
 	 * @param rowChange the row change for this move, valid numbers are (-7) to (+7)
 	 * @param columnChange the column change for this move, valid numbers are (-7) to (+7)
@@ -149,7 +154,41 @@ public abstract class Move
 		return false;
 	}
 	
-
+	/**
+	 * 
+	 * @param newMovesMadeCount the new value for how many times this move has been made
+	 */
+	public void setMovesMade(long newMovesMadeCount)
+	{
+		myMovesMade = newMovesMadeCount;
+	}
+	
+	/**
+	 * 
+	 * @return how many times this move has been made
+	 */
+	public long getMovesMade()
+	{
+		return myMovesMade;
+	}
+	
+	/**
+	 * Copies the move counter from the given move
+	 * @param moveToCopyFrom
+	 */
+	public void copyMoveCounter(Move moveToCopyFrom)
+	{
+		myMovesMade = moveToCopyFrom.getMovesMade();
+	}
+	
+	/**
+	 * Could be called periodically to reset the repetitiveness protection
+	 */
+	public void resetMoveCounter()
+	{
+		myMovesMade = 0;
+	}
+	
 	/**
 	 * 
 	 * @return the affinity of the piece making this move
@@ -178,6 +217,15 @@ public abstract class Move
 		{
 			return myPieceAtDestination.getValue();
 		}
+		return 0;
+	}
+	
+	/**
+	 * 
+	 * @return how progressive this move is (e.g a pawn move is very progressive as it leads to pawn replacements)
+	 */
+	public int getProgressiveValue()
+	{
 		return 0;
 	}
 
@@ -413,6 +461,7 @@ public abstract class Move
 		}
 		board.movePiece(myPiece, this);
 		myPiece.getCurrentPosition().applyMove(this);
+		myMovesMade++;
 	}
 	
 	@Override

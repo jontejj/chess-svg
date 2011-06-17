@@ -130,6 +130,8 @@ public class RevertingMove extends IndependantMove {
 			myPiece.reEnablePossibleMoves();
 			
 			board.popLastMoveIfEqual(myMoveToRevert);
+			//Decrement how many times the move to revert has been made
+			myMoveToRevert.setMovesMade(myMoveToRevert.getMovesMade()-1);
 			
 			myPiece.revertedAMove(board);
 		}

@@ -16,5 +16,6 @@ public class MoveOrdering
 	public static final Ordering<Move> instance = Ordering.compound(ImmutableList.of(
 																	new TakeOverValueOrdering(), 
 																	new EvadeOrdering(), 
+																	new ProgressivenessOrdering(),
 																	new CenterStageOrdering()));
 }

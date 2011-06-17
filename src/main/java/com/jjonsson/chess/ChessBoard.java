@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.exceptions.BoardInconsistencyException;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
@@ -134,6 +136,7 @@ public class ChessBoard implements Cloneable
 	
 	/**
 	 * Makes a copy of the board without copying the listeners
+	 * @return the new board or null if the copy failed
 	 */
 	@Override
 	public ChessBoard clone()
@@ -147,6 +150,7 @@ public class ChessBoard implements Cloneable
 			newBoard.readPersistanceData(new ByteArrayInputStream(baos.toByteArray()));
 			newBoard.setPossibleMoves();
 			newBoard.updateGameState();
+			newBoard.copyMoveCounters(this);
 		}
 		catch (IOException e)
 		{
@@ -156,9 +160,50 @@ public class ChessBoard implements Cloneable
 		{
 			newBoard = null;
 		}
+		catch (BoardInconsistencyException e)
+		{
+			newBoard = null;
+		}
 		return newBoard;
 	}
 	
+	/**
+	 * Copies the number of times the moves has been made from the given board
+	 * @param chessBoard the board to copy the move counters from
+	 * @throws BoardInconsistencyException if the given board doesn't match this board
+	 */
+	private void copyMoveCounters(ChessBoard chessBoard) throws BoardInconsistencyException
+	{
+		for(Piece p : getPieces())
+		{
+			ArrayList<Move> toMoves = p.getPossibleMoves();
+			ArrayList<Move> fromMoves = chessBoard.getPiece(p.getCurrentPosition()).getPossibleMoves();
+			
+			//The arrays should match if the board matches
+			if(toMoves.size() != fromMoves.size())
+				throw new BoardInconsistencyException();
+			
+			for(int i = 0;i<toMoves.size();i++)
+			{
+				toMoves.get(i).copyMoveCounter(fromMoves.get(i));
+			}
+		}
+	}
+	
+	/**
+	 * Resets the number of times the moves has been made to zero
+	 */
+	public void resetMoveCounters()
+	{
+		for(Piece p : getPieces())
+		{
+			for(Move m : p.getPossibleMoves())
+			{
+				m.resetMoveCounter();
+			}
+		}
+	}
+
 	ChessBoard getOriginatingBoard()
 	{
 		return myOriginatingBoard;

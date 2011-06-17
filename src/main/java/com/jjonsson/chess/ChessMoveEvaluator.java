@@ -135,7 +135,6 @@ public class ChessMoveEvaluator
 			while(sortedMoves.hasNext() && movesLeftToEvaluateOnThisBranch > 0)
 			{
 				//TODO(jontejj): how to search deeper when time allows us to
-				//TODO(jontejj): detect loops where the same moves are made over and over again
 				if(limiter.depth == SearchLimiter.MAX_DEPTH)
 				{
 					//For each main branch we reset the moves left
@@ -232,6 +231,8 @@ public class ChessMoveEvaluator
 	 * The differences in available moves and non available moves, 
 	 * how many pieces that are protected by other pieces,
 	 * how many pieces that can be taken over by the other player
+	 * how many time the move has been made (a repetitiveness protection)
+	 * how progressive a move is
 	 * @param move the move to perform (if it isn't available right now
 	 * @param undoMoveAfterMeasurement true if you only want the value of the move without it actually being performed
 	 * @return the estimated value of the move performed 
@@ -239,7 +240,6 @@ public class ChessMoveEvaluator
 	 */
 	private static long performMoveWithMeasurements(Move move, ChessBoard board, boolean undoMoveAfterMeasurement)
 	{
-		//TODO(jontejj): measure how far the pawns has reached (useful during the end game)
 		//Save some measurements for the before state
 		int takeOverValue = move.getTakeOverValue();
 		long accumulatedTakeOverValue = move.getAccumulatedTakeOverValuesForPieceAtDestination();
@@ -283,6 +283,7 @@ public class ChessMoveEvaluator
 		//The higher the value, the better the move
 		long moveValue = takeOverValue;
 		moveValue += stateValue;
+		moveValue += move.getProgressiveValue();
 		moveValue += (otherPlayerNrOfAvailableMoves - otherPlayerNrOfAvailableMovesAfter);
 		moveValue += (otherPlayerNrOfNonAvailableMovesAfter - otherPlayerNrOfNonAvailableMoves);
 		moveValue += (playerNrOfAvailableMovesAfter - playerNrOfAvailableMoves);
@@ -293,6 +294,9 @@ public class ChessMoveEvaluator
 		
 		moveValue += (playerTakeOverCountAfter - playerTakeOverCount + accumulatedTakeOverValue);
 		moveValue += (otherPlayerTakeOverCount - otherPlayerTakeOverCountAfter);
+		
+		//If we have made this move recently we punish it for being repetitive
+		moveValue -= (move.getMovesMade() - 1) * 10;
 
 		if(undoMoveAfterMeasurement)
 			board.undoMove(move, false);

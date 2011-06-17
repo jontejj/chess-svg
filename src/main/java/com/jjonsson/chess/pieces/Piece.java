@@ -17,7 +17,6 @@ import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.moves.ordering.MoveOrdering;
 import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 
@@ -28,12 +27,14 @@ import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 public abstract class Piece
 {	
 	//Used to figure out the take over value of a move
-	public static final int TOWER_VALUE = 400;
+	public static final int TOWER_VALUE = 500;
 	public static final int KNIGHT_VALUE = 300;
-	public static final int BISHOP_VALUE = 300;
+	public static final int BISHOP_VALUE = 320;
 	public static final int PAWN_VALUE = 100;
-	public static final int KING_VALUE = 800;
-	public static final int QUEEN_VALUE = 800;
+	public static final int QUEEN_VALUE = 900;
+	
+	//This is handled by the ChessState's the king can't be taken over and therefore it shouldn't have a value
+	public static final int KING_VALUE = 0;
 	
 	/**
 	 * Defines how important is to have many take over alternatives

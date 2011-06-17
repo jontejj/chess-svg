@@ -43,5 +43,11 @@ public abstract class PawnMove extends DependantMove
 		
 		return false;
 	}
+	
+	@Override
+	public int getProgressiveValue()
+	{
+		return 20;
+	}
 
 }

@@ -202,6 +202,31 @@ public abstract class DependantMove extends Move
 			myMoveDependingOnMe.syncCountersWithBoardDownwards(board);
 		}
 	}
+	/**
+	 * Copies the counters recursively
+	 */
+	@Override
+	public void copyMoveCounter(Move moveToCopyFrom)
+	{
+		super.copyMoveCounter(moveToCopyFrom);
+		DependantMove moveDependingOnMe = getMoveDependingOnMe();
+		if(moveDependingOnMe != null)
+		{
+			moveDependingOnMe.copyMoveCounter(DependantMove.class.cast(moveToCopyFrom).getMoveDependingOnMe());
+		}
+	}
+	
+	/**
+	 * Resets the counters recursively
+	 */
+	public void resetMoveCounter()
+	{
+		super.resetMoveCounter();
+		if(getMoveDependingOnMe() != null)
+		{
+			getMoveDependingOnMe().resetMoveCounter();
+		}
+	}
 	
 	public List<Move> getPossibleMovesThatIsDependantOnMe(ChessBoard board)
 	{
