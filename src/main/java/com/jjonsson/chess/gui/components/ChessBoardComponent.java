@@ -531,7 +531,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 					}
 				}.start();
 			}
-			//else
+			else
 			{
 				//just for fun
 				/*try
