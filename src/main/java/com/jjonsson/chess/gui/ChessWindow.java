@@ -10,24 +10,28 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import javax.swing.Icon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.ChessGame;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.ChessFileFilter;
 import com.jjonsson.utilities.CrossPlatformUtilities;
 
-public class ChessWindow extends JFrame implements ActionListener
-{
+public class ChessWindow extends JFrame implements ActionListener, StatusListener
+{	
+	public static final String VERSION = "0.2";
+	public static final String NAME = "Chess";
+	public static final String APP_TITLE = NAME + " " + VERSION;
+	
 	private static final long	serialVersionUID	= 1L;
 	
 	public static final int DEFAULT_WINDOW_WIDTH = 700;
@@ -37,24 +41,29 @@ public class ChessWindow extends JFrame implements ActionListener
 	private static final int WINDOW_BORDER_SIZE = 3;
 	private static final int TITLE_BAR_HEIGHT = 22;
 	
-	private static final String NEW_MENU_ITEM = "New";
+	@VisibleForTesting
+	public static final String NEW_MENU_ITEM = "New";
 	private static final String LOAD_MENU_ITEM = "Load";
 	private static final String SAVE_MENU_ITEM = "Save";
 	private static final String SAVE_AS_MENU_ITEM = "Save As";
-	private static final String DISABLE_AI_MENU_ITEM = "Disable Computer Player";
+	@VisibleForTesting
+	public static final String DISABLE_AI_MENU_ITEM = "Disable Computer Player";
 	private static final String ENABLE_AI_MENU_ITEM = "Enable Computer Player";
-	private static final String EXIT_MENU_ITEM = "Exit";
-	private static final String UNDO_BLACK_MENU_ITEM = "Undo Last Move";
+	@VisibleForTesting
+	public static final String EXIT_MENU_ITEM = "Exit";
+	@VisibleForTesting
+	public static final String UNDO_BLACK_MENU_ITEM = "Undo Last Move";
 	private static final String UNDO_WHITE_MENU_ITEM = "Undo Last Two Moves";
 	private static final String SHOW_HINT_MENU_ITEM = "Show Hint";
 
-	private static final String	SHOW_AVAILABLE_CLICKS_MENU_ITEM	= "Show Available Clicks";
+	@VisibleForTesting
+	public static final String	SHOW_AVAILABLE_CLICKS_MENU_ITEM	= "Show Available Clicks";
 
 	private static final String	HIDE_AVAILABLE_CLICKS_MENU_ITEM	= "Hide Available Clicks";
 	
 	private String lastFileChooserLocation;
 	
-	private ChessGame myGame;
+	private ChessBoard myBoard;
 	ChessBoardComponent myComponent;
 	
 	private String myCurrentBoardFile;
@@ -63,22 +72,29 @@ public class ChessWindow extends JFrame implements ActionListener
 	
 	private String myGameStatus;
 	
-	public ChessWindow(ChessGame chessGame)
+	public ChessWindow(ChessBoard board)
 	{
-		super(ChessGame.NAME);
-		myGame = chessGame;
+		super(NAME);
+		myBoard = board;
 		
 	    this.setBackground(Color.DARK_GRAY);
 	    createMenuBar();
 
 	    this.setSize(ChessWindow.DEFAULT_WINDOW_WIDTH + WINDOW_BORDER_SIZE, ChessWindow.DEFAULT_WINDOW_HEIGHT + WINDOW_BORDER_SIZE + getJMenuBar().getHeight() + STATUS_BAR_HEIGHT);
-	    myComponent = new ChessBoardComponent(this);
+	    myComponent = new ChessBoardComponent(myBoard, getBoardComponentSize());
+	    myComponent.setStatusListener(this);
 	    this.setContentPane(myComponent);
 	    
 	    this.addWindowListener(new WindowListener());
 	    this.addComponentListener(new ComponentAdapter(this));
 	    
 	    createStatusBar();
+	}
+	
+	@VisibleForTesting
+	public ChessBoardComponent getBoardComponent()
+	{
+		return myComponent;
 	}
 	
 	public Dimension getBoardComponentSize()
@@ -111,13 +127,13 @@ public class ChessWindow extends JFrame implements ActionListener
 	
 	public void setTitle(String info)
 	{
-		super.setTitle(ChessGame.NAME + " - " + info);
+		super.setTitle(NAME + " - " + info);
 	}
 	
 	
 	public ChessBoard getBoard()
 	{
-		return myGame.getBoard();
+		return myBoard;
 	}
 
 	public void displayGame()
@@ -225,7 +241,7 @@ public class ChessWindow extends JFrame implements ActionListener
 	private void newGame()
 	{
 		myComponent.clear();
-		myGame.getBoard().reset();
+		myBoard.reset();
 	}
 	
 	/**
@@ -366,7 +382,16 @@ public class ChessWindow extends JFrame implements ActionListener
 
 	private void showHint()
 	{
-		myComponent.showHint();
+		setResultOfInteraction("Thinking of a hint");
+		new Thread()
+		{
+			@Override
+			public void run()
+			{
+				myComponent.showHint();
+			}
+		}.start();
+		
 	}
 
 	private File selectFile(String buttonText)
@@ -419,5 +444,11 @@ public class ChessWindow extends JFrame implements ActionListener
 			}
 			lastFileChooserLocation = path;
 		}
+	}
+
+	@Override
+	public void statusHasBeenUpdated()
+	{
+		updateStatusBar();
 	}
 }

@@ -146,6 +146,7 @@ public class ChessMoveEvaluator
 				
 				boolean takeOverMove = move.isTakeOverMove();
 				long moveValue = performMoveWithMeasurements(move, board, false);
+				movesLeftToEvaluateOnThisBranch--;
 				if((((limiter.depth >= 0 && limiter.movesLeft > 0) 
 					|| (takeOverMove && limiter.scoreFactor == 1 && limiter.depth <= 0))
 					&& moveValue > Long.MIN_VALUE) 
@@ -186,15 +187,20 @@ public class ChessMoveEvaluator
 						limiter.depth--;*/
 					
 					limiter.depth++;
-					movesLeftToEvaluateOnThisBranch--;
 				}
 				if(board.undoMove(move, false))
 				{
-					//Only return the move if it was undoable because otherwise it means that it was a bad/invalid move
-					if(moveValue > result.bestMoveValue)
-					{	
-						result.bestMove = move;
-						result.bestMoveValue = moveValue;
+					//Moves that has not been searched deeper than one level risks an immediate take over from the other player 
+					//so to avoid making really stupid moves we only make those moves if they have a really high value
+					//
+					if(movesLeftToEvaluateOnThisBranch > 0 || moveValue >= move.getPiece().getValue())
+					{
+						//Only return the move if it was undoable because otherwise it means that it was a bad/invalid move
+						if(moveValue > result.bestMoveValue)
+						{	
+							result.bestMove = move;
+							result.bestMoveValue = moveValue;
+						}
 					}
 					
 					if(limiter.depth == SearchLimiter.MAX_DEPTH)

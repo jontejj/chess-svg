@@ -21,18 +21,12 @@ public abstract class PawnMove extends DependantMove
 	{
 		super.makeMove(board);
 		
-		if(isTimeForReplacement())
+		if(Pawn.class.cast(myPiece).isTimeForReplacement(myPiece.getCurrentPosition()))
 		{
 			//The white/black pawn has reached the bottom/top and now it's time to replace him
 			myRevertingMove.setPieceThatReplacedMyPiece(board.replacePawn(myPiece));
 		}
 		Pawn.class.cast(myPiece).removeTwoStepMove(board);
-	}
-	
-	private boolean isTimeForReplacement()
-	{
-		int destinationRow = (myPiece.getAffinity() == Piece.BLACK) ? 0 :(ChessBoard.BOARD_SIZE - 1);
-		return myPiece.getCurrentPosition().getRow() == destinationRow;
 	}
 
 	@Override

@@ -4,8 +4,6 @@ import java.awt.RenderingHints;
 
 import javax.swing.*;
 
-import com.jjonsson.chess.ChessGame;
-
 public class WindowUtilities {
 
 	private static RenderingHints renderHints;
@@ -23,7 +21,7 @@ public class WindowUtilities {
 	{
 		//For Mac's we want to use the native menu bar
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
-		System.setProperty("com.apple.mrj.application.apple.menu.about.name", ChessGame.NAME);
+		System.setProperty("com.apple.mrj.application.apple.menu.about.name", ChessWindow.NAME);
 		
 		try 
 		{

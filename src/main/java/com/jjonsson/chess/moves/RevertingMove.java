@@ -113,6 +113,7 @@ public class RevertingMove extends IndependantMove {
 	{
 		if(canBeMade(board))
 		{
+			Position oldPosition = myPiece.getCurrentPosition().clone();
 			//If a pawn was replaced by another piece
 			if(myPieceThatReplacedMyPiece != null)
 				myPieceThatReplacedMyPiece.removeFromBoard(board);
@@ -125,6 +126,7 @@ public class RevertingMove extends IndependantMove {
 				myPieceToPlaceAtOldPosition.reEnablePossibleMoves();
 				board.addPiece(myPieceToPlaceAtOldPosition, true, false);
 				board.updatePossibilityOfMovesForPosition(myPieceToPlaceAtOldPosition.getCurrentPosition());
+				myPieceToPlaceAtOldPosition = null;
 			}
 			
 			myPiece.reEnablePossibleMoves();
@@ -132,8 +134,8 @@ public class RevertingMove extends IndependantMove {
 			board.popLastMoveIfEqual(myMoveToRevert);
 			//Decrement how many times the move to revert has been made
 			myMoveToRevert.setMovesMade(myMoveToRevert.getMovesMade()-1);
-			
-			myPiece.revertedAMove(board);
+
+			myPiece.revertedAMove(board, oldPosition);
 		}
 		else
 			throw new UnavailableMoveException(this);

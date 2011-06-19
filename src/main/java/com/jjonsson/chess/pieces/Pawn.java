@@ -4,6 +4,7 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTwoStepMove;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.RevertingMove;
 
 public abstract class Pawn extends Piece
 {
@@ -24,12 +25,6 @@ public abstract class Pawn extends Piece
 	public void setTwoStepMove(PawnTwoStepMove move)
 	{
 		myTwoStepMove = move;
-	}
-
-	@Override
-	public int getValue()
-	{
-		return Piece.PAWN_VALUE;
 	}
 
 	@Override
@@ -55,8 +50,19 @@ public abstract class Pawn extends Piece
 	
 	protected abstract boolean isAtStartingRow();
 	
+	/**
+	 * 
+	 * @param position the position that should be evaluated (usually the Pawns current position)
+	 * @return true if it's time for this pawn to be replaced
+	 */
+	public boolean isTimeForReplacement(Position position)
+	{
+		int destinationRow = (getAffinity() == Piece.BLACK) ? 0 :(ChessBoard.BOARD_SIZE - 1);
+		return position.getRow() == destinationRow;
+	}
+	
 	@Override
-	public void revertedAMove(ChessBoard board)
+	public void revertedAMove(ChessBoard board, Position oldPosition)
 	{
 		if(isAtStartingRow())
 		{
@@ -67,6 +73,11 @@ public abstract class Pawn extends Piece
 				myOneStepMove.setMoveThatDependsOnMe(myTwoStepMove);
 				myTwoStepMove.updateMove(board);
 			}
+		}
+		//The pawn was removed because it reached it's destination, we need to add it again
+		if(isTimeForReplacement(oldPosition))
+		{
+			board.addPiece(this, true, false);
 		}
 	}
 }

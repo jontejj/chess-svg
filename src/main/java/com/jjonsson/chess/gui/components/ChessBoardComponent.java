@@ -30,6 +30,7 @@ import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.ChessWindow;
 import com.jjonsson.chess.gui.Settings;
+import com.jjonsson.chess.gui.StatusListener;
 import com.jjonsson.chess.gui.WindowUtilities;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
@@ -43,7 +44,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	private Piece myCurrentlySelectedPiece;
 	
-	private ChessWindow myWindow;
+	private Dimension mySize;
 
 	private Dimension myCurrentPieceSize;
 	public int myPieceBorderSize;
@@ -57,22 +58,31 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	private boolean myShowAvailableClicks;
 	
-	public ChessBoardComponent(ChessWindow window)
+	private ChessBoard myBoard;
+
+	private StatusListener	myStatusListener;
+	
+	/**
+	 * 
+	 * @param size the dimensions for this component
+	 */
+	public ChessBoardComponent(ChessBoard board, Dimension size)
 	{	
 		super();
 		if(Settings.DEBUG)
 		{
 			myShowAvailableClicks = true;
 		}
+		mySize = size;
+		myBoard = board;
 		
-		myWindow = window;
 		myPositionScores = ImmutableMap.of();
 		pieces = Sets.newHashSet();
 		setCurrentPieceSize();
-		setSize(myWindow.getBoardComponentSize());
+		setSize(size);
 		addMouseListener(this);
 		getBoard().addChessBoardListener(this);
-		for(Piece p : window.getBoard().getPieces())
+		for(Piece p : myBoard.getPieces())
 		{
 			ChessPieceComponent comp = new ChessPieceComponent(p, this);
 			pieces.add(comp);
@@ -80,6 +90,27 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		for(ChessPieceComponent p : pieces)
 		{
 			this.add(p);
+		}
+	}
+	
+	public void setStatusListener(StatusListener sl)
+	{
+		myStatusListener = sl;
+	}
+	
+	private void setResultOfInteraction(String result)
+	{
+		if(myStatusListener != null)
+		{
+			myStatusListener.setResultOfInteraction(result);
+		}
+	}
+	
+	private void statusChange()
+	{
+		if(myStatusListener != null)
+		{
+			myStatusListener.statusHasBeenUpdated();
 		}
 	}
 	
@@ -105,9 +136,14 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		return myCurrentPieceSize;
 	}
 	
+	public void setComponentSize(Dimension newSize)
+	{
+		mySize = newSize;
+	}
+	
 	private void setCurrentPieceSize()
 	{
-		myCurrentPieceSize = new Dimension(myWindow.getBoardComponentSize().width / ChessBoard.BOARD_SIZE, myWindow.getBoardComponentSize().height / ChessBoard.BOARD_SIZE);
+		myCurrentPieceSize = new Dimension(mySize.width / ChessBoard.BOARD_SIZE, mySize.height / ChessBoard.BOARD_SIZE);
 		myPieceMargin = (int) (myCurrentPieceSize.height * 0.1);
 		myPieceBorderSize = (int) (myCurrentPieceSize.height * 0.07);
 	}
@@ -118,10 +154,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void clear()
 	{
 		myCurrentlySelectedPiece = null;
-		Iterator<ChessPieceComponent> iterator = pieces.iterator();
-		while(iterator.hasNext())
+		for(ChessPieceComponent comp : pieces)
 		{
-			ChessPieceComponent comp = iterator.next();
 			comp.pieceRemoved(comp.getPiece());
 		}
 		pieces.clear();
@@ -134,7 +168,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	public ChessBoard getBoard()
 	{
-		return myWindow.getBoard();
+		return myBoard;
 	}
 	
 	public void paintComponent(Graphics g) 
@@ -189,10 +223,11 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
          }
 	}
 	/**
-	 * @param newWindowSize
+	 * @param newComponentSize
 	 */
-	public void resizeBoard(Dimension newWindowSize)
+	public void resizeBoard(Dimension newComponentSize)
 	{
+		mySize = newComponentSize;
 		setCurrentPieceSize();
 		for(ChessPieceComponent p : pieces)
 		{
@@ -204,26 +239,23 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	public void showHint()
 	{
-		myWindow.setResultOfInteraction("Thinking of a hint");
-		new Thread()
+		myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
+		if(myHintMove != null)
 		{
-			@Override
-			public void run()
-			{
-				myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
-				if(myHintMove != null)
-				{
-					myWindow.setResultOfInteraction("Hint: " + myHintMove);
-					//Makes it easy to make the move
-					setSelectedPiece(myHintMove.getPiece());
-					repaint();
-				}
-				else
-				{
-					myWindow.setResultOfInteraction("No hint could be found");
-				}
-			}
-		}.start();
+			setResultOfInteraction("Hint: " + myHintMove);
+			//Makes it easy to make the move
+			setSelectedPiece(myHintMove.getPiece());
+			repaint();
+		}
+		else
+		{
+			setResultOfInteraction("No hint could be found");
+		}
+	}
+	
+	public Move getHintMove()
+	{
+		return myHintMove;
 	}
 	
 	/**
@@ -282,11 +314,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
 			for(Move m : moves)
 			{
-				try
-				{
-					markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
-				}
-				catch(NullPointerException npe){}
+				markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);
 			}
 		}
 	}
@@ -308,6 +336,9 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	 */
 	private void markSquare(Position pos, Color markingColor, Graphics2D graphics)
 	{
+		if(pos == null)
+			return;
+		
 		graphics.setColor(markingColor);
 		Point point = getInnerBorderUpperLeftCornerPointForSquare(pos);
 		//Upper line
@@ -387,29 +418,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		
 		System.out.println("Point: " + p + ", Position: " + selectedPosition);
 		
-		if(myCurrentlySelectedPiece != null)
-		{
-			Move m = myCurrentlySelectedPiece.getAvailableMoveForPosition(selectedPosition, getBoard());
-			if(m != null)
-			{
-				System.out.println("Destination available: " + selectedPosition);
-				try
-				{
-					myCurrentlySelectedPiece.performMove(m, myWindow.getBoard());
-					return;
-				}
-				catch (UnavailableMoveException ume)
-				{
-					System.out.println(ume);
-				}
-			}
-		}
+		positionClicked(selectedPosition);
 		
-		Piece pieceAtSelectedPosition = getBoard().getPiece(selectedPosition);
-		if(pieceAtSelectedPosition != null && pieceAtSelectedPosition.hasSameAffinityAs(getBoard().getCurrentPlayer()))
-		{
-			setSelectedPiece(pieceAtSelectedPosition);
-		}
 		long time = (System.nanoTime() - startNanos);
 		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(1000000000));
 		System.out.println("Seconds: " + bd.toPlainString());
@@ -422,6 +432,33 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void mouseEntered(MouseEvent e){}
 	@Override
 	public void mouseExited(MouseEvent e){}
+	
+	public void positionClicked(Position positionThatWasClicked)
+	{
+		if(myCurrentlySelectedPiece != null)
+		{
+			Move m = myCurrentlySelectedPiece.getAvailableMoveForPosition(positionThatWasClicked, getBoard());
+			if(m != null)
+			{
+				System.out.println("Destination available: " + positionThatWasClicked);
+				try
+				{
+					myCurrentlySelectedPiece.performMove(m, getBoard());
+					return;
+				}
+				catch (UnavailableMoveException ume)
+				{
+					System.out.println(ume);
+				}
+			}
+		}
+		
+		Piece pieceAtSelectedPosition = getBoard().getPiece(positionThatWasClicked);
+		if(pieceAtSelectedPosition != null && pieceAtSelectedPosition.hasSameAffinityAs(getBoard().getCurrentPlayer()))
+		{
+			setSelectedPiece(pieceAtSelectedPosition);
+		}
+	}
 
 	@Override
 	public void piecePlaced(Piece p)
@@ -436,7 +473,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void gameStateChanged(ChessState newState)
 	{
 		System.out.println(newState);
-		myWindow.updateStatusBar();
+		statusChange();
 	}
 
 	@Override
@@ -452,7 +489,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	{
 		nextPlayer();
 		repaint();
-		myWindow.updateStatusBar();
+		statusChange();
 	}
 
 	@Override
@@ -460,7 +497,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	{
 		setSelectedPiece(null);
 		myHintMove = null;
-		myWindow.updateStatusBar();
+		statusChange();
 		if(!myAIdisabled && ChessBoardEvaluator.inPlay(getBoard()) && getBoard().allowsMoves())
 		{
 			/*try
@@ -474,7 +511,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			}*/
 			if(getBoard().getCurrentPlayer() == Piece.BLACK)
 			{
-				myWindow.setResultOfInteraction("Thinking ...");
+				setResultOfInteraction("Thinking ...");
 				//Run in a seperate thread to let the eventQueue run along
 				new Thread()
 				{
@@ -489,12 +526,12 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 						{
 							e.printStackTrace();
 						}
-						myWindow.updateStatusBar();
+						statusChange();
 						repaint();
 					}
 				}.start();
 			}
-			else
+			//else
 			{
 				//just for fun
 				/*try

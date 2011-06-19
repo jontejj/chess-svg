@@ -39,4 +39,11 @@ public class BlackPawn extends Pawn
 	{
 		return getCurrentPosition().getRow() == BLACK_PAWN_STARTING_ROW;
 	}
+
+	//The pawns are worth more as they approach their top/bottom goal
+	@Override
+	public int getValue()
+	{
+		return Piece.PAWN_VALUE + ((ChessBoard.BOARD_SIZE - getCurrentPosition().getRow() - 1) * 10);
+	}
 }

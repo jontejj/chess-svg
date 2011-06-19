@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -17,6 +18,7 @@ import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.moves.ordering.MoveOrdering;
 import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 
@@ -531,14 +533,9 @@ public abstract class Piece
 			currentPieceAtMyPosition.removeFromBoard(board);
 		}
 		
-		Object clonedSet = myListeners.clone();
-		if(clonedSet instanceof HashSet<?>)
+		for(MoveListener listener : ImmutableSet.copyOf(myListeners))
 		{
-			for(Object listener : (HashSet<?>)clonedSet)
-			{
-				if(listener instanceof MoveListener)
-					((MoveListener)listener).pieceRemoved(this);
-			}
+			listener.pieceRemoved(this);
 		}
 	}
 	
@@ -561,7 +558,7 @@ public abstract class Piece
 	 * Called when a move that this piece previously made has been reverted
 	 */
 	@SuppressWarnings("unused")
-	public void revertedAMove(ChessBoard board)
+	public void revertedAMove(ChessBoard board, Position oldPosition)
 	{
 	}
 

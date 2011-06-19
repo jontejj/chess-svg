@@ -20,7 +20,6 @@ import com.jjonsson.chess.pieces.Piece;
 public class MoveLogger implements MoveListener, ChessBoardListener
 {
 	private Deque<Move> myMoveHistory;
-	private long myMovesMade;
 	public MoveLogger()
 	{
 		myMoveHistory = new ArrayDeque<Move>();
@@ -62,9 +61,8 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 		if(!(performedMove instanceof RevertingMove))
 		{
 			addMove(performedMove);
-			myMovesMade++;
 			//We need to reset the move counters periodically to avoid the measurements from getting off the charts
-			if(myMovesMade % 10 == 0)
+			if(myMoveHistory.size() % 30 == 0)
 			{
 				performedMove.getPiece().getBoard().resetMoveCounters();
 			}

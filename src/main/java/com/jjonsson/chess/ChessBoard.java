@@ -725,16 +725,16 @@ public class ChessBoard implements Cloneable
 		{
 			for(Move m : possibleTakeOverMoves)
 			{
-				if(m instanceof PawnTakeOverMove)
+				//No threatening move
+				if(!(m instanceof PawnMove))
 				{
-					numberOfMoves++;
+					if(m instanceof PawnTakeOverMove)
+					{
+						numberOfMoves++;
+					}
+					else if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
+						numberOfMoves++;
 				}
-				else if(m instanceof PawnMove)
-				{
-					//No threatening move
-				}
-				else if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
-					numberOfMoves++;
 			}
 		}
 		

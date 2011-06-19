@@ -62,13 +62,35 @@ public class TestChessMoveEvaluator
 	public void testStupidTakeOverShouldNotBeMade() throws NoMovesAvailableException, InvalidPosition
 	{
 		ChessBoard board = TestScenarios.loadBoard("bishop_should_move_rational");
-		
+		//Pawn should not be taken by the bishop at 7G
+		makeSureMoveWasNotMade(board, Position.createPosition(2, Position.B));
+	}
+	
+	/**
+	 * Test if the AI avoids making risky moves that haven't been searched deeper than one level and thus may look good but
+	 * when in fact they aren't
+	 * @throws UnavailableMoveException 
+	 * @throws NoMovesAvailableException 
+	 * @throws InvalidPosition 
+	 */
+	@Test
+	public void testOnlyMakeSureMoves() throws NoMovesAvailableException, InvalidPosition
+	{
+		ChessBoard board = TestScenarios.loadBoard("white_queen_should_not_move_to_5H");
+		makeSureMoveWasNotMade(board, Position.createPosition(5, Position.H));
+	}
+	
+	@Test
+	public void testDontMoveIntoThreatenedSquare() throws NoMovesAvailableException, InvalidPosition
+	{
+		ChessBoard board = TestScenarios.loadBoard("white_queen_should_not_move_to_4C");
+		makeSureMoveWasNotMade(board, Position.createPosition(4, Position.C));
+	}
+	
+	private void makeSureMoveWasNotMade(ChessBoard board, Position badPosition) throws NoMovesAvailableException
+	{
 		ChessMoveEvaluator.performBestMove(board);
-		
 		Move lastMove = board.getLastMove();
-		
-		Position badPosition = Position.createPosition(2, Position.B);
-		
-		assertFalse("Pawn should not be taken by the bishop at 7G", lastMove.getCurrentPosition().equals(badPosition));
+		assertFalse("Last move should not be to: " + badPosition, lastMove.getCurrentPosition().equals(badPosition));
 	}
 }
