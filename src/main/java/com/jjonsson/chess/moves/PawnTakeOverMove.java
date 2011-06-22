@@ -35,8 +35,9 @@ public class PawnTakeOverMove extends PawnMove
 	{
 		if(isTakeOverMove())
 		{
-			return getPieceAtDestination().getValue() + 10;
+			//It may be a move that reaches it's destination as well
+			return getPieceAtDestination().getValue() + 10 + super.getTakeOverValue();
 		}
-		return 0;
+		return super.getTakeOverValue();
 	}
 }

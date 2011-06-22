@@ -43,5 +43,19 @@ public abstract class PawnMove extends DependantMove
 	{
 		return 20;
 	}
+	
+	/**
+	 * Overridden to prioritize replacement moves (Not actually a take over)
+	 * @return the value of the piece at this move's destination
+	 */
+	@Override
+	public int getTakeOverValue()
+	{
+		if(Pawn.isTimeForReplacement(getPositionIfPerformed(), getAffinity()))
+		{
+			return Piece.QUEEN_VALUE - Piece.PAWN_VALUE;
+		}
+		return 0;
+	}
 
 }

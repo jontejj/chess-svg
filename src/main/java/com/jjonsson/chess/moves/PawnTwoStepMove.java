@@ -20,6 +20,12 @@ public class PawnTwoStepMove extends PawnMove
 		return false;
 	}
 	
+	@Override
+	public int getTakeOverValue()
+	{
+		return 0;
+	}
+	
 	/**
 	 * Overridden to not accumulate takeover/protecting values as this move can't either protect nor take over a piece
 	 */

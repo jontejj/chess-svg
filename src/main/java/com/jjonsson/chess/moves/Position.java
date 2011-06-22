@@ -47,16 +47,6 @@ public class Position implements Cloneable
 	{
 		return myColumn;
 	}
-	
-	public void setRow(byte newRow)
-	{
-		myRow = newRow;
-	}
-	
-	public void setColumn(byte newColumn)
-	{
-		myColumn = newColumn;
-	}
 
 	void applyMove(Move move) 
 	{
@@ -72,10 +62,32 @@ public class Position implements Cloneable
 	 */
 	public static Position createPosition(int row, int column) throws InvalidPosition
 	{
-		if(row < 1 || row > ChessBoard.BOARD_SIZE || column < 1 || column > ChessBoard.BOARD_SIZE)
+		if(isInvalidPosition(row-1, column-1))
 			throw new InvalidPosition(row, column);
 		
 		return new Position((byte)(row - 1), (byte)(column - 1));
+	}
+	
+	/**
+	 * Validates that row and column are NOT between 0-7 (inclusive)
+	 * @param row
+	 * @param column
+	 * @return
+	 */
+	public static boolean isInvalidPosition(byte row, byte column)
+	{
+		return row < 0 || column < 0 || row >= ChessBoard.BOARD_SIZE || column >= ChessBoard.BOARD_SIZE;
+	}
+	
+	/**
+	 * Validates that row and column are NOT between 0-7 (inclusive)
+	 * @param row
+	 * @param column
+	 * @return
+	 */
+	private static boolean isInvalidPosition(int row, int column)
+	{
+		return row < 0 || column < 0 || row >= ChessBoard.BOARD_SIZE || column >= ChessBoard.BOARD_SIZE;
 	}
 	
 	public Position up() throws InvalidPosition

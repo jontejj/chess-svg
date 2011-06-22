@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.ChessBoardEvaluator;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.ChainMove;
@@ -450,7 +451,7 @@ public abstract class Piece
 	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
 	public void performMove(Move move, ChessBoard board, boolean printOut) throws UnavailableMoveException
-	{		
+	{			
 		if(printOut)
 			System.out.println("Performing: " + move);
 		

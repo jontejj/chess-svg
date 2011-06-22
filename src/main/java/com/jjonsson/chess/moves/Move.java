@@ -116,14 +116,6 @@ public abstract class Move
 		}
 	}
 	
-	public Piece getPieceBlockingMe()
-	{
-		if(myPieceAtDestination != null && myPieceAtDestination.hasSameAffinityAs(myPiece))
-			return myPieceAtDestination;
-		
-		return null;
-	}
-	
 	public Piece getPiece()
 	{
 		return myPiece;
@@ -273,9 +265,8 @@ public abstract class Move
 		byte newRow = (byte)(currentPosition.getRow()+myRowChange);
 		byte newColumn = (byte)(currentPosition.getColumn()+myColumnChange);
 		
-		if(newRow < 0 || newColumn < 0 || newRow >= ChessBoard.BOARD_SIZE || newColumn >= ChessBoard.BOARD_SIZE)
+		if(Position.isInvalidPosition(newRow, newColumn))
 		{
-			//Out of bounds
 			myDestination =  null;
 		}
 		else

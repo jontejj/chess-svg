@@ -22,10 +22,6 @@ public abstract class IndependantMove extends Move
 		
 		if(myCanBeMadeCache)
 		{
-			if(myDestination == null)
-			{
-				System.out.println(this + "Shouldn't be possible to do");
-			}
 			//The move is now possible
 			board.addAvailableMove(myDestination, myPiece, this);
 		}

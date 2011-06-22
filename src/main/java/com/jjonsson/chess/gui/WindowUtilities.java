@@ -16,21 +16,18 @@ public class WindowUtilities {
 	/**
 	 * Tell system to use native look and feel, as in previous
      * releases. Metal (Java) LAF is the default otherwise.
+	 * @throws UnsupportedLookAndFeelException 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 * @throws ClassNotFoundException 
 	 */
-	public static void setNativeLookAndFeel() 
+	public static void setNativeLookAndFeel() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException 
 	{
 		//For Mac's we want to use the native menu bar
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
 		System.setProperty("com.apple.mrj.application.apple.menu.about.name", ChessWindow.NAME);
 		
-		try 
-		{
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} 
-		catch(Exception e) 
-		{
-			System.out.println("Error setting native look and feel: " + e.getLocalizedMessage());
-		}
+		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 	}
 	  
 	public static RenderingHints getRenderingHints()

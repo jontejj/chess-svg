@@ -343,6 +343,9 @@ public class ChessBoard implements Cloneable
 	 */
 	public void performRandomMove() throws NoMovesAvailableException
 	{
+		if(!ChessBoardEvaluator.inPlay(this))
+			throw new NoMovesAvailableException();
+		
 		HashMultimap<Position, Move> availableMoves = getAvailableMoves(getCurrentPlayer());
 		
 		
@@ -402,9 +405,6 @@ public class ChessBoard implements Cloneable
 	{	
 		try
 		{
-			/* *****************************
-			  	
-			 * ******************************/
 			for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
 			{
 				addPiece(new WhitePawn(Position.createPosition(2, column), this), false, true);
@@ -750,17 +750,6 @@ public class ChessBoard implements Cloneable
 		}
 		
 		return numberOfMoves;
-	}
-	
-	/**
-	 * 
-	 * @param position the threatened position
-	 * @param affinity the affinity of the player that should threaten the position
-	 * @return true if the position is threatened
-	 */
-	public boolean isMoveThreateningPositionRightNow(Position position, boolean affinity)
-	{
-		return getAvailableMoves(position, affinity).size() > 0;
 	}
 
 	/**

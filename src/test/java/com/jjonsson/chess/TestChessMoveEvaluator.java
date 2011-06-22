@@ -2,6 +2,8 @@ package com.jjonsson.chess;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -16,41 +18,7 @@ import com.jjonsson.chess.scenarios.TestScenarios;
 
 
 public class TestChessMoveEvaluator
-{
-	
-	@Test
-	public void testAI() throws NoMovesAvailableException
-	{
-		ChessBoard board = TestScenarios.loadBoard("tower_evade_take_over");
-		long startNanos = System.nanoTime();
-		while(ChessBoardEvaluator.inPlay(board))
-		{
-			if(board.getCurrentPlayer() == Piece.BLACK)
-			{
-				ChessMoveEvaluator.performBestMove(board);
-			}
-			else
-				//Simulate that the white is a bad player that doesn't know what he's doing
-				board.performRandomMove();
-			
-			if(System.nanoTime() > startNanos + 15000000000L)
-			{
-				break;
-			}
-		}
-		
-		if(board.getCurrentState() == ChessState.CHECKMATE)
-		{
-			//If someone wins it should really be black :)
-			assertEquals("A random player won against the AI within 15 seconds, that's some crazy shit", Piece.BLACK, !board.getCurrentPlayer());
-			System.out.println("AI won within 15 seconds, that's good!");
-		}
-		else
-		{
-			//Well this is embarrassing black should have played better/faster
-		}
-	}
-	
+{	
 	/**
 	 * Test if the AI is to aggressive and doesn't recognize that the best move may be to move to cover 
 	 * instead of taking a less valuable piece as a trade for a more valuable one
@@ -64,6 +32,30 @@ public class TestChessMoveEvaluator
 		ChessBoard board = TestScenarios.loadBoard("bishop_should_move_rational");
 		//Pawn should not be taken by the bishop at 7G
 		makeSureMoveWasNotMade(board, Position.createPosition(2, Position.B));
+	}
+	
+	@Test
+	public void testADirectChechMateShouldBePrioritizedOverAFutureOne() throws NoMovesAvailableException
+	{
+		ChessBoard board = TestScenarios.loadBoard("pawn_moves_that_reach_their_destinations_should_be_worth_as_much_as_their_replacement_value");
+		ChessMoveEvaluator.performBestMove(board);
+		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
+	}
+	
+	@Test
+	public void testMakingAMoveWhileInCheckMateState()
+	{
+		ChessBoard board = TestScenarios.loadBoard("should_be_checkmate");
+		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
+		try
+		{
+			ChessMoveEvaluator.performBestMove(board);
+		}
+		catch (NoMovesAvailableException e)
+		{
+			assertFalse(ChessBoardEvaluator.inPlay(board));
+		}
+		assertNull(board.getLastMove());
 	}
 	
 	/**

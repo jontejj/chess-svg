@@ -61,6 +61,18 @@ public abstract class Pawn extends Piece
 		return position.getRow() == destinationRow;
 	}
 	
+	/**
+	 * 
+	 * @param position the position that should be evaluated (usually the Pawns current position)
+	 * @param affinity the affinity of the pawn
+	 * @return true if it's time for this pawn to be replaced
+	 */
+	public static boolean isTimeForReplacement(Position position, boolean affinity)
+	{
+		int destinationRow = (affinity == Piece.BLACK) ? 0 :(ChessBoard.BOARD_SIZE - 1);
+		return position.getRow() == destinationRow;
+	}
+	
 	@Override
 	public void revertedAMove(ChessBoard board, Position oldPosition)
 	{

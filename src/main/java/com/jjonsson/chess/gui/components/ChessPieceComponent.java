@@ -90,10 +90,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	{
 		if(this.getPiece() != null)
 			this.getPiece().removeMoveListener(this);
-		else
-		{
-			System.out.println("Something wrong with" + this);
-		}
+		
 		this.dispose();
 		
 		if(this.getParent() != null)

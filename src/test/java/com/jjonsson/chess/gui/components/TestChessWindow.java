@@ -5,8 +5,11 @@ import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.*;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentEvent;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JMenuItem;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,6 +17,7 @@ import org.junit.Test;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.gui.ChessWindow;
+import com.jjonsson.chess.gui.WindowUtilities;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.Rock;
@@ -25,8 +29,9 @@ public class TestChessWindow
 	static JMenuItem fakeMenuItem;
 	
 	@BeforeClass
-	public static void setup()
+	public static void setup() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException
 	{
+		WindowUtilities.setNativeLookAndFeel();
 		fakeMenuItem = new JMenuItem();
 	}
 	
@@ -65,14 +70,16 @@ public class TestChessWindow
 	/**
 	 * Tests that it's possible to undo moves
 	 * @throws InvalidPosition
+	 * @throws InterruptedException 
 	 */
 	@Test
-	public void testUndoMove() throws InvalidPosition
+	public void testUndoMove() throws InvalidPosition, InterruptedException
 	{
 		ChessBoard board = new ChessBoard(true);
 		ChessWindow window = new ChessWindow(board);
 		
 		window.displayGame();
+		window.setTitle("Testing undo of a move");
 		disableAI(window);
 		showClicks(window);
 		
@@ -99,12 +106,13 @@ public class TestChessWindow
 	
 	
 	@Test
-	public void testRevertOfPawnReplacementMove() throws InvalidPosition
+	public void testRevertOfPawnReplacementMove() throws InvalidPosition, InterruptedException
 	{
 		ChessBoard board = TestScenarios.loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");
 		ChessWindow window = new ChessWindow(board);
 		
 		window.displayGame();
+		window.setTitle("Testing undo of a pawn replacement move");
 		disableAI(window);
 		showClicks(window);
 		
@@ -134,12 +142,13 @@ public class TestChessWindow
 	}
 	
 	@Test
-	public void testNewGame() throws InvalidPosition
+	public void testNewGame() throws InvalidPosition, InterruptedException
 	{
 		ChessBoard board = new ChessBoard(true);
 		ChessWindow window = new ChessWindow(board);
 		
 		window.displayGame();
+		window.setTitle("Testing that new game resets the board");
 		disableAI(window);
 		
 		ChessBoardComponent component = window.getBoardComponent();
@@ -148,11 +157,28 @@ public class TestChessWindow
 		component.positionClicked(fromPosition);
 		TestChessBoardComponent.sleep();
 		component.positionClicked(toPosition);
-		TestChessBoardComponent.sleep();
 		
 		assertNotNull(board.getPiece(toPosition));
 		newGame(window);
 		assertNull(board.getPiece(toPosition));
+	}
+	
+	/**
+	 * Doesn't really test anything more than that the resize code doesn't throw anything that it shouldn't 
+	 * (Useful for testing resize events)
+	 */
+	@Test
+	public void testWindowResize()
+	{
+		ChessBoard board = new ChessBoard(true);
+		ChessWindow window = new ChessWindow(board);
+		
+		window.displayGame();
+		window.setTitle("Testing resize of window");
+		
+		
+		window.getComponentListeners()[0].componentResized(new WindowEvent(window, WindowEvent.WINDOW_STATE_CHANGED));
+		assertTrue(window.isEnabled());
 	}
 
 }

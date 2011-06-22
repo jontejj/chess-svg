@@ -43,6 +43,11 @@ public class ChessMoveEvaluator
 			depth = MAX_DEPTH;
 			scoreFactor = 1;
 		}
+		
+		public long getCurrentDepth()
+		{
+			return MAX_DEPTH-depth + 1;
+		}
 	}
 	
 	private static class SearchResult
@@ -52,7 +57,7 @@ public class ChessMoveEvaluator
 	}
 	
 	/**
-	 * Performs a focused search (not all moves are evaluated) and tries to return the best move available
+	 * Performs a directed DFS (not all moves to a given level are evaluated) and tries to return the best move available
 	 * @param board
 	 * @return the best move for the current player on the given board or null if no move was found
 	 */
@@ -87,13 +92,20 @@ public class ChessMoveEvaluator
 			Move bestMove = getBestMove(board);
 			bestMove.getPiece().performMove(bestMove, board);
 		}
-		catch(Throwable e)
+		catch(Throwable bestMoveException)
 		{
 			//TODO(jontejj): This shouldn't happen
-			e.printStackTrace();
+			bestMoveException.printStackTrace();
 			
 			//In the worst case scenario we make a random move if possible
-			board.performRandomMove();
+			try
+			{
+				board.performRandomMove();
+			}
+			catch(Throwable randomMoveException)
+			{
+				throw new NoMovesAvailableException();
+			}
 		}
 	}
 	
@@ -145,12 +157,13 @@ public class ChessMoveEvaluator
 				//	System.out.println("Testing: " + move);
 				
 				boolean takeOverMove = move.isTakeOverMove();
-				long moveValue = performMoveWithMeasurements(move, board, false);
+				long moveValue = performMoveWithMeasurements(move, board, limiter);
 				movesLeftToEvaluateOnThisBranch--;
 				if((((limiter.depth >= 0 && limiter.movesLeft > 0) 
-					|| (takeOverMove && limiter.scoreFactor == 1 && limiter.depth <= 0))
-					&& moveValue > Long.MIN_VALUE) 
-					&& movesLeftToEvaluateOnThisBranch > 0)
+					|| (takeOverMove && limiter.scoreFactor == 1 && limiter.depth <= 0)) //If we take over a piece we continue that path to not give too positive results
+					&& moveValue > Long.MIN_VALUE) //For invalid moves we don't continue
+					&& movesLeftToEvaluateOnThisBranch > 0 //This filters out deeper searches for moves that initially don't look so good
+					&& ChessBoardEvaluator.inPlay(board)) //Don't search deeper if we already are at check mate
 				{
 					limiter.depth--;
 					/*if(!takeOverMove)
@@ -241,11 +254,10 @@ public class ChessMoveEvaluator
 	 * how many time the move has been made (a repetitiveness protection)
 	 * how progressive a move is
 	 * @param move the move to perform (if it isn't available right now
-	 * @param undoMoveAfterMeasurement true if you only want the value of the move without it actually being performed
 	 * @return the estimated value of the move performed 
 	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
-	private static long performMoveWithMeasurements(Move move, ChessBoard board, boolean undoMoveAfterMeasurement)
+	private static long performMoveWithMeasurements(Move move, ChessBoard board, SearchLimiter limiter)
 	{
 		//Save some measurements for the before state
 		int takeOverValue = move.getTakeOverValue();
@@ -275,7 +287,7 @@ public class ChessMoveEvaluator
 		}
 		
 		//Save some measurements for the after state (the current player has changed now so that's why the getCurrentPlayer has been inverted)
-		long stateValue = ChessBoardEvaluator.valueOfState(board.getCurrentState());
+		long stateValue = ChessBoardEvaluator.valueOfState(board.getCurrentState()) / limiter.getCurrentDepth();
 		int otherPlayerNrOfAvailableMovesAfter = board.getAvailableMoves(board.getCurrentPlayer()).size();
 		int otherPlayerNrOfNonAvailableMovesAfter = board.getNonAvailableMoves(board.getCurrentPlayer()).size();
 		int playerNrOfAvailableMovesAfter = board.getAvailableMoves(!board.getCurrentPlayer()).size();
@@ -304,9 +316,6 @@ public class ChessMoveEvaluator
 		
 		//If we have made this move recently we punish it for being repetitive
 		moveValue -= (move.getMovesMade() - 1) * 10;
-
-		if(undoMoveAfterMeasurement)
-			board.undoMove(move, false);
 		
 		return moveValue;
 	}

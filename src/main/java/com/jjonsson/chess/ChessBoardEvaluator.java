@@ -21,20 +21,24 @@ public class ChessBoardEvaluator
 	
 	public static long valueOfState(ChessState state)
 	{
+		long result = 0;
 		switch(state)
 		{
 			case CHECKMATE:
-				return 50000;
+				result = 50000;
+				break;
 			case STALEMATE:
 				//TODO(jontejj): this could be beneficial during the end game
-				return -10000;
+				result = -10000;
+				break;
 			case CHECK:
-				return 0;
+				result = 0;
+				break;
 			case PLAYING:
-				return 0;
-			default:
-				return 0;
+				result = 0;
+				break;
 		}
+		return result;
 	}
 	
 	/**
