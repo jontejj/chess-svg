@@ -43,7 +43,9 @@ public class RevertingMove extends IndependantMove {
 	}
 	
 	/**
-	 * A reverting move can always be made if the it belongs to the move that was made last
+	 * {@inheritDoc}
+	 * 
+	 * <p>A reverting move can always be made if the it belongs to the move that was made last
 	 */
 	@Override
 	public boolean canBeMade(ChessBoard board)
@@ -74,7 +76,7 @@ public class RevertingMove extends IndependantMove {
 		myPieceThatReplacedMyPiece = p;
 	}
 	
-	public void setPieceAtOldPosition(Piece removedPiece)
+	public void setPieceToPlaceAtOldPosition(Piece removedPiece)
 	{
 		myPieceToPlaceAtOldPosition = removedPiece;
 	}
@@ -114,6 +116,7 @@ public class RevertingMove extends IndependantMove {
 		if(canBeMade(board))
 		{
 			Position oldPosition = myPiece.getCurrentPosition().clone();
+			
 			//If a pawn was replaced by another piece
 			if(myPieceThatReplacedMyPiece != null)
 				myPieceThatReplacedMyPiece.removeFromBoard(board);
@@ -126,7 +129,6 @@ public class RevertingMove extends IndependantMove {
 				myPieceToPlaceAtOldPosition.reEnablePossibleMoves();
 				board.addPiece(myPieceToPlaceAtOldPosition, true, false);
 				board.updatePossibilityOfMovesForPosition(myPieceToPlaceAtOldPosition.getCurrentPosition());
-				myPieceToPlaceAtOldPosition = null;
 			}
 			
 			myPiece.reEnablePossibleMoves();

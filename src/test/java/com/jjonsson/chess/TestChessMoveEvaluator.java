@@ -79,6 +79,16 @@ public class TestChessMoveEvaluator
 		makeSureMoveWasNotMade(board, Position.createPosition(4, Position.C));
 	}
 	
+	@Test
+	public void testWhiteQueenShouldAvoidBeingTaken() throws NoMovesAvailableException, InvalidPosition
+	{
+		ChessBoard board = TestScenarios.loadBoard("white_pawn_should_protect_queen_by_moving_to_4C");
+		//This should move the queen out of harms way
+		ChessMoveEvaluator.performBestMove(board);
+		//Verify that the black pawn can't take over the queen
+		assertTrue(board.getAvailableMoves(Position.createPosition(3, Position.B), Piece.BLACK).isEmpty());
+	}
+	
 	private void makeSureMoveWasNotMade(ChessBoard board, Position badPosition) throws NoMovesAvailableException
 	{
 		ChessMoveEvaluator.performBestMove(board);

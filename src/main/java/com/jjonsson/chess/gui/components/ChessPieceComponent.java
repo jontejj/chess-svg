@@ -63,7 +63,11 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 
 	public void updateSize()
 	{
-
+		if(myBoardComponent == null)
+		{
+			pieceRemoved(myPieceToDraw);
+			return;
+		}
 		setSize(myBoardComponent.getCurrentPieceSize().width - myBoardComponent.getPieceBorderSize() * 2 - myBoardComponent.getPieceMargin() * 2, myBoardComponent.getCurrentPieceSize().height - myBoardComponent.getPieceBorderSize() * 2 - myBoardComponent.getPieceMargin() * 2);
 		setLocation(getPointForPiece(myPieceToDraw));
 	}
@@ -88,16 +92,19 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	@Override
 	public void pieceRemoved(Piece removedPiece)
 	{
-		if(this.getPiece() != null)
-			this.getPiece().removeMoveListener(this);
-		
-		this.dispose();
-		
-		if(this.getParent() != null)
-			this.getParent().remove(this);
-		
-		myBoardComponent = null;
-		myPieceToDraw = null;
+		if(removedPiece == myPieceToDraw)
+		{
+			if(this.getPiece() != null)
+				this.getPiece().removeMoveListener(this);
+			
+			this.dispose();
+			
+			if(this.getParent() != null)
+				this.getParent().remove(this);
+			
+			myBoardComponent = null;
+			myPieceToDraw = null;
+		}
 	}
 
 	@Override

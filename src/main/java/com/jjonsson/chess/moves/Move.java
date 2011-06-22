@@ -1,6 +1,12 @@
 package com.jjonsson.chess.moves;
 
+import java.util.HashMap;
+import java.util.List;
+
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimaps;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
@@ -57,6 +63,11 @@ public abstract class Move
 	private long myMovesMade;
 	
 	/**
+	 * Maps the move history of the board to a possibility change (useful for debugging)
+	 */
+	protected HashMap<Move, List<Move>> myMovesThatHasChangedMyPossibility;
+	
+	/**
 	 * 
 	 * @param rowChange the row change for this move, valid numbers are (-7) to (+7)
 	 * @param columnChange the column change for this move, valid numbers are (-7) to (+7)
@@ -66,6 +77,7 @@ public abstract class Move
 		myRowChange = (byte)rowChange;
 		myColumnChange = (byte)columnChange;
 		myPiece = pieceThatTheMoveWillBeMadeWith;
+		myMovesThatHasChangedMyPossibility = Maps.newHashMap();
 		setRevertingMove();
 	}
 	
@@ -447,9 +459,9 @@ public abstract class Move
 		if(myPieceAtDestination != null)
 		{
 			//Take over is happening
-			myPieceAtDestination.removeFromBoard(board);
-			myRevertingMove.setPieceAtOldPosition(myPieceAtDestination);
+			myPieceAtDestination = myPieceAtDestination.removeFromBoard(board);
 		}
+		
 		board.movePiece(myPiece, this);
 		myPiece.getCurrentPosition().applyMove(this);
 		myMovesMade++;

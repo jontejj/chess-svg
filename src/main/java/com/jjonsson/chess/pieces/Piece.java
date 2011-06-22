@@ -80,6 +80,11 @@ public abstract class Piece
 	private boolean myIsRemoved;
 	
 	/**
+	 * True if a pawn has been exchanged for this piece
+	 */
+	private boolean myIsPawnReplacementPiece;
+	
+	/**
 	 * The board that this piece is placed on
 	 */
 	private ChessBoard myBoard;
@@ -521,8 +526,14 @@ public abstract class Piece
 		}
 	}
 	
-	public void removeFromBoard(ChessBoard board)
+	/**
+	 * 
+	 * @param board
+	 * @return the removed piece
+	 */
+	public Piece removeFromBoard(ChessBoard board)
 	{	
+		Piece returnPiece = this;
 		board.removePiece(this);
 		this.removeMovesFromBoard(board);
 		myIsRemoved = true;
@@ -531,18 +542,29 @@ public abstract class Piece
 		//This could happen if the previous piece was taken and there is a new piece that could be taken
 		if(currentPieceAtMyPosition != null && currentPieceAtMyPosition != this)
 		{
-			currentPieceAtMyPosition.removeFromBoard(board);
+			return currentPieceAtMyPosition.removeFromBoard(board);
 		}
 		
 		for(MoveListener listener : ImmutableSet.copyOf(myListeners))
 		{
-			listener.pieceRemoved(this);
+			listener.pieceRemoved(returnPiece);
 		}
+		return returnPiece;
 	}
 	
 	public boolean isRemoved()
 	{
 		return myIsRemoved;
+	}
+	
+	public boolean isPawnReplacementPiece()
+	{
+		return myIsPawnReplacementPiece;
+	}
+	
+	public void setIsPawnReplacementPiece()
+	{
+		myIsPawnReplacementPiece = true;
 	}
 
 	public boolean isWhite()

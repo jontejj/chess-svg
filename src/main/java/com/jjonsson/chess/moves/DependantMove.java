@@ -149,10 +149,12 @@ public abstract class DependantMove extends Move
 		{
 			//The move is now possible
 			board.addAvailableMove(myDestination, myPiece, this);
+			myMovesThatHasChangedMyPossibility.remove(board.getLastMove());
 		}
 		else
 		{
 			board.addNonAvailableMove(myDestination, myPiece, this);
+			myMovesThatHasChangedMyPossibility.put(board.getLastMove(), board.getMoveLogger().getLatestMoves(5));
 		}
 	}
 

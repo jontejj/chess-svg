@@ -503,6 +503,8 @@ public class ChessBoard implements Cloneable
 			//Replace him with a Queen
 			newPiece = new Queen(pawn.getCurrentPosition(), pawn.getAffinity(), this);
 		}
+		newPiece.setIsPawnReplacementPiece();
+		
 		addPiece(newPiece, true, false);
 		
 		//Update moves that can reach the queen
@@ -573,6 +575,11 @@ public class ChessBoard implements Cloneable
 			return myBlackKing;
 		
 		return myWhiteKing;
+	}
+	
+	public MoveLogger getMoveLogger()
+	{
+		return myMoveLogger;
 	}
 	
 	private HashMap<Position, Piece> getMapForAffinity(boolean affinity)
@@ -790,23 +797,31 @@ public class ChessBoard implements Cloneable
 	 */
 	public void updatePossibilityOfMovesForPosition(Position position)
 	{
-		updatePossibiltyForMapOfMoves(myWhiteAvailableMoves, position);
-		updatePossibiltyForMapOfMoves(myWhiteNonAvailableMoves, position);
-		updatePossibiltyForMapOfMoves(myBlackAvailableMoves, position);
-		updatePossibiltyForMapOfMoves(myBlackNonAvailableMoves, position);
+		ImmutableSet<Move> updatedMoves = ImmutableSet.of();
+		updatedMoves = updatePossibiltyForMapOfMoves(myWhiteAvailableMoves, position, updatedMoves);
+		updatePossibiltyForMapOfMoves(myWhiteNonAvailableMoves, position, updatedMoves);
+		updatedMoves = ImmutableSet.of();
+		updatedMoves = updatePossibiltyForMapOfMoves(myBlackAvailableMoves, position, updatedMoves);
+		updatePossibiltyForMapOfMoves(myBlackNonAvailableMoves, position, updatedMoves);
 	}
 	
 	/**
 	 * 
 	 * @param moves
 	 * @param pos
+	 * @param exclusionMap a map of moves that won't need an update
+	 * @return a map of the moves that was updated
 	 */
-	private void updatePossibiltyForMapOfMoves(HashMultimap<Position, Move> moves, Position pos)
+	private ImmutableSet<Move> updatePossibiltyForMapOfMoves(HashMultimap<Position, Move> moves, Position pos, ImmutableSet<Move> exclusionMap)
 	{
 		//As the move may be removed during this iteration will need a shallow copy of the move map
 		ImmutableSet<Move> copy = ImmutableSet.copyOf(moves.get(pos));
 		for(Move m : copy)
-			m.updateMove(this);
+		{
+			if(!exclusionMap.contains(m))
+				m.updateMove(this);
+		}
+		return copy;
 	}
 
 	public void updateGameState()
