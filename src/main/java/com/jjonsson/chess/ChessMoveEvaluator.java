@@ -206,7 +206,9 @@ public class ChessMoveEvaluator
 					//Moves that has not been searched deeper than one level risks an immediate take over from the other player 
 					//so to avoid making really stupid moves we only make those moves if they have a really high value
 					//
-					if(movesLeftToEvaluateOnThisBranch > 0 || moveValue >= move.getPiece().getValue())
+					long moveValueWithMarginForAPossibleTakeOver = moveValue - move.getPiece().getValue();
+					
+					if(movesLeftToEvaluateOnThisBranch > 0 || moveValueWithMarginForAPossibleTakeOver > result.bestMoveValue)
 					{
 						//Only return the move if it was undoable because otherwise it means that it was a bad/invalid move
 						if(moveValue > result.bestMoveValue)

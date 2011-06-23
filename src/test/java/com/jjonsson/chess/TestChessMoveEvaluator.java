@@ -57,6 +57,22 @@ public class TestChessMoveEvaluator
 		}
 		assertNull(board.getLastMove());
 	}
+
+	@Test
+	public void testCheckmateThreatShouldBeNeutralizedByAResonableMove() throws NoMovesAvailableException, InvalidPosition, UnavailableMoveException
+	{
+		ChessBoard board = TestScenarios.loadBoard("chechmate_threat_must_be_neatrulized");
+		assertEquals(ChessState.PLAYING, board.getCurrentState());
+		makeSureMoveWasNotMade(board, Position.createPosition(8, Position.G));
+		Piece blackQueen = board.getPiece(Position.createPosition(7, Position.G));
+		Move possibleCheckMateMove = blackQueen.getAvailableMoveForPosition(Position.createPosition(3, Position.G), board);
+		blackQueen.performMove(possibleCheckMateMove, board);
+		assertEquals(ChessState.CHECK, board.getCurrentState());
+		//The queen should be taken
+		ChessMoveEvaluator.performBestMove(board);
+		assertTrue(blackQueen.isRemoved());
+		assertEquals(ChessState.PLAYING, board.getCurrentState());
+	}
 	
 	/**
 	 * Test if the AI avoids making risky moves that haven't been searched deeper than one level and thus may look good but
