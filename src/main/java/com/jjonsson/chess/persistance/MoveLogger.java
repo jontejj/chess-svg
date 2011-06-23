@@ -88,6 +88,11 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 			}
 		}
 	}
+	
+	public Piece getRemovedPieceForLastMove()
+	{
+		return myRemovalHistory.get(myMoveHistory.size() - 1);
+	}
 
 	@Override
 	public void pieceRemoved(Piece removedPiece)

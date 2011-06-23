@@ -105,6 +105,14 @@ public class TestChessMoveEvaluator
 		assertTrue(board.getAvailableMoves(Position.createPosition(3, Position.B), Piece.BLACK).isEmpty());
 	}
 	
+	@Test
+	public void testBishopShouldAvoidBeingTaken() throws NoMovesAvailableException, InvalidPosition
+	{
+		ChessBoard board = TestScenarios.loadBoard("bishop_should_escape_from_6E");
+		ChessMoveEvaluator.performBestMove(board);
+		assertTrue(board.getAvailableMoves(Position.createPosition(6, Position.E), Piece.WHITE).isEmpty());
+	}
+	
 	private void makeSureMoveWasNotMade(ChessBoard board, Position badPosition) throws NoMovesAvailableException
 	{
 		ChessMoveEvaluator.performBestMove(board);

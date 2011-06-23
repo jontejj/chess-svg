@@ -480,8 +480,9 @@ public abstract class Move
 	public String logMessageForLastMove() 
 	{
 		String log = myPiece.getDisplayName() + ": " + getRevertingMove().getPositionIfPerformed() + " -> " + myPiece.getCurrentPosition();
-		if(getRevertingMove().getPieceThatITookOver() != null)
-			log += " (Took over: " + getRevertingMove().getPieceThatITookOver().getDisplayName() + ")";
+		Piece removedPiece = getPiece().getBoard().getMoveLogger().getRemovedPieceForLastMove();
+		if(removedPiece != null)
+			log += " (Took over: " + removedPiece.getDisplayName() + ")";
 		return log;
 	}
 

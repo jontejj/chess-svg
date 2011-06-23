@@ -915,21 +915,27 @@ public class ChessBoard implements Cloneable
 
 	/**
 	 * 
-	 * @return a descriptive string of the status for this board (which players turn it is etc.)
+	 * @return a descriptive string of the status for this board (who's turn it is etc.)
 	 */
 	public String getStatusString() 
 	{
 		String status = "";
-		if(ChessBoardEvaluator.inPlay(this))
-			status = getCurrentPlayerString() + "s turn";
-		else
+		ChessState state = getCurrentState();
+		switch(state)
 		{
-			ChessState state = getCurrentState();
-			if(state == ChessState.CHECKMATE)
-				status = "Checkmate. " + getPreviousPlayerString() + " won.";
-			else if(state == ChessState.STALEMATE)				
+			case CHECK:
+				status = "Check. ";
+			case PLAYING:
+				status += getCurrentPlayerString() + "s turn";
+				break;
+			case CHECKMATE:
+				status = "Check mate. " + getPreviousPlayerString() + " won. ";
+				break;
+			case STALEMATE:	
 				status = "Stalemate! Draw. ";
+				break;
 		}
+
 		if(getLastMove() != null)
 		{
 			status += " (Last Move: " + getLastMove().logMessageForLastMove() + ")";
