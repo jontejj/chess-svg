@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.pieces.Piece;
 
 /**
@@ -149,12 +149,10 @@ public abstract class DependantMove extends Move
 		{
 			//The move is now possible
 			board.addAvailableMove(myDestination, myPiece, this);
-			myMovesThatHasChangedMyPossibility.remove(board.getLastMove());
 		}
 		else
 		{
 			board.addNonAvailableMove(myDestination, myPiece, this);
-			myMovesThatHasChangedMyPossibility.put(board.getLastMove(), board.getMoveLogger().getLatestMoves(5));
 		}
 	}
 
@@ -168,7 +166,7 @@ public abstract class DependantMove extends Move
 	}
 	
 	@Override
-	protected void syncCountersWithBoard(ChessBoard board)
+	public void syncCountersWithBoard(ChessBoard board)
 	{
 		//First sync moves that this move is dependent on
 		syncCountersWithBoardUpwards(board);

@@ -21,10 +21,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.ChessBoardEvaluator;
-import com.jjonsson.chess.ChessMoveEvaluator;
-import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
-import com.jjonsson.chess.ChessBoardListener;
+import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
+import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
+import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
@@ -32,6 +31,7 @@ import com.jjonsson.chess.gui.ChessWindow;
 import com.jjonsson.chess.gui.Settings;
 import com.jjonsson.chess.gui.StatusListener;
 import com.jjonsson.chess.gui.WindowUtilities;
+import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
@@ -311,7 +311,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		if(ChessBoardEvaluator.inPlay(getBoard()) && myCurrentlySelectedPiece != null)
 		{
 			//Mark available moves for the selected piece
-			List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(false, getBoard());
+			List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(Piece.NO_SORT, getBoard());
 			for(Move m : moves)
 			{
 				markSquare(m.getPositionIfPerformed(),Color.GREEN, graphics);

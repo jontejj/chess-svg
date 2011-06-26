@@ -20,11 +20,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
+import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.BoardInconsistencyException;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;
@@ -44,6 +46,12 @@ import com.jjonsson.chess.pieces.WhitePawn;
 public class ChessBoard implements Cloneable
 {
 	public static final byte BOARD_SIZE = 8;
+	
+	/**
+	 * Defines how important it is to keep available moves for one's king
+	 * King Mobility = KING_MOBILITY_FACTOR * "the number of available moves for one's king"
+	 */
+	public static final int KING_MOBILITY_FACTOR = 20;
 	
 	private HashMap<Position, Piece> myWhitePieces;
 	private HashMap<Position, Piece> myBlackPieces;
@@ -204,7 +212,7 @@ public class ChessBoard implements Cloneable
 		}
 	}
 
-	ChessBoard getOriginatingBoard()
+	public ChessBoard getOriginatingBoard()
 	{
 		return myOriginatingBoard;
 	}
@@ -727,30 +735,24 @@ public class ChessBoard implements Cloneable
 		//Pieces may be able to move into this position if a piece moves there so 
 		//we check all pieces that has a currently non possible move that leads to this position
 		ImmutableSet<Move> possibleTakeOverMoves = getNonAvailableMoves(position, affinity);
-		
-		if(possibleTakeOverMoves != null)
+		for(Move m : possibleTakeOverMoves)
 		{
-			for(Move m : possibleTakeOverMoves)
+			//No threatening move
+			if(!(m instanceof PawnMove))
 			{
-				//No threatening move
-				if(!(m instanceof PawnMove))
+				if(m instanceof PawnTakeOverMove)
 				{
-					if(m instanceof PawnTakeOverMove)
-					{
-						numberOfMoves++;
-					}
-					else if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
-						numberOfMoves++;
+					numberOfMoves++;
 				}
+				else if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
+					numberOfMoves++;
 			}
 		}
 		
-		Iterator<Move> iterator = moves.iterator();
-		while(iterator.hasNext())
+		for(Move m : moves)
 		{
-			Move threateningMove = iterator.next();
 			//A pawn move can't be made if there is something standing in this square and thus is it not threatening this square
-			if(!(threateningMove instanceof PawnMove))
+			if(!(m instanceof PawnMove))
 			{
 				numberOfMoves++;
 			}
@@ -1088,4 +1090,19 @@ public class ChessBoard implements Cloneable
 		return myWhiteTakeOverPiecesCount;
 	}
 
+	public long getMeasuredStatusForPlayer(boolean affinity)
+	{
+		int playerNrOfAvailableMoves = getAvailableMoves(affinity).size();
+		//int playerNrOfNonAvailableMoves = getNonAvailableMoves(affinity).size();
+		long playerProtectiveMoves = getProtectedPiecesCount(affinity);
+		long playerTakeOverCount = getTakeOverPiecesCount(affinity);
+		long totalPieceValue = 0;
+		for(Piece p : getPiecesForAffinity(affinity))
+		{
+			totalPieceValue += p.getValue();
+		}
+		//Counts the available moves for the king
+		int kingMobility = this.getKing(affinity).getAvailableMoves(Piece.NO_SORT, this).size() * KING_MOBILITY_FACTOR;
+		return playerNrOfAvailableMoves + playerProtectiveMoves + playerTakeOverCount + totalPieceValue + kingMobility;
+	}
 }

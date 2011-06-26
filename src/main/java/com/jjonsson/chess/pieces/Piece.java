@@ -11,7 +11,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.ChessBoardEvaluator;
+import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
+import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.ChainMove;
@@ -20,7 +21,6 @@ import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.RevertingMove;
-import com.jjonsson.chess.moves.ordering.MoveOrdering;
 import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 
 /**
@@ -40,9 +40,9 @@ public abstract class Piece
 	public static final int KING_VALUE = 0;
 	
 	/**
-	 * Defines how important is to have many take over alternatives
+	 * Defines how important is to have many take over alternatives (based on empirical tests)
 	 */
-	protected static final double TAKE_OVER_ACCUMULATOR_IMPORTANCE_FACTOR = 0.1;
+	protected static final double TAKE_OVER_ACCUMULATOR_IMPORTANCE_FACTOR = 0.6;
 	
 	/**
 	 * Defines how important it is to protect your own pieces
@@ -60,6 +60,9 @@ public abstract class Piece
 	//The affinity (color) of a piece
 	public static boolean WHITE = false;
 	public static boolean BLACK = true;
+	
+	public static boolean NO_SORT = false;
+	public static boolean SORT = true;
 	
 	protected Position myCurrentPosition;
 	private boolean myAffinity;
@@ -355,7 +358,7 @@ public abstract class Piece
 	
 	public boolean canMakeAMove(ChessBoard board)
 	{
-		return getAvailableMoves(false, board).size() > 0;
+		return getAvailableMoves(NO_SORT, board).size() > 0;
 	}
 	/**
 	 * 
@@ -523,6 +526,7 @@ public abstract class Piece
 		for(Move m : myPossibleMoves)
 		{
 			m.removeFromBoard(chessBoard);
+			m.syncCountersWithBoard(chessBoard);
 		}
 	}
 	

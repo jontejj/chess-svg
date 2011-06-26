@@ -11,7 +11,7 @@ import org.junit.Test;
 import junit.framework.Assert;
 
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;

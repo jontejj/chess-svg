@@ -63,11 +63,6 @@ public abstract class Move
 	private long myMovesMade;
 	
 	/**
-	 * Maps the move history of the board to a possibility change (useful for debugging)
-	 */
-	protected HashMap<Move, List<Move>> myMovesThatHasChangedMyPossibility;
-	
-	/**
 	 * 
 	 * @param rowChange the row change for this move, valid numbers are (-7) to (+7)
 	 * @param columnChange the column change for this move, valid numbers are (-7) to (+7)
@@ -77,7 +72,6 @@ public abstract class Move
 		myRowChange = (byte)rowChange;
 		myColumnChange = (byte)columnChange;
 		myPiece = pieceThatTheMoveWillBeMadeWith;
-		myMovesThatHasChangedMyPossibility = Maps.newHashMap();
 		setRevertingMove();
 	}
 	
@@ -298,7 +292,7 @@ public abstract class Move
 		this.syncCountersWithBoard(board);
 	}
 	
-	protected void syncCountersWithBoard(ChessBoard board)
+	public void syncCountersWithBoard(ChessBoard board)
 	{
 		//Only update the counters if there has been a change
 		if(myOldPieceAtDestination != myPieceAtDestination || myChangedCountersDuringLastSync)
@@ -356,7 +350,6 @@ public abstract class Move
 		myCanBeMadeCache = false;
 		myOldPieceAtDestination = myPieceAtDestination;
 		myPieceAtDestination = null;
-		syncCountersWithBoard(chessBoard);
 	}
 	
 	public boolean isRemoved()
