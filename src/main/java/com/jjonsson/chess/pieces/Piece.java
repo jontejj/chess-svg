@@ -37,7 +37,7 @@ public abstract class Piece
 	public static final int QUEEN_VALUE = 900;
 	
 	//This is handled by the ChessState's the king can't be taken over and therefore it shouldn't have a value
-	public static final int KING_VALUE = 0;
+	public static final int KING_VALUE = 30;
 	
 	/**
 	 * Defines how important is to have many take over alternatives (based on empirical tests)

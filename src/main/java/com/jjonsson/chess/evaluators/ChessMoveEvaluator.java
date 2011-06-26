@@ -122,11 +122,8 @@ public class ChessMoveEvaluator
 				boolean takeOverMove = move.isTakeOverMove();
 				long moveValue = performMoveWithMeasurements(move, board, limiter);
 				movesLeftToEvaluateOnThisBranch--;
-				if((((limiter.depth >= 0 && limiter.movesLeft > 0) 
-					|| (takeOverMove && limiter.scoreFactor == 1 && limiter.depth <= 0)) //If we take over a piece we continue that path to not give too positive results
-					&& moveValue > Long.MIN_VALUE) //For invalid moves we don't continue
-					&& movesLeftToEvaluateOnThisBranch > 0 //This filters out deeper searches for moves that initially don't look so good
-					&& ChessBoardEvaluator.inPlay(board)) //Don't search deeper if we already are at check mate
+				boolean deeperSearch = shouldContinueDeeper(board, limiter, movesLeftToEvaluateOnThisBranch, moveValue, takeOverMove);
+				if(deeperSearch)
 				{
 					limiter.depth--;
 					/*if(!takeOverMove)
@@ -171,7 +168,7 @@ public class ChessMoveEvaluator
 					//
 					long moveValueWithMarginForAPossibleTakeOver = moveValue - move.getPiece().getValue();
 					
-					if(movesLeftToEvaluateOnThisBranch > 0 || moveValueWithMarginForAPossibleTakeOver > result.bestMoveValue)
+					if(deeperSearch || moveValueWithMarginForAPossibleTakeOver > result.bestMoveValue)
 					{
 						//Only return the move if it was undoable because otherwise it means that it was a bad/invalid move
 						if(moveValue > result.bestMoveValue)
@@ -208,6 +205,26 @@ public class ChessMoveEvaluator
 		}
 		
 		return result;
+	}
+	
+	private static boolean shouldContinueDeeper(ChessBoard board, SearchLimiter limiter, long movesLeftOnBranch, long moveValue, boolean isTakeOverMove)
+	{
+		if(!ChessBoardEvaluator.inPlay(board)) //Don't search deeper if we already are at check mate
+			return false;
+		
+		if(moveValue == Long.MIN_VALUE) //For invalid moves we don't continue
+			return false;
+		
+		boolean minimumDepthNotReached = (limiter.getCurrentDepth() <= SearchLimiter.MINIMUM_DEPTH_TO_SEARCH);
+		
+		if(movesLeftOnBranch <= 0 && !minimumDepthNotReached) //This filters out deeper searches for moves that initially don't look so good
+			return false;
+		
+		boolean finalDepthNotReached = (limiter.depth >= 0 && limiter.movesLeft > 0);
+		//If we take over a piece we continue that path to not give too positive results
+		boolean iTookOverAPiece = (isTakeOverMove && limiter.scoreFactor == 1 && limiter.depth <= 0);
+		
+		return minimumDepthNotReached || finalDepthNotReached || iTookOverAPiece;
 	}
 	
 	/**

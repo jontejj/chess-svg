@@ -140,6 +140,22 @@ public class TestChessMoveEvaluator
 	}
 	
 	@Test
+	public void testShouldFinishRatherQuick() throws NoMovesAvailableException
+	{
+		ChessBoard board = TestScenarios.loadBoard("should_finish_rather_quick");
+		ChessMoveEvaluator.performBestMove(board);
+		
+		assertTrue(ChessState.CHECK == board.getCurrentState());
+		
+		//Moves the king to the only available slot
+		board.performRandomMove();
+		
+		ChessMoveEvaluator.performBestMove(board);
+		
+		assertTrue(ChessState.CHECKMATE == board.getCurrentState());
+	}
+	
+	@Test
 	public void testBishopShouldAvoidBeingTaken() throws NoMovesAvailableException, InvalidPosition
 	{
 		ChessBoard board = TestScenarios.loadBoard("bishop_should_escape_from_6E");

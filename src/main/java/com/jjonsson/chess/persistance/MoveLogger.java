@@ -28,6 +28,11 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 {
 	private Deque<Move> myMoveHistory;
 	private Map<Integer, Piece> myRemovalHistory;
+	
+	/**
+	 * Defines how many moves that are remembered so that the game doesn't get stuck in a repetitive loop
+	 */
+	private static final int REPITION_HISTORY_RESET_INTERVAL = 30;
 	public MoveLogger()
 	{
 		myMoveHistory = new ArrayDeque<Move>();
@@ -82,7 +87,7 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 		{
 			addMove(performedMove);
 			//We need to reset the move counters periodically to avoid the measurements from getting off the charts
-			if(myMoveHistory.size() % 30 == 0)
+			if(myMoveHistory.size() % REPITION_HISTORY_RESET_INTERVAL == 0)
 			{
 				performedMove.getPiece().getBoard().resetMoveCounters();
 			}

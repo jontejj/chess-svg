@@ -4,6 +4,7 @@ class SearchLimiter
 {
 	static final long MAX_DEPTH = 2;
 	static final long MAX_BRANCH_MOVES = 30;
+	public static final int MINIMUM_DEPTH_TO_SEARCH = 2;
 	/**
 	 * Used to limit the amount of moves to evaluate
 	 */
