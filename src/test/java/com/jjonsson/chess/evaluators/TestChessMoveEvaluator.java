@@ -19,6 +19,7 @@ import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.scenarios.TestScenarios;
+import static com.jjonsson.chess.pieces.Piece.*;
 
 
 public class TestChessMoveEvaluator
@@ -160,7 +161,7 @@ public class TestChessMoveEvaluator
 	{
 		ChessBoard board = TestScenarios.loadBoard("bishop_should_escape_from_6E");
 		ChessMoveEvaluator.performBestMove(board);
-		assertTrue(board.getAvailableMoves(Position.createPosition(6, Position.E), Piece.WHITE).isEmpty());
+		assertTrue(board.getAvailableMoves(Position.createPosition(6, Position.E), WHITE).isEmpty());
 	}
 	
 	private void makeSureMoveWasNotMade(ChessBoard board, Position badPosition) throws NoMovesAvailableException

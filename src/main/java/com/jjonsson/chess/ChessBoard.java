@@ -43,6 +43,8 @@ import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.Rock;
 import com.jjonsson.chess.pieces.WhitePawn;
 
+import static com.jjonsson.chess.pieces.Piece.*;
+
 public class ChessBoard implements Cloneable
 {
 	public static final byte BOARD_SIZE = 8;
@@ -613,7 +615,7 @@ public class ChessBoard implements Cloneable
 	 */
 	public HashMultimap<Position, Move> getAvailableMoves(boolean affinity)
 	{
-		if(affinity == Piece.WHITE)
+		if(affinity == WHITE)
 			return myWhiteAvailableMoves;
 		
 		return myBlackAvailableMoves;	
@@ -627,7 +629,7 @@ public class ChessBoard implements Cloneable
 	public ImmutableSet<Move> getAvailableMoves(Position position, boolean affinity)
 	{
 		Set<Move> moves = null;
-		if(affinity == Piece.WHITE)
+		if(affinity == WHITE)
 			moves = myWhiteAvailableMoves.get(position);
 		else
 			moves = myBlackAvailableMoves.get(position);
@@ -650,7 +652,7 @@ public class ChessBoard implements Cloneable
 	public HashMultimap<Position, Move> getNonAvailableMoves(boolean affinity)
 	{
 		HashMultimap<Position, Move> moves = null;
-		if(affinity == Piece.WHITE)
+		if(affinity == WHITE)
 			moves = myWhiteNonAvailableMoves;
 		else
 			moves = myBlackNonAvailableMoves;
@@ -666,7 +668,7 @@ public class ChessBoard implements Cloneable
 	public ImmutableSet<Move> getNonAvailableMoves(Position position, boolean affinity)
 	{
 		Set<Move> moves = null;
-		if(affinity == Piece.BLACK)
+		if(affinity == BLACK)
 			moves  = myBlackNonAvailableMoves.get(position);
 		else
 			moves = myWhiteNonAvailableMoves.get(position);
@@ -895,7 +897,7 @@ public class ChessBoard implements Cloneable
 		byte[] settings = new byte[1];
 		
 		//Left most bit tell us the current player
-		if(myCurrentPlayer == Piece.BLACK)
+		if(myCurrentPlayer == BLACK)
 			settings[0] = (byte) (1 << 7);
 		
 		return settings;
@@ -909,9 +911,9 @@ public class ChessBoard implements Cloneable
 		{
 			//Left most bit tell us the current player
 			if((settings[0] & 0x80) == 0x80)
-				myCurrentPlayer = Piece.BLACK;
+				myCurrentPlayer = BLACK;
 			else
-				myCurrentPlayer = Piece.WHITE;
+				myCurrentPlayer = WHITE;
 		}
 	}
 
@@ -1044,7 +1046,7 @@ public class ChessBoard implements Cloneable
 
 	public void decreaseProtectedPiecesCounter(boolean affinity, int decrementValue)
 	{
-		if(affinity == Piece.BLACK)
+		if(affinity == BLACK)
 			myBlackProtectedPiecesCount -= decrementValue;
 		else
 			myWhiteProtectedPiecesCount -= decrementValue;
@@ -1052,7 +1054,7 @@ public class ChessBoard implements Cloneable
 
 	public void increaseProtectedPiecesCounter(boolean affinity, int incrementValue)
 	{
-		if(affinity == Piece.BLACK)
+		if(affinity == BLACK)
 			myBlackProtectedPiecesCount += incrementValue;
 		else
 			myWhiteProtectedPiecesCount += incrementValue;
@@ -1060,7 +1062,7 @@ public class ChessBoard implements Cloneable
 	
 	public long getProtectedPiecesCount(boolean affinity)
 	{
-		if(affinity == Piece.BLACK)
+		if(affinity == BLACK)
 			return myBlackProtectedPiecesCount;
 		
 		return myWhiteProtectedPiecesCount;
@@ -1068,7 +1070,7 @@ public class ChessBoard implements Cloneable
 	
 	public void decreaseTakeOverPiecesCounter(boolean affinity, int decrementValue)
 	{
-		if(affinity == Piece.BLACK)
+		if(affinity == BLACK)
 			myBlackTakeOverPiecesCount -= decrementValue;
 		else
 			myWhiteTakeOverPiecesCount -= decrementValue;
@@ -1076,7 +1078,7 @@ public class ChessBoard implements Cloneable
 
 	public void increaseTakeOverPiecesCounter(boolean affinity, int incrementValue)
 	{
-		if(affinity == Piece.BLACK)
+		if(affinity == BLACK)
 			myBlackTakeOverPiecesCount += incrementValue;
 		else
 			myWhiteTakeOverPiecesCount += incrementValue;
@@ -1084,7 +1086,7 @@ public class ChessBoard implements Cloneable
 	
 	public long getTakeOverPiecesCount(boolean affinity)
 	{
-		if(affinity == Piece.BLACK)
+		if(affinity == BLACK)
 			return myBlackTakeOverPiecesCount;
 		
 		return myWhiteTakeOverPiecesCount;
@@ -1102,7 +1104,7 @@ public class ChessBoard implements Cloneable
 			totalPieceValue += p.getValue();
 		}
 		//Counts the available moves for the king
-		int kingMobility = this.getKing(affinity).getAvailableMoves(Piece.NO_SORT, this).size() * KING_MOBILITY_FACTOR;
+		int kingMobility = this.getKing(affinity).getAvailableMoves(NO_SORT, this).size() * KING_MOBILITY_FACTOR;
 		return playerNrOfAvailableMoves + playerProtectiveMoves + playerTakeOverCount + totalPieceValue + kingMobility;
 	}
 }

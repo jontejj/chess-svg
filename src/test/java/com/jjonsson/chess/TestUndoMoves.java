@@ -14,6 +14,7 @@ import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.Rock;
 import com.jjonsson.chess.scenarios.TestScenarios;
+import static com.jjonsson.chess.pieces.Piece.*;
 
 public class TestUndoMoves
 {
@@ -22,7 +23,7 @@ public class TestUndoMoves
 	public void testPawnTwoStepMoveUndo() throws NoSuchElementException, InvalidPosition, UnavailableMoveException
 	{
 		ChessBoard board = new ChessBoard(true);
-		Move pawnTwoStepMove = board.getAvailableMove(Position.createPosition(4, Position.C), Piece.WHITE);
+		Move pawnTwoStepMove = board.getAvailableMove(Position.createPosition(4, Position.C), WHITE);
 		pawnTwoStepMove.getPiece().performMove(pawnTwoStepMove, board);
 		assertEquals(1, board.undoMoves(1));
 		assertTrue(pawnTwoStepMove.canBeMade(board));
@@ -43,20 +44,20 @@ public class TestUndoMoves
 		ChessBoard board2 = TestScenarios.loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");
 		
 		Position takeOverSpot = Position.createPosition(8, Position.B);
-		Move pawnTakeOverMove = board2.getAvailableMove(takeOverSpot, Piece.WHITE);
+		Move pawnTakeOverMove = board2.getAvailableMove(takeOverSpot, WHITE);
 		
 		//Take over the black rock
 		pawnTakeOverMove.getPiece().performMove(pawnTakeOverMove, board2);
 		
 		Piece whiteQueen = board2.getPiece(takeOverSpot);
-		assertEquals(Piece.WHITE, whiteQueen.getAffinity());
+		assertEquals(WHITE, whiteQueen.getAffinity());
 		assertTrue(whiteQueen instanceof Queen);
 		
 		board2.undoMoves(1);
 		
 		//The black rock should again be on the board
 		Piece blackRock = board2.getPiece(takeOverSpot);
-		assertEquals(Piece.BLACK, blackRock.getAffinity());
+		assertEquals(BLACK, blackRock.getAffinity());
 		assertTrue(blackRock instanceof Rock);
 	}
 	
@@ -71,16 +72,16 @@ public class TestUndoMoves
 		Position rockMoveToSpot = Position.createPosition(7, Position.A);
 		
 		//Take over a white pawn
-		Move pawnTakeOverMove = board.getAvailableMove(takeOverOneSpot, Piece.BLACK);
+		Move pawnTakeOverMove = board.getAvailableMove(takeOverOneSpot, BLACK);
 		pawnTakeOverMove.getPiece().performMove(pawnTakeOverMove, board);
 		
 		//Perform the white rock move
-		Move rockMove = board.getAvailableMove(rockMoveToSpot, Piece.WHITE);
+		Move rockMove = board.getAvailableMove(rockMoveToSpot, WHITE);
 		rockMove.getPiece().performMove(rockMove, board);
 		
 		
 		//Take over the second white pawn
-		pawnTakeOverMove = board.getAvailableMove(takeOverTwoSpot, Piece.BLACK);
+		pawnTakeOverMove = board.getAvailableMove(takeOverTwoSpot, BLACK);
 		pawnTakeOverMove.getPiece().performMove(pawnTakeOverMove, board);
 		
 		int undidMoves = board.undoMoves(3);

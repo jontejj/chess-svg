@@ -1,12 +1,6 @@
 package com.jjonsson.chess.moves;
 
-import java.util.HashMap;
-import java.util.List;
-
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimaps;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;

@@ -7,13 +7,10 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.InputSupplier;
 import com.google.common.io.OutputSupplier;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;

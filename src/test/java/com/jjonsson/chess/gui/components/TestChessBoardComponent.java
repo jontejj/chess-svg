@@ -1,6 +1,5 @@
 package com.jjonsson.chess.gui.components;
 
-import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 

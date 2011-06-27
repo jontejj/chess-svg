@@ -5,7 +5,6 @@ import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.*;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ComponentEvent;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JMenuItem;

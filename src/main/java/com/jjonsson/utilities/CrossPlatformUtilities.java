@@ -34,6 +34,14 @@ public class CrossPlatformUtilities
 		return isWindows;
 	}
 	
+	public static int getTitleHeightForCurrentPlatform()
+	{
+		if(isWindows())
+			return 24;
+		else 
+			return 0;
+	}
+	
 	public static boolean isMac()
 	{
 		return isMac;

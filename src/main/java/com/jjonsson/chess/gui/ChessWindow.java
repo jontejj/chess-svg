@@ -24,7 +24,7 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.ChessFileFilter;
-import com.jjonsson.utilities.CrossPlatformUtilities;
+import static com.jjonsson.utilities.CrossPlatformUtilities.*;
 
 public class ChessWindow extends JFrame implements ActionListener, StatusListener
 {	
@@ -117,7 +117,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	private void resizeStatusBar()
 	{
 		myStatusBar.setSize(getSize().width, STATUS_BAR_HEIGHT);
-		myStatusBar.setLocation(0, getSize().height - STATUS_BAR_HEIGHT - TITLE_BAR_HEIGHT);
+		myStatusBar.setLocation(0, getSize().height - STATUS_BAR_HEIGHT - TITLE_BAR_HEIGHT - getTitleHeightForCurrentPlatform());
 	}
 
 	public void updateStatusBar()
@@ -156,32 +156,32 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	    JMenu fileMenu = new JMenu("File");
 	    
 	    JMenuItem newAction = new JMenuItem(NEW_MENU_ITEM);
-	    newAction.setAccelerator(CrossPlatformUtilities.getNewKeyStroke());
+	    newAction.setAccelerator(getNewKeyStroke());
 	    newAction.addActionListener(this);
 	    fileMenu.add(newAction);
 	    
 	    JMenuItem loadAction = new JMenuItem(LOAD_MENU_ITEM);
-	    loadAction.setAccelerator(CrossPlatformUtilities.getLoadKeyStroke());
+	    loadAction.setAccelerator(getLoadKeyStroke());
 	    loadAction.addActionListener(this);
 	    fileMenu.add(loadAction);
 	    
 	    JMenuItem saveAction = new JMenuItem(SAVE_MENU_ITEM);
-	    saveAction.setAccelerator(CrossPlatformUtilities.getSaveKeyStroke());
+	    saveAction.setAccelerator(getSaveKeyStroke());
 	    saveAction.addActionListener(this);
 	    fileMenu.add(saveAction);
 	    
 	    JMenuItem saveAsAction = new JMenuItem(SAVE_AS_MENU_ITEM);
-	    saveAsAction.setAccelerator(CrossPlatformUtilities.getSaveAsKeyStroke());
+	    saveAsAction.setAccelerator(getSaveAsKeyStroke());
 	    saveAsAction.addActionListener(this);
 	    fileMenu.add(saveAsAction);
 	    
 	    //Mac's already have a default menu with an exit action
-	    if(!CrossPlatformUtilities.isMac())
+	    if(!isMac())
 	    {
 		    fileMenu.addSeparator();
 		    
 		    JMenuItem exitAction = new JMenuItem(EXIT_MENU_ITEM);
-		    exitAction.setAccelerator(CrossPlatformUtilities.getExitKeyStroke());
+		    exitAction.setAccelerator(getExitKeyStroke());
 		    exitAction.addActionListener(this);
 		    fileMenu.add(exitAction);
 	    }
@@ -189,19 +189,19 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	    JMenu actionsMenu = new JMenu("Actions");
 	    
 	    JMenuItem undoBlack = new JMenuItem(UNDO_BLACK_MENU_ITEM);
-	    undoBlack.setAccelerator(CrossPlatformUtilities.getUndoKeyStroke());
+	    undoBlack.setAccelerator(getUndoKeyStroke());
 	    undoBlack.addActionListener(this);
 	    actionsMenu.add(undoBlack);
 	    
 	    JMenuItem undoWhite = new JMenuItem(UNDO_WHITE_MENU_ITEM);
-	    undoWhite.setAccelerator(CrossPlatformUtilities.getUndoTwiceKeyStroke());
+	    undoWhite.setAccelerator(getUndoTwiceKeyStroke());
 	    undoWhite.addActionListener(this);
 	    actionsMenu.add(undoWhite);
 	    
 	    fileMenu.addSeparator();
 	    
 	    JMenuItem showHint = new JMenuItem(SHOW_HINT_MENU_ITEM);
-	    showHint.setAccelerator(CrossPlatformUtilities.getShowHintKeyStroke());
+	    showHint.setAccelerator(getShowHintKeyStroke());
 	    showHint.addActionListener(this);
 	    actionsMenu.add(showHint);
 	    

@@ -11,7 +11,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
@@ -20,7 +19,6 @@ import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 
 /**
@@ -573,18 +571,17 @@ public abstract class Piece
 
 	public boolean isWhite()
 	{
-		return myAffinity == Piece.WHITE;
+		return myAffinity == WHITE;
 	}
 	
 	public boolean isBlack()
 	{
-		return myAffinity == Piece.BLACK;
+		return myAffinity == BLACK;
 	}
 
 	/**
 	 * Called when a move that this piece previously made has been reverted
 	 */
-	@SuppressWarnings("unused")
 	public void revertedAMove(ChessBoard board, Position oldPosition)
 	{
 	}

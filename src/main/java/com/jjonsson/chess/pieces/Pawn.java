@@ -4,7 +4,6 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTwoStepMove;
 import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.moves.RevertingMove;
 
 public abstract class Pawn extends Piece
 {

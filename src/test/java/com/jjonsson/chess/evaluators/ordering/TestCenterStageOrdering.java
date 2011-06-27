@@ -11,7 +11,7 @@ import com.jjonsson.chess.evaluators.orderings.CenterStageOrdering;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.pieces.Piece;
+import static com.jjonsson.chess.pieces.Piece.*;
 
 
 public class TestCenterStageOrdering
@@ -21,8 +21,8 @@ public class TestCenterStageOrdering
 	public void testCenterStageOrdering() throws InvalidPosition, NoSuchElementException
 	{
 		ChessBoard board = new ChessBoard(true);
-		Move pawnTwoStepMove = board.getAvailableMove(Position.createPosition(4, Position.C), Piece.WHITE);
-		Move knightMove = board.getAvailableMove(Position.createPosition(3, Position.A), Piece.WHITE);
+		Move pawnTwoStepMove = board.getAvailableMove(Position.createPosition(4, Position.C), WHITE);
+		Move knightMove = board.getAvailableMove(Position.createPosition(3, Position.A), WHITE);
 		
 		CenterStageOrdering ordering = new CenterStageOrdering();
 		

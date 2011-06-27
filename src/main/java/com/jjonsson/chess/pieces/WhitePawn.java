@@ -13,7 +13,7 @@ public class WhitePawn extends Pawn
 	private static final byte WHITE_PAWN_STARTING_ROW = 1;
 	public WhitePawn(Position startingPosition, ChessBoard boardPieceIsToBePlacedOn)
 	{
-		super(startingPosition, Piece.WHITE, boardPieceIsToBePlacedOn);
+		super(startingPosition, WHITE, boardPieceIsToBePlacedOn);
 	}
 
 	@Override

@@ -17,6 +17,7 @@ import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Rock;
 import com.jjonsson.chess.scenarios.TestScenarios;
+import static com.jjonsson.chess.pieces.Piece.*;
 
 public class TestPersistance
 {
@@ -27,13 +28,13 @@ public class TestPersistance
 		ChessBoard board = new ChessBoard(false);
 		
 		Position kingPos = Position.createPosition(5, Position.D);
-		King k = new King(kingPos, Piece.BLACK, board);
+		King k = new King(kingPos, BLACK, board);
 		short p = k.getPersistanceData();
 		Piece k2 = Piece.getPieceFromPersistanceData(p, board);
 		assertTrue("Saved piece doesn't match the read one", k.same(k2));
 	
 		Position rockPos = Position.createPosition(8, Position.H);
-		Rock r = new Rock(rockPos, Piece.WHITE, board);
+		Rock r = new Rock(rockPos, WHITE, board);
 		short p1 = r.getPersistanceData();
 		Piece r2 = Piece.getPieceFromPersistanceData(p1, board);
 		assertTrue("Saved piece doesn't match the read one", r.same(r2));
@@ -45,7 +46,7 @@ public class TestPersistance
 		//Load a board and make changes to it
 		ChessBoard board = TestScenarios.loadBoard("king_should_not_be_able_to_move");
 		Piece blackRock = board.getPiece(Position.createPosition(8, Position.H));
-		Move rockMove = board.getAvailableMove(Position.createPosition(8, Position.F), Piece.BLACK);
+		Move rockMove = board.getAvailableMove(Position.createPosition(8, Position.F), BLACK);
 		rockMove.getPiece().performMove(rockMove, board);
 		
 		assertTrue(BoardLoader.saveBoard(board, "temp_save_test"));
