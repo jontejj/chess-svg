@@ -4,6 +4,7 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
+import com.jjonsson.chess.pieces.Rock;
 
 /**
  * A move that can revert another move
@@ -152,5 +153,10 @@ public class RevertingMove extends IndependantMove {
 	{
 		return myMoveToRevert.getPositionIfPerformed();
 	}
-
+	
+	@Override
+	public boolean isPartOfAnotherMove()
+	{
+		return myMoveToRevert.isPartOfAnotherMove();
+	}
 }

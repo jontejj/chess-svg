@@ -40,4 +40,11 @@ public class PawnTakeOverMove extends PawnMove
 		}
 		return super.getTakeOverValue();
 	}
+	
+	
+	@Override
+	public boolean canBeTakeOverMove()
+	{
+		return true;
+	}
 }

@@ -22,28 +22,35 @@ public class ChessMoveEvaluator
 	/**
 	 * Performs a directed DFS (not all moves to a given level are evaluated) and tries to return the best move available
 	 * @param board
-	 * @return the best move for the current player on the given board or null if no move was found
+	 * @return the best move for the current player on the given board
+	 * @throws NoMovesAvailableException if the evaluation of available moves didn't return a move
 	 */
-	public static Move getBestMove(ChessBoard board)
+	public static Move getBestMove(ChessBoard board) throws NoMovesAvailableException
 	{
 		Move bestMove = null;
 		deepestSearch = 0;
 		ChessBoard copyOfBoard = board.clone();
-		try
+		SearchLimiter limiter = new SearchLimiter();
+		SearchResult result = deepSearch(copyOfBoard, limiter);
+		if(result.bestMove == null)
 		{
-			SearchLimiter limiter = new SearchLimiter();
-			SearchResult result = deepSearch(copyOfBoard, limiter);
-			System.out.println("Best move: " + result.bestMove);
-			System.out.println("Best move value: " + result.bestMoveValue);
-			Piece chosenPiece = board.getPiece(result.bestMove.getCurrentPosition());
-			bestMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getPositionIfPerformed(), board);
-			System.out.println("Reached " + deepestSearch + " steps ahead on the deepest path");
+			throw new NoMovesAvailableException();
 		}
-		catch(Throwable e)
+		System.out.println("Best move: " + result.bestMove);
+		System.out.println("Best move value: " + result.bestMoveValue);
+		Piece chosenPiece = board.getPiece(result.bestMove.getCurrentPosition());
+		if(chosenPiece == null)
 		{
-			//TODO(jontejj): This shouldn't happen unless it's the end of the game
-			e.printStackTrace();
+			//TODO(jontejj) this shouldn't be needed
+			throw new NoMovesAvailableException();
 		}
+		bestMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getPositionIfPerformed(), board);
+		if(bestMove == null)
+		{
+			//TODO(jontejj) this shouldn't be needed
+			throw new NoMovesAvailableException();
+		}
+		System.out.println("Reached " + deepestSearch + " steps ahead on the deepest path");
 		
 		return bestMove;
 	}
@@ -55,20 +62,16 @@ public class ChessMoveEvaluator
 			Move bestMove = getBestMove(board);
 			bestMove.getPiece().performMove(bestMove, board);
 		}
-		catch(Throwable bestMoveException)
-		{
-			//TODO(jontejj): This shouldn't happen
-			bestMoveException.printStackTrace();
-			
+		catch(NoMovesAvailableException evaluationNoMovesException)
+		{	
 			//In the worst case scenario we make a random move if possible
-			try
-			{
-				board.performRandomMove();
-			}
-			catch(Throwable randomMoveException)
-			{
-				throw new NoMovesAvailableException();
-			}
+			board.performRandomMove();
+		}
+		catch (UnavailableMoveException evaluationFailedException)
+		{
+			evaluationFailedException.printStackTrace();
+			//In the worst case scenario we make a random move if possible
+			board.performRandomMove();
 		}
 	}
 	

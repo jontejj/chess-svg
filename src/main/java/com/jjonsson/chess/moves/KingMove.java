@@ -6,19 +6,9 @@ import com.jjonsson.chess.pieces.King;
 public class KingMove extends IndependantMove 
 {
 	
-	private boolean myIsCheckedByAnotherMove;
-	
 	public KingMove(int rowChange, int columnChange, King pieceThatTheMoveWillBeMadeWith) 
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
-	}
-
-	/**
-	 * If this is true then the reason for this move not being available is that a move from the other player could reach the same destination
-	 */
-	public boolean isCheckedByAnotherMove()
-	{
-		return myIsCheckedByAnotherMove;
 	}
 	
 	@Override
@@ -32,16 +22,14 @@ public class KingMove extends IndependantMove
 	
 	public boolean canBeMadeInternal(ChessBoard board) 
 	{
-		myIsCheckedByAnotherMove = false;
 		Position newPosition = this.getPositionIfPerformed();
 		if(newPosition == null)
 			return false; //The move was out of bounds
 		
-		Move threateningMove = board.moveThreateningPosition(newPosition, !myPiece.getAffinity(), myPiece);
+		Move threateningMove = board.moveThreateningPosition(newPosition, !myPiece.getAffinity(), myPiece, true);
 		
 		if(threateningMove != null)
 		{
-			myIsCheckedByAnotherMove = true;
 			//If this is true for all the king's moves then the game is over
 			return false;
 		}

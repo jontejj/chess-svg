@@ -57,5 +57,11 @@ public abstract class PawnMove extends DependantMove
 		}
 		return 0;
 	}
+	
+	@Override
+	public boolean canBeTakeOverMove()
+	{
+		return false;
+	}
 
 }

@@ -148,6 +148,15 @@ public abstract class Move
 	
 	/**
 	 * 
+	 * @return true if this move can take over another piece when it's standing at this move's destination
+	 */
+	public boolean canBeTakeOverMove()
+	{
+		return true;
+	}
+	
+	/**
+	 * 
 	 * @param newMovesMadeCount the new value for how many times this move has been made
 	 */
 	public void setMovesMade(long newMovesMadeCount)
@@ -339,8 +348,14 @@ public abstract class Move
 	public void removeFromBoard(ChessBoard chessBoard)
 	{
 		myIsRemoved = true;
-		chessBoard.removeAvailableMove(myDestination, myPiece, this);
-		chessBoard.removeNonAvailableMove(myDestination, myPiece, this);
+		if(myCanBeMadeCache)
+		{
+			chessBoard.removeAvailableMove(myDestination, myPiece, this);
+		}
+		else
+		{
+			chessBoard.removeNonAvailableMove(myDestination, myPiece, this);
+		}
 		myCanBeMadeCache = false;
 		myOldPieceAtDestination = myPieceAtDestination;
 		myPieceAtDestination = null;
@@ -368,11 +383,11 @@ public abstract class Move
 		if(isRemoved())
 			return false;
 		
-		if(board.isMoveUnavailableDueToCheck(this))
-			return false;
-		
-		if(myCanBeMadeCache)
+		if(myCanBeMadeCache && !isPartOfAnotherMove())
 		{			
+			if(board.isMoveUnavailableDueToCheck(this))
+				return false;
+			
 			//TODO(jontejj): could this be cached?
 			return !isMoveUnavailableDueToCheckMate(board) && myCanBeMadeCache;
 			
@@ -401,6 +416,11 @@ public abstract class Move
 		{
 			for(Move threateningMove : kingThreateningMoves)
 			{
+				if(this.getPositionIfPerformed() == null)
+				{
+					System.out.println(this);
+					System.out.println(this.getClass().getCanonicalName());
+				}
 				if(this.getPositionIfPerformed().equals(threateningMove.getCurrentPosition()))
 				{
 					//This is a take over move that would remove the threatening piece
@@ -458,6 +478,15 @@ public abstract class Move
 	public String toString()
 	{
 		return myPiece + ": " + myPiece.getCurrentPosition() + " -> " + getPositionIfPerformed();
+	}
+	
+	/**
+	 * Used to know how many moves to undo during an undo moves action
+	 * @return
+	 */
+	public boolean isPartOfAnotherMove()
+	{
+		return false;
 	}
 
 	/**

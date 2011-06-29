@@ -7,7 +7,6 @@ import com.jjonsson.chess.moves.Move;
 /**
  * Orders moves first by their need to evade a hostile take over, then by their own take over value and lastly how near the center
  * they take their pieces
- * TODO(jontejj): make better choices at the end of a game
  * @author jonatanjoensson
  *
  */

@@ -19,6 +19,7 @@ import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 
 /**
@@ -89,6 +90,8 @@ public abstract class Piece
 	 * The board that this piece is placed on
 	 */
 	private ChessBoard myBoard;
+	
+	private long myMovesMade;
 	
 	
 	/**
@@ -431,6 +434,15 @@ public abstract class Piece
 	
 	/**
 	 * 
+	 * @return how many moves this piece has made
+	 */
+	public long getMovesMade()
+	{
+		return myMovesMade;
+	}
+	
+	/**
+	 * 
 	 * @return true if this piece is black, false if it's white
 	 */
 	public boolean getAffinity()
@@ -462,6 +474,12 @@ public abstract class Piece
 			System.out.println("Performing: " + move);
 		
 		move.makeMove(board);
+		
+		if(move instanceof RevertingMove)
+			myMovesMade--;
+		else
+			myMovesMade++;
+		
 		for(Move m : getPossibleMoves())
 		{
 			m.updateMove(board);
@@ -476,11 +494,14 @@ public abstract class Piece
 		{
 			m.movePerformed(move);
 		}
-		board.nextPlayer();
+		if(!move.isPartOfAnotherMove())
+		{
+			board.nextPlayer();
+		}
 	}
 	
 	/**
-	 * TODO(jontejj): convert this into equals together with a code hashCode
+	 * TODO(jontejj): convert this into equals together with a good hashCode
 	 * @param p
 	 * @return if the given piece has the same location, affinity and type
 	 */

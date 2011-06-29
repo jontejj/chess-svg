@@ -33,6 +33,7 @@ import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.persistance.MoveLogger;
 import com.jjonsson.chess.pieces.Bishop;
 import com.jjonsson.chess.pieces.BlackPawn;
@@ -170,30 +171,23 @@ public class ChessBoard implements Cloneable
 		{
 			newBoard = null;
 		}
-		catch (BoardInconsistencyException e)
-		{
-			newBoard = null;
-		}
 		return newBoard;
 	}
 	
 	/**
 	 * Copies the number of times the moves has been made from the given board
 	 * @param chessBoard the board to copy the move counters from
-	 * @throws BoardInconsistencyException if the given board doesn't match this board
 	 */
-	private void copyMoveCounters(ChessBoard chessBoard) throws BoardInconsistencyException
+	private void copyMoveCounters(ChessBoard chessBoard)
 	{
 		for(Piece p : getPieces())
 		{
 			ArrayList<Move> toMoves = p.getPossibleMoves();
 			ArrayList<Move> fromMoves = chessBoard.getPiece(p.getCurrentPosition()).getPossibleMoves();
 			
-			//The arrays should match if the board matches
-			if(toMoves.size() != fromMoves.size())
-				throw new BoardInconsistencyException();
-			
-			for(int i = 0;i<toMoves.size();i++)
+			//Note that if the arrays differ only the common moves will be copied, the rest is ignored
+			int endIndex = Math.min(fromMoves.size(), toMoves.size());
+			for(int i = 0;i<endIndex;i++)
 			{
 				toMoves.get(i).copyMoveCounter(fromMoves.get(i));
 			}
@@ -420,17 +414,22 @@ public class ChessBoard implements Cloneable
 				addPiece(new WhitePawn(Position.createPosition(2, column), this), false, true);
 			}
 			
-			addPiece(new Knight(Position.createPosition(1, Position.B), Piece.WHITE, this), false, true);
-			addPiece(new Knight(Position.createPosition(1, Position.G), Piece.WHITE, this), false, true);
+			addPiece(new Knight(Position.createPosition(1, Position.B), WHITE, this), false, true);
+			addPiece(new Knight(Position.createPosition(1, Position.G), WHITE, this), false, true);
 			
-			addPiece(new Rock(Position.createPosition(1, Position.A), Piece.WHITE, this), false, true);
-			addPiece(new Rock(Position.createPosition(1, Position.H), Piece.WHITE, this), false, true);
+			Rock leftRock = new Rock(Position.createPosition(1, Position.A), WHITE, this);
+			addPiece(leftRock, false, true);
+			Rock rightRock = new Rock(Position.createPosition(1, Position.H), WHITE, this);
+			addPiece(rightRock, false, true);
 			
-			addPiece(new Queen(Position.createPosition(1, Position.D), Piece.WHITE, this), false, true);
-			addPiece(new Bishop(Position.createPosition(1, Position.C), Piece.WHITE, this), false, true);
-			addPiece(new Bishop(Position.createPosition(1, Position.F), Piece.WHITE, this), false, true);
+			addPiece(new Queen(Position.createPosition(1, Position.D), WHITE, this), false, true);
+			addPiece(new Bishop(Position.createPosition(1, Position.C), WHITE, this), false, true);
+			addPiece(new Bishop(Position.createPosition(1, Position.F), WHITE, this), false, true);
 			
-			addPiece(new King(Position.createPosition(1, Position.E), Piece.WHITE, this), false, true);
+			addPiece(new King(Position.createPosition(1, Position.E), WHITE, this), false, true);
+			
+			myWhiteKing.getKingSideCastlingMove().setRock(rightRock);
+			myWhiteKing.getQueenSideCastlingMove().setRock(leftRock);
 		}
 		catch(InvalidPosition ip)
 		{
@@ -450,21 +449,52 @@ public class ChessBoard implements Cloneable
 				addPiece(new BlackPawn(Position.createPosition(7, column), this), false, true);
 			}
 			
-			addPiece(new Knight(Position.createPosition(8, Position.B), Piece.BLACK, this), false, true);
-			addPiece(new Knight(Position.createPosition(8, Position.G), Piece.BLACK, this), false, true);
+			addPiece(new Knight(Position.createPosition(8, Position.B), BLACK, this), false, true);
+			addPiece(new Knight(Position.createPosition(8, Position.G), BLACK, this), false, true);
 			
-			addPiece(new Rock(Position.createPosition(8, Position.A), Piece.BLACK, this), false, true);
-			addPiece(new Rock(Position.createPosition(8, Position.H), Piece.BLACK, this), false, true);
+			Rock leftRock = new Rock(Position.createPosition(8, Position.A), BLACK, this);
+			addPiece(leftRock, false, true);
 			
-			addPiece(new Queen(Position.createPosition(8, Position.D), Piece.BLACK, this), false, true);
-			addPiece(new Bishop(Position.createPosition(8, Position.C), Piece.BLACK, this), false, true);
-			addPiece(new Bishop(Position.createPosition(8, Position.F), Piece.BLACK, this), false, true);
+			Rock rightRock = new Rock(Position.createPosition(8, Position.H), BLACK, this);
+			addPiece(rightRock, false, true);
 			
-			addPiece(new King(Position.createPosition(8, Position.E), Piece.BLACK, this), false, true);
+			addPiece(new Queen(Position.createPosition(8, Position.D), BLACK, this), false, true);
+			addPiece(new Bishop(Position.createPosition(8, Position.C), BLACK, this), false, true);
+			addPiece(new Bishop(Position.createPosition(8, Position.F), BLACK, this), false, true);
+			
+			addPiece(new King(Position.createPosition(8, Position.E), BLACK, this), false, true);
+			
+			myBlackKing.getKingSideCastlingMove().setRock(rightRock);
+			myBlackKing.getQueenSideCastlingMove().setRock(leftRock);
 		}
 		catch(InvalidPosition ip)
 		{
 			System.out.println("Something wrong with board setup, got " + ip);
+		}
+	}
+	
+	private void setupCastlingMoves()
+	{
+		try
+		{
+			if(myBlackKing.isAtStartingPosition())
+			{
+				Piece blackLeftRock = getPiece(Position.createPosition(8, Position.A));
+				Piece blackRightRock = getPiece(Position.createPosition(8, Position.H));
+				myBlackKing.getQueenSideCastlingMove().setRock(blackLeftRock);
+				myBlackKing.getKingSideCastlingMove().setRock(blackRightRock);
+			}
+			if(myWhiteKing.isAtStartingPosition())
+			{
+				Piece whiteLeftRock = getPiece(Position.createPosition(1, Position.A));
+				Piece whiteRightRock = getPiece(Position.createPosition(1, Position.H));
+				myWhiteKing.getQueenSideCastlingMove().setRock(whiteLeftRock);
+				myWhiteKing.getKingSideCastlingMove().setRock(whiteRightRock);
+			}
+		}
+		catch (InvalidPosition e)
+		{
+			System.out.println("Something wrong with board setup, got " + e);
 		}
 	}
 	
@@ -680,9 +710,11 @@ public class ChessBoard implements Cloneable
 	 * This method checks for a move that could reach the given position by the other player in one move
 	 * @param position the position to check
 	 * @param affinity the affinity of the threatening player
+	 * @param pieceThatWonders
+	 * @param passThroughKing true if it's possible to pass through the king(i.e false if it's a castling move as the rock is going to protect the king)
 	 * @return a move if the player with the given affinity could move into position in one move, otherwise null
 	 */
-	public Move moveThreateningPosition(Position position, boolean affinity, Piece pieceThatWonders)
+	public Move moveThreateningPosition(Position position, boolean affinity, Piece pieceThatWonders, boolean passThroughKing)
 	{
 		ImmutableSet<Move> moves = getAvailableMoves(position, affinity);
 		
@@ -690,30 +722,25 @@ public class ChessBoard implements Cloneable
 		//we check all pieces that has a currently non possible move that leads to this position
 		ImmutableSet<Move> possibleTakeOverMoves = getNonAvailableMoves(position, affinity);
 		
-		if(possibleTakeOverMoves != null)
+		for(Move m : possibleTakeOverMoves)
 		{
-			for(Move m : possibleTakeOverMoves)
+			if(!m.canBeTakeOverMove())
 			{
-				if(m instanceof PawnTakeOverMove)
-				{
-					return m;
-				}
-				else if(m instanceof PawnMove)
-				{
-					//No threatening move
-				}
-				else if(!m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
-						return m;
+				continue; //No threatening move
 			}
+			else if(m instanceof PawnTakeOverMove)
+			{
+				return m;
+			}
+			else if(passThroughKing && !m.isPieceBlockingMe(position, pieceThatWonders.getCurrentPosition()))
+					return m;
 		}
 		
 		//Select first move that would take this square over
-		Iterator<Move> iterator = moves.iterator();
-		while(iterator.hasNext())
+		for(Move threateningMove : moves)
 		{
-			Move threateningMove = iterator.next();
-			//A pawn move can't be made if there is something standing in this square and thus is it not threatening this square
-			if(!(threateningMove instanceof PawnMove))
+			//A {pawn move | castling move} can't be made if there is something standing in this square and thus is it not threatening this square
+			if(threateningMove.canBeTakeOverMove())
 			{
 				//We have found our first move that really is threatening this square
 				return threateningMove;
@@ -890,6 +917,7 @@ public class ChessBoard implements Cloneable
 					addPiece(p, false, true);
 			}
 		}
+		setupCastlingMoves();
 	}
 	
 	private byte[] getGameStatePersistanceData()
@@ -971,7 +999,10 @@ public class ChessBoard implements Cloneable
 			{
 				Move lastMove = myMoveLogger.getLastMove();
 				lastMove.getPiece().performMove(lastMove.getRevertingMove(), this, printOuts);
-				movesReverted++;
+				if(!lastMove.isPartOfAnotherMove())
+				{
+					movesReverted++;
+				}
 			}
 			catch (Exception e)
 			{
@@ -996,11 +1027,18 @@ public class ChessBoard implements Cloneable
 	public boolean undoMove(Move moveToUndo, boolean printOuts)
 	{
 		boolean wasUndone = true;
+		boolean wasPartOfAnotherMove = false;
 		
 		myAllowsMoves = false;
 		try
 		{
-			moveToUndo.getPiece().performMove(moveToUndo.getRevertingMove(), this, printOuts);
+			RevertingMove revertingMove = moveToUndo.getRevertingMove();
+			moveToUndo.getPiece().performMove(revertingMove, this, printOuts);
+			if(revertingMove.isPartOfAnotherMove())
+			{
+				wasPartOfAnotherMove = true;
+				wasUndone = (undoMoves(1, false) == 1);
+			}
 		}
 		catch (Exception e)
 		{
@@ -1008,7 +1046,7 @@ public class ChessBoard implements Cloneable
 		}		
 		myAllowsMoves = true;
 		
-		if(wasUndone)
+		if(wasUndone && !wasPartOfAnotherMove)
 		{
 			for(ChessBoardListener listener : myBoardListeners)
 			{

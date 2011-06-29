@@ -237,16 +237,17 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	
 	public void showHint()
 	{
-		myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
-		if(myHintMove != null)
+		try
 		{
+			myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
 			setResultOfInteraction("Hint: " + myHintMove);
 			//Makes it easy to make the move
 			setSelectedPiece(myHintMove.getPiece());
 			repaint();
 		}
-		else
+		catch (NoMovesAvailableException e)
 		{
+			myHintMove = null;
 			setResultOfInteraction("No hint could be found");
 		}
 	}

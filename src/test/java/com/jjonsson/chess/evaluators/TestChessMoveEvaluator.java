@@ -17,6 +17,7 @@ import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.scenarios.TestScenarios;
 import static com.jjonsson.chess.pieces.Piece.*;
@@ -55,6 +56,10 @@ public class TestChessMoveEvaluator
 		try
 		{
 			ChessMoveEvaluator.performBestMove(board);
+		}
+		catch(NullPointerException npe)
+		{
+			assertFalse(ChessBoardEvaluator.inPlay(board));
 		}
 		catch (NoMovesAvailableException e)
 		{
@@ -126,6 +131,7 @@ public class TestChessMoveEvaluator
 	{
 		ChessBoard board = TestScenarios.loadBoard("knight_should_not_be_left_unprotected");
 		Position knightPosition = Position.createPosition(5, Position.A);
+		King blackDefendingKing = King.class.cast(board.getPiece(Position.createPosition(6, Position.B)));
 		Piece knight = board.getPiece(knightPosition);
 		Piece bishop = knight.getCheapestPieceThatTakesMeOver();
 		assertNotNull(bishop);
@@ -134,8 +140,10 @@ public class TestChessMoveEvaluator
 		
 		Move bishopMove = bishop.getAvailableMoveForPosition(knightPosition, board);
 		bishop.performMove(bishopMove, board);
-		//The king should now take over the bishop
-		ChessMoveEvaluator.performBestMove(board);
+		
+		//The king should now be able to take over the bishop
+		Move bishopTakeOverMove = blackDefendingKing.getAvailableMoveForPosition(knightPosition, board);
+		blackDefendingKing.performMove(bishopTakeOverMove, board);
 		
 		assertTrue(bishop.isRemoved());
 	}

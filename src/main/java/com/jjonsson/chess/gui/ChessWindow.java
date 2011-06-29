@@ -39,7 +39,6 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	
 	private static final int STATUS_BAR_HEIGHT = 20;
 	private static final int WINDOW_BORDER_SIZE = 3;
-	//TODO(jontejj) this isn't right for Windows
 	private static final int TITLE_BAR_HEIGHT = 22;
 	
 	@VisibleForTesting

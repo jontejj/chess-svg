@@ -28,6 +28,7 @@ public class BoardLoader
 		}
 		catch (Throwable t)
 		{
+			t.printStackTrace();
 			return false;
 		}
 	}
