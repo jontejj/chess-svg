@@ -120,6 +120,15 @@ public final class ChessBoardEvaluator
 		{
 			return ChessState.STALEMATE;
 		}
+		/*TODO(jontejj) there are more stalemate games:
+		The game is immediately drawn when one of the following endings arises:
+
+		    king against king;
+		    king against king and bishop;
+		    king against king and knight;
+		    king and bishop against king and bishop, with both bishops on diagonals of the same colour.
+		*/
+
 		
 		return ChessState.PLAYING;
 	}

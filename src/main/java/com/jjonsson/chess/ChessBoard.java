@@ -53,6 +53,11 @@ public class ChessBoard implements Cloneable
 	 * King Mobility = KING_MOBILITY_FACTOR * "the number of available moves for one's king"
 	 */
 	public static final int KING_MOBILITY_FACTOR = 20;
+
+	/**
+	 * In principle this means that at least 2 steps ahead is evaluated for every move
+	 */
+	private static final int DEFAULT_DIFFICULTY = 1;
 	
 	private Map<Position, Piece> myWhitePieces;
 	private Map<Position, Piece> myBlackPieces;
@@ -115,11 +120,17 @@ public class ChessBoard implements Cloneable
 	private long myWhiteTakeOverPiecesCount;
 
 	/**
+	 * The difficulty the user has chosen (Good values are 1-5) defaults to {@link ChessBoard.DEFAULT_DIFFICULTY}
+	 */
+	private int	myDifficulty;
+
+	/**
 	 * Constructs the chess board 
 	 * @param placeInitialPieces if true, all the pieces is set to their default locations
 	 */
 	public ChessBoard(boolean placeInitialPieces)
 	{
+		myDifficulty = DEFAULT_DIFFICULTY;
 		myOriginatingBoard = this;
 		myAllowsMoves = true;
 		myMovesThatStopsKingFromBeingChecked = ImmutableSet.of();
@@ -138,6 +149,11 @@ public class ChessBoard implements Cloneable
 		{
 			this.reset();
 		}
+	}
+	
+	public void setDifficulty(int newDifficulty)
+	{
+		myDifficulty = newDifficulty;
 	}
 	
 	private void setOriginatingBoard(ChessBoard board)
@@ -395,7 +411,7 @@ public class ChessBoard implements Cloneable
 		if(p instanceof King)
 		{
 			King k = (King)p;
-			if(k.getAffinity() == Piece.BLACK)
+			if(k.isBlack())
 			{
 				myBlackKing = k;
 			}
@@ -1228,5 +1244,10 @@ public class ChessBoard implements Cloneable
 		//Counts the available moves for the king
 		int kingMobility = this.getKing(affinity).getAvailableMoves(NO_SORT, this).size() * KING_MOBILITY_FACTOR;
 		return playerNrOfAvailableMoves + playerProtectiveMoves + playerTakeOverCount + totalPieceValue + kingMobility;
+	}
+
+	public int getDifficulty()
+	{
+		return myDifficulty;
 	}
 }

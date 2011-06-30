@@ -4,7 +4,7 @@ class SearchLimiter
 {
 	static final long MAX_DEPTH = 2;
 	static final long MAX_BRANCH_MOVES = 30;
-	static final int MINIMUM_DEPTH_TO_SEARCH = 2;
+	private int myDifficulty;
 	/**
 	 * Used to limit the amount of moves to evaluate
 	 */
@@ -20,15 +20,21 @@ class SearchLimiter
 	 */
 	long scoreFactor;
 	
-	SearchLimiter()
+	SearchLimiter(int difficulty)
 	{
 		movesLeft = MAX_BRANCH_MOVES;
 		depth = MAX_DEPTH;
 		scoreFactor = 1;
+		myDifficulty = difficulty;
 	}
 	
 	long getCurrentDepth()
 	{
 		return MAX_DEPTH-depth + 1;
+	}
+	
+	int getMinimumDepthToSearch()
+	{
+		return myDifficulty;
 	}
 }

@@ -12,6 +12,7 @@ import static com.jjonsson.chess.pieces.Piece.*;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class TestCastlingMove
 {
@@ -20,14 +21,6 @@ public class TestCastlingMove
 	public void testThatCastlingMoveCanBeMade() throws InvalidPosition, UnavailableMoveException
 	{
 		ChessBoard board = loadBoard("castling_move");
-		performAndVerifyWhiteKingsideCastlingMove(board);
-		
-	}
-	
-	@Test
-	public void testThatCastlingMoveCanBeMadeDuringCheck() throws InvalidPosition, UnavailableMoveException
-	{
-		ChessBoard board = loadBoard("king_should_be_able_to_move_to_1G_with_a_castling_move");
 		performAndVerifyWhiteKingsideCastlingMove(board);
 		
 	}
@@ -48,6 +41,37 @@ public class TestCastlingMove
 		
 		assertEquals(whiteKing, board.getPiece(castlingKingDestination));
 		assertEquals(whiteRock, board.getPiece(Position.createPosition(1, Position.F)));
+	}
+	
+	@Test
+	public void testBlackQueenSideCastling() throws InvalidPosition, UnavailableMoveException
+	{
+		ChessBoard board = loadBoard("queenside_castling");
+		Position castlingKingDestination = Position.createPosition(8, Position.C);
+		Piece blackRock = board.getPiece(Position.createPosition(8, Position.A));
+		
+		assertNotNull(blackRock);
+		
+		Piece blackKing = board.getKing(BLACK);
+		
+		Move castlingMove = blackKing.getAvailableMoveForPosition(castlingKingDestination, board);
+		
+		assertNotNull("Castling move unavailable", castlingMove);
+		blackKing.performMove(castlingMove, board);
+		
+		assertEquals(blackKing, board.getPiece(castlingKingDestination));
+		assertEquals(blackRock, board.getPiece(Position.createPosition(8, Position.D)));
+	}
+	
+	@Test
+	public void testCastlingMoveUnavailableDuringCheck() throws InvalidPosition
+	{
+		ChessBoard board = loadBoard("queenside_castling_not_available_during_check");
+		Position castlingKingDestination = Position.createPosition(8, Position.C);
+		
+		Piece blackKing = board.getKing(BLACK);
+		
+		assertNull(blackKing.getAvailableMoveForPosition(castlingKingDestination, board));
 	}
 	
 }

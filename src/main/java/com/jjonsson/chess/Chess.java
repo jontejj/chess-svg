@@ -18,6 +18,7 @@ public final class Chess {
 		WindowUtilities.setNativeLookAndFeel();
 		
 		ChessBoard board = new ChessBoard(true);
+		board.setDifficulty(2);
 		ChessWindow window = new ChessWindow(board);
 		window.displayGame();
 	}

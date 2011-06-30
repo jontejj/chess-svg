@@ -8,8 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JMenuItem;
-import javax.swing.UnsupportedLookAndFeelException;
-
 import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;

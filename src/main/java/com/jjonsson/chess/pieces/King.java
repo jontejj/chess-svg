@@ -43,14 +43,14 @@ public class King extends Piece
 		{
 			myKingSideCastlingMove = new CastlingMove(0, 2, this);
 			addPossibleMove(myKingSideCastlingMove);
-			myQueenSideCastlingMove = new CastlingMove(0, -3, this);
+			myQueenSideCastlingMove = new CastlingMove(0, -2, this);
 			addPossibleMove(myQueenSideCastlingMove);
 		}
 	}
 	
 	public boolean isAtStartingPosition()
 	{
-		if(getAffinity() == Piece.BLACK)
+		if(isBlack())
 		{
 			return BLACK_KING_START_POSITION.equals(getCurrentPosition());
 		}

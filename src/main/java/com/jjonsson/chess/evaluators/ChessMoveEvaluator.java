@@ -50,7 +50,7 @@ public final class ChessMoveEvaluator
 			LOGGER.warning("ChessBoard doesn't support cloning");
 			throw new NoMovesAvailableException();
 		}
-		SearchLimiter limiter = new SearchLimiter();
+		SearchLimiter limiter = new SearchLimiter(board.getDifficulty());
 		SearchResult result = deepSearch(copyOfBoard, limiter);
 		if(result.bestMove == null)
 		{
@@ -242,7 +242,7 @@ public final class ChessMoveEvaluator
 			return false;
 		}
 		
-		boolean minimumDepthNotReached = (limiter.getCurrentDepth() <= SearchLimiter.MINIMUM_DEPTH_TO_SEARCH);
+		boolean minimumDepthNotReached = (limiter.getCurrentDepth() <= limiter.getMinimumDepthToSearch());
 		
 		if(movesLeftOnBranch <= 0 && !minimumDepthNotReached)
 		{ 

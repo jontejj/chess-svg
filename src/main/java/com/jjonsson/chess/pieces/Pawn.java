@@ -57,7 +57,7 @@ public abstract class Pawn extends Piece
 	 */
 	public boolean isTimeForReplacement(Position position)
 	{
-		int destinationRow = (getAffinity() == Piece.BLACK) ? 0 :(ChessBoard.BOARD_SIZE - 1);
+		int destinationRow = (isBlack()) ? 0 :(ChessBoard.BOARD_SIZE - 1);
 		return position.getRow() == destinationRow;
 	}
 	

@@ -129,10 +129,6 @@ public class Position implements Cloneable
 		{
 			return false;
 		}
-		if(o.getClass() != getClass())
-		{
-			return false;
-		}
 		Position p = (Position)o;
 		return myRow == p.getRow() && myColumn == p.getColumn();
 	}

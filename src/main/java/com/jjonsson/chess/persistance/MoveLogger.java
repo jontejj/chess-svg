@@ -1,17 +1,15 @@
 package com.jjonsson.chess.persistance;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.InputSupplier;
-import com.google.common.io.OutputSupplier;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.moves.Move;
@@ -28,7 +26,8 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 	/**
 	 * Defines how many moves that are remembered so that the game doesn't get stuck in a repetitive loop
 	 */
-	private static final int REPITION_HISTORY_RESET_INTERVAL = 30;
+	@VisibleForTesting
+	public static final int REPITION_HISTORY_RESET_INTERVAL = 30;
 	public MoveLogger()
 	{
 		myMoveHistory = new ArrayDeque<Move>();
@@ -64,16 +63,6 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 			lastMove.getRevertingMove().setPieceToPlaceAtOldPosition(removedPiece);
 		}
 		return myMoveHistory.peekFirst();
-	}
-	
-	public void writeMoves(OutputSupplier<OutputStream> out)
-	{
-		//out.getOutput().write(b);
-	}
-	
-	public void performMoves(InputSupplier<InputStream> in)
-	{
-		//in.getInput().
 	}
 
 	@Override
@@ -151,24 +140,5 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 	@Override
 	public void squareScores(ImmutableMap<Position, String> positionScores)
 	{
-	}
-	
-	/**
-	 * 
-	 * @param numberOfMoves the maximum amount of moves to return
-	 * @return a sorted list of the moves that has been made (the first element in the list is the last move that was made)
-	 */
-	public ImmutableList<Move> getLatestMoves(int numberOfMoves)
-	{
-		List<Move> moves = Lists.newArrayList();
-		for(Move m : myMoveHistory)
-		{
-			if(moves.size() >= numberOfMoves)
-			{
-				break;
-			}
-			moves.add(m);
-		}
-		return ImmutableList.copyOf(moves);
 	}
 }

@@ -11,7 +11,7 @@ import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.Rock;
-import com.jjonsson.chess.scenarios.TestScenarios;
+import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static com.jjonsson.chess.pieces.Piece.*;
 
 public class TestUndoMoves
@@ -39,7 +39,7 @@ public class TestUndoMoves
 	@Test
 	public void testUndoAndVerifyThatPieceRevivalOccured() throws InvalidPosition, UnavailableMoveException
 	{
-		ChessBoard board2 = TestScenarios.loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");
+		ChessBoard board2 = loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");
 		
 		Position takeOverSpot = Position.createPosition(8, Position.B);
 		Move pawnTakeOverMove = board2.getAvailableMove(takeOverSpot, WHITE);
@@ -48,21 +48,21 @@ public class TestUndoMoves
 		pawnTakeOverMove.getPiece().performMove(pawnTakeOverMove, board2);
 		
 		Piece whiteQueen = board2.getPiece(takeOverSpot);
-		assertEquals(WHITE, whiteQueen.getAffinity());
+		assertTrue(whiteQueen.isWhite());
 		assertTrue(whiteQueen instanceof Queen);
 		
 		board2.undoMoves(1);
 		
 		//The black rock should again be on the board
 		Piece blackRock = board2.getPiece(takeOverSpot);
-		assertEquals(BLACK, blackRock.getAffinity());
+		assertTrue(blackRock.isBlack());
 		assertTrue(blackRock instanceof Rock);
 	}
 	
 	@Test
 	public void testUndoTwoTakeOverMovesAndVerifyThatBothPiecesWereRevived() throws InvalidPosition, UnavailableMoveException
 	{
-		ChessBoard board = TestScenarios.loadBoard("undo_two_take_over_moves_in_a_row_for_the_same_piece");
+		ChessBoard board = loadBoard("undo_two_take_over_moves_in_a_row_for_the_same_piece");
 		
 		Position blackPawnPosition = Position.createPosition(4, Position.C);
 		Position takeOverOneSpot = Position.createPosition(3, Position.D);

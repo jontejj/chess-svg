@@ -81,16 +81,6 @@ public class RevertingMove extends IndependantMove {
 		myPieceToPlaceAtOldPosition = removedPiece;
 	}
 	
-	
-	/**
-	 * 
-	 * @return the piece that this move took over or null if it didn't take over any piece
-	 */
-	public Piece getPieceThatITookOver()
-	{
-		return myPieceToPlaceAtOldPosition;
-	}
-	
 	/**
 	 * Returns the position that the piece this move is connected to previously was at
 	 */

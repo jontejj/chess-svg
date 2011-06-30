@@ -3,12 +3,10 @@ package com.jjonsson.chess.pieces;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
@@ -74,7 +72,7 @@ public abstract class Piece
 	private List<Move> myPossibleMoves;
 	
 	//TODO(jontejj): keep this map updated and use it in the getMoveForPosition functions
-	private Map<Position, Move> myMoveMap;
+	//private Map<Position, Move> myMoveMap;
 	
 	private Set<Piece> myPiecesThatTakesMyPieceOver;
 	private Piece myCheapestPieceThatTakesMeOver;
@@ -101,7 +99,6 @@ public abstract class Piece
 	 */
 	public Piece(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
 	{
-		myMoveMap = Maps.newHashMap();
 		myListeners = Sets.newHashSet();
 		myPossibleMoves = Lists.newArrayList();
 		
@@ -155,12 +152,12 @@ public abstract class Piece
 	
 	public String getIdentifier()
 	{
-		return ((getAffinity() == Piece.BLACK) ? "Black_" : "White_") + getPieceName();
+		return (isBlack() ? "Black_" : "White_") + getPieceName();
 	}
 	
 	public String getDisplayName()
 	{
-		return ((getAffinity() == Piece.BLACK) ? "Black " : "White ") + getPieceName();
+		return (isBlack() ? "Black " : "White ") + getPieceName();
 	}
 	
 	public abstract String getPieceName();
@@ -174,7 +171,7 @@ public abstract class Piece
 	private byte getPersistanceIdentifier()
 	{
 		byte type = getPersistanceIdentifierType();
-		if(getAffinity() == Piece.BLACK)
+		if(isBlack())
 		{
 			//The fourth bit is the color identifier
 			type = (byte) (0x8 | type);

@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
-import com.jjonsson.chess.scenarios.TestScenarios;
+import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 
 public class TestChessBoardEvaluator
 {
@@ -15,7 +15,7 @@ public class TestChessBoardEvaluator
 	@Test
 	public void testCheck()
 	{
-		ChessBoard board = TestScenarios.loadBoard("king_should_not_be_able_to_move");
+		ChessBoard board = loadBoard("king_should_not_be_able_to_move");
 		ChessState currentState = board.getCurrentState();
 		assertEquals(GAME_STATE, currentState, ChessState.CHECK);
 	}
@@ -23,7 +23,7 @@ public class TestChessBoardEvaluator
 	@Test
 	public void testCheckMate()
 	{
-		ChessBoard board = TestScenarios.loadBoard("should_be_checkmate");
+		ChessBoard board = loadBoard("should_be_checkmate");
 		ChessState currentState = board.getCurrentState();
 		assertEquals(GAME_STATE, currentState, ChessState.CHECKMATE);
 	}
@@ -31,7 +31,7 @@ public class TestChessBoardEvaluator
 	@Test
 	public void testNotCheck()
 	{
-		ChessBoard board = TestScenarios.loadBoard("should_not_be_check");
+		ChessBoard board = loadBoard("should_not_be_check");
 		ChessState currentState = board.getCurrentState();
 		assertEquals(GAME_STATE, currentState, ChessState.PLAYING);
 	}
@@ -39,7 +39,7 @@ public class TestChessBoardEvaluator
 	@Test
 	public void testStaleMate()
 	{
-		ChessBoard board = TestScenarios.loadBoard("should_be_stalemate");
+		ChessBoard board = loadBoard("should_be_stalemate");
 		ChessState currentState = board.getCurrentState();
 		assertEquals(GAME_STATE, currentState, ChessState.STALEMATE);
 	}
