@@ -2,8 +2,6 @@ package com.jjonsson.chess.evaluators.ordering;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.NoSuchElementException;
-
 import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
@@ -18,7 +16,7 @@ import com.jjonsson.chess.scenarios.TestScenarios;
 public class TestTakeOverValueOrdering
 {
 	@Test
-	public void testTakeOverValueOrdering() throws NoSuchElementException, InvalidPosition
+	public void testTakeOverValueOrdering() throws InvalidPosition
 	{
 		ChessBoard board = TestScenarios.loadBoard("king_right_move_should_not_be_possible");
 		

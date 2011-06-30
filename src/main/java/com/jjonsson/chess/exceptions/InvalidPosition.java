@@ -5,8 +5,8 @@ public class InvalidPosition extends Exception
 
 	private static final long	serialVersionUID	= -7230926466258265135L;
 	
-	int myRow;
-	int myColumn;
+	private int myRow;
+	private int myColumn;
 	
 	public InvalidPosition(int row, int column)
 	{

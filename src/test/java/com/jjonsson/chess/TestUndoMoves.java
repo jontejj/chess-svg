@@ -3,8 +3,6 @@ package com.jjonsson.chess;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.*;
 
-import java.util.NoSuchElementException;
-
 import org.junit.Test;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
@@ -20,7 +18,7 @@ public class TestUndoMoves
 {
 
 	@Test
-	public void testPawnTwoStepMoveUndo() throws NoSuchElementException, InvalidPosition, UnavailableMoveException
+	public void testPawnTwoStepMoveUndo() throws InvalidPosition, UnavailableMoveException
 	{
 		ChessBoard board = new ChessBoard(true);
 		Move pawnTwoStepMove = board.getAvailableMove(Position.createPosition(4, Position.C), WHITE);
@@ -39,7 +37,7 @@ public class TestUndoMoves
 	}
 	
 	@Test
-	public void testUndoAndVerifyThatPieceRevivalOccured() throws NoSuchElementException, InvalidPosition, UnavailableMoveException
+	public void testUndoAndVerifyThatPieceRevivalOccured() throws InvalidPosition, UnavailableMoveException
 	{
 		ChessBoard board2 = TestScenarios.loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");
 		
@@ -62,7 +60,7 @@ public class TestUndoMoves
 	}
 	
 	@Test
-	public void testUndoTwoTakeOverMovesAndVerifyThatBothPiecesWereRevived() throws NoSuchElementException, InvalidPosition, UnavailableMoveException
+	public void testUndoTwoTakeOverMovesAndVerifyThatBothPiecesWereRevived() throws InvalidPosition, UnavailableMoveException
 	{
 		ChessBoard board = TestScenarios.loadBoard("undo_two_take_over_moves_in_a_row_for_the_same_piece");
 		

@@ -44,6 +44,6 @@ public class BlackPawn extends Pawn
 	@Override
 	public int getValue()
 	{
-		return Piece.PAWN_VALUE + ((ChessBoard.BOARD_SIZE - getCurrentPosition().getRow() - 1) * 10);
+		return Piece.PAWN_VALUE + ((ChessBoard.BOARD_SIZE - getCurrentPosition().getRow() - 1) * PAWN_VALUE_INCREASE_PER_ROW);
 	}
 }

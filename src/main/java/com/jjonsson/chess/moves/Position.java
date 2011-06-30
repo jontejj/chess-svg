@@ -5,6 +5,7 @@ import com.jjonsson.chess.exceptions.InvalidPosition;
 
 public class Position implements Cloneable
 {
+	
 	private byte myRow;
 	private byte myColumn;
 	
@@ -17,7 +18,7 @@ public class Position implements Cloneable
 	public static final int G = 7;
 	public static final int H = 8;
 	
-	private static final char[] columns = {'A','B','C','D','E','F','G','H'}; 
+	private static final char[] COLUMNS = {'A','B','C','D','E','F','G','H'}; 
 	
 	/**
 	 * 
@@ -63,7 +64,9 @@ public class Position implements Cloneable
 	public static Position createPosition(int row, int column) throws InvalidPosition
 	{
 		if(isInvalidPosition(row-1, column-1))
+		{
 			throw new InvalidPosition(row, column);
+		}
 		
 		return new Position((byte)(row - 1), (byte)(column - 1));
 	}
@@ -72,7 +75,7 @@ public class Position implements Cloneable
 	 * Validates that row and column are NOT between 0-7 (inclusive)
 	 * @param row
 	 * @param column
-	 * @return
+	 * @return true if the given arguments results in a position that is'nt found on a chess board
 	 */
 	public static boolean isInvalidPosition(byte row, byte column)
 	{
@@ -123,9 +126,13 @@ public class Position implements Cloneable
 	public boolean equals(Object o)
 	{
 		if(o == null)
+		{
 			return false;
+		}
 		if(o.getClass() != getClass())
+		{
 			return false;
+		}
 		Position p = (Position)o;
 		return myRow == p.getRow() && myColumn == p.getColumn();
 	}
@@ -134,22 +141,26 @@ public class Position implements Cloneable
 	public String toString()
 	{
 		//if myColumn is an invalid index there is something that is seriously wrong
-		return (myRow+1) + "" + columns[myColumn];
+		return (myRow+1) + "" + COLUMNS[myColumn];
 	}
 	
-	@Override
-	public Position clone()
+	public Position copy()
 	{
 		Position p = null;
 		try
 		{
-			p = (Position) super.clone();
+			p = clone();
 		}
 		catch (CloneNotSupportedException e)
 		{
-			e.printStackTrace();
 		}
 		return p;
+	}
+	
+	@Override
+	public Position clone() throws CloneNotSupportedException
+	{
+		return (Position) super.clone();
 		
 	}
 }

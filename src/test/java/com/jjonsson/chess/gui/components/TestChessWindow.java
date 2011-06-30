@@ -10,7 +10,6 @@ import java.awt.event.WindowEvent;
 import javax.swing.JMenuItem;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
@@ -25,44 +24,42 @@ import com.jjonsson.chess.scenarios.TestScenarios;
 
 public class TestChessWindow
 {
-	static JMenuItem fakeMenuItem;
-	
-	@BeforeClass
-	public static void setup() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException
+	static
 	{
 		WindowUtilities.setNativeLookAndFeel();
-		fakeMenuItem = new JMenuItem();
 	}
+	
+	private static final JMenuItem FAKE_MENU_ITEM = new JMenuItem();
 	
 	private void undoOneMove(ChessWindow window)
 	{
 		//Undo the move
-		ActionEvent undoEvent = new ActionEvent(fakeMenuItem, ActionEvent.ACTION_PERFORMED, ChessWindow.UNDO_BLACK_MENU_ITEM, System.nanoTime(), 0);
+		ActionEvent undoEvent = new ActionEvent(FAKE_MENU_ITEM, ActionEvent.ACTION_PERFORMED, ChessWindow.UNDO_BLACK_MENU_ITEM, System.nanoTime(), 0);
 		window.actionPerformed(undoEvent);
 	}
 	
 	private void disableAI(ChessWindow window)
 	{
 		//Disable AI
-		ActionEvent disableAIEvent = new ActionEvent(fakeMenuItem, ActionEvent.ACTION_PERFORMED, ChessWindow.DISABLE_AI_MENU_ITEM, System.nanoTime(), 0);
+		ActionEvent disableAIEvent = new ActionEvent(FAKE_MENU_ITEM, ActionEvent.ACTION_PERFORMED, ChessWindow.DISABLE_AI_MENU_ITEM, System.nanoTime(), 0);
 		window.actionPerformed(disableAIEvent);
 	}
 	
 	private void showClicks(ChessWindow window)
 	{
-		ActionEvent showClicksEvent = new ActionEvent(fakeMenuItem, ActionEvent.ACTION_PERFORMED, ChessWindow.SHOW_AVAILABLE_CLICKS_MENU_ITEM, System.nanoTime(), 0);
+		ActionEvent showClicksEvent = new ActionEvent(FAKE_MENU_ITEM, ActionEvent.ACTION_PERFORMED, ChessWindow.SHOW_AVAILABLE_CLICKS_MENU_ITEM, System.nanoTime(), 0);
 		window.actionPerformed(showClicksEvent);
 	}
 	
 	private void newGame(ChessWindow window)
 	{
-		ActionEvent newGameEvent = new ActionEvent(fakeMenuItem, ActionEvent.ACTION_PERFORMED, ChessWindow.NEW_MENU_ITEM, System.nanoTime(), 0);
+		ActionEvent newGameEvent = new ActionEvent(FAKE_MENU_ITEM, ActionEvent.ACTION_PERFORMED, ChessWindow.NEW_MENU_ITEM, System.nanoTime(), 0);
 		window.actionPerformed(newGameEvent);
 	}
 	
 	private void exit(ChessWindow window)
 	{
-		ActionEvent exitEvent = new ActionEvent(fakeMenuItem, ActionEvent.ACTION_PERFORMED, ChessWindow.EXIT_MENU_ITEM, System.nanoTime(), 0);
+		ActionEvent exitEvent = new ActionEvent(FAKE_MENU_ITEM, ActionEvent.ACTION_PERFORMED, ChessWindow.EXIT_MENU_ITEM, System.nanoTime(), 0);
 		window.actionPerformed(exitEvent);
 	}
 	

@@ -24,18 +24,18 @@ public abstract class Move
 	/**
 	 * The piece that this move will be made with
 	 */
-	protected Piece myPiece;
+	private Piece myPiece;
 	/**
 	 * The piece that would be defeated if this move was performed
 	 */
-	protected Piece myPieceAtDestination;
+	private Piece myPieceAtDestination;
 	
-	protected Piece myOldPieceAtDestination;
+	private Piece myOldPieceAtDestination;
 	
 	/**
 	 * The cached position of this move's destination 
 	 */
-	protected Position myDestination;
+	private Position myDestination;
 
 	/**
 	 * Cached decision of whether or not this move can be made
@@ -49,7 +49,7 @@ public abstract class Move
 	
 	protected RevertingMove myRevertingMove;
 	
-	protected boolean myIsRemoved;
+	private boolean myIsRemoved;
 	
 	/**
 	 * Holds the number of moves made with this move
@@ -94,26 +94,24 @@ public abstract class Move
 	
 	protected boolean canBeMadeDefault()
 	{
-		if(this.getPositionIfPerformed() == null)
-			return false; //The move was out of bounds
+		if(this.getDestination() == null)
+		{
+			//The move was out of bounds
+			return false; 
+		}
 		
 		return canBeMadeEnding();
 	}
 	
 	protected boolean canBeMadeEnding()
 	{
-		if(getPieceAtDestination() == null)
-			return true; //The space is free
-		else if(getPieceAtDestination().hasSameAffinityAs(myPiece))
+		if(getPieceAtDestination() != null && getPieceAtDestination().hasSameAffinityAs(myPiece))
 		{
 			//For DependantMoves this also means that moves further a long this move chain won't be possible either
 			return false; //You can't take over your own pieces
 		}
-		else
-		{
-			//Take over is available
-			return true;
-		}
+		//The space is either free or a take over is available
+		return true;
 	}
 	
 	public Piece getPiece()
@@ -141,7 +139,9 @@ public abstract class Move
 	public boolean isTakeOverMove()
 	{
 		if(myPieceAtDestination != null)
+		{
 			return !myPiece.hasSameAffinityAs(myPieceAtDestination);
+		}
 		
 		return false;
 	}
@@ -196,7 +196,7 @@ public abstract class Move
 	 */
 	public boolean getAffinity()
 	{
-		return myPiece.getAffinity();
+		return getPiece().getAffinity();
 	}
 	
 	/**
@@ -205,7 +205,7 @@ public abstract class Move
 	 */
 	public Position getCurrentPosition()
 	{
-		return myPiece.getCurrentPosition();
+		return getPiece().getCurrentPosition();
 	}
 	
 	/**
@@ -248,9 +248,14 @@ public abstract class Move
 	/**	 
 	 * @return the new position or null if the move isn't valid
 	 */
-	public Position getPositionIfPerformed()
+	public Position getDestination()
 	{
 		return myDestination;
+	}
+	
+	public void setDestination(Position newDestination)
+	{
+		myDestination = newDestination;
 	}
 	
 	/**
@@ -264,9 +269,13 @@ public abstract class Move
 		{
 			//The old destination where this move previously took us, remove it
 			if(myCanBeMadeCache)
+			{
 				board.removeAvailableMove(myDestination, myPiece, this);
+			}
 			else
+			{
 				board.removeNonAvailableMove(myDestination, myPiece, this);
+			}
 				
 		}
 		
@@ -279,7 +288,9 @@ public abstract class Move
 			myDestination =  null;
 		}
 		else
+		{
 			myDestination = new Position(newRow, newColumn);
+		}
 		
 		setPieceAtDestination(board.getPiece(myDestination));
 	}
@@ -381,12 +392,16 @@ public abstract class Move
 	public boolean canBeMade(ChessBoard board)
 	{
 		if(isRemoved())
+		{
 			return false;
+		}
 		
 		if(myCanBeMadeCache && !isPartOfAnotherMove())
 		{			
 			if(board.isMoveUnavailableDueToCheck(this))
+			{
 				return false;
+			}
 			
 			//TODO(jontejj): could this be cached?
 			return !isMoveUnavailableDueToCheckMate(board) && myCanBeMadeCache;
@@ -416,12 +431,7 @@ public abstract class Move
 		{
 			for(Move threateningMove : kingThreateningMoves)
 			{
-				if(this.getPositionIfPerformed() == null)
-				{
-					System.out.println(this);
-					System.out.println(this.getClass().getCanonicalName());
-				}
-				if(this.getPositionIfPerformed().equals(threateningMove.getCurrentPosition()))
+				if(this.getDestination().equals(threateningMove.getCurrentPosition()))
 				{
 					//This is a take over move that would remove the threatening piece
 					continue;
@@ -432,13 +442,22 @@ public abstract class Move
 					boolean myPieceIsStoppingCheckMate = false;
 					boolean anotherPieceIsStoppingCheckMate = false;
 					Position destinationForMove = null;
-					while(move != null && (destinationForMove = move.getPositionIfPerformed()) != null)
+					while(move != null)
 					{
-						if(destinationForMove.equals(myPiece.getCurrentPosition()))
+						destinationForMove = move.getDestination();
+						if(destinationForMove == null)
+						{
+							break;
+						}
+						else if(destinationForMove.equals(myPiece.getCurrentPosition()))
+						{
 							myPieceIsStoppingCheckMate = true;
+						}
 						else if(board.getPiece(destinationForMove) != null)
+						{
 							anotherPieceIsStoppingCheckMate = true;
-						else if(destinationForMove.equals(this.getPositionIfPerformed()))
+						}
+						else if(destinationForMove.equals(this.getDestination()))
 						{
 							//this(move) is on the path for the checking move even if this move is performed (i.e still stopping check mate)
 							anotherPieceIsStoppingCheckMate = true;
@@ -447,7 +466,10 @@ public abstract class Move
 						move = move.getMoveThatIDependUpon();
 					}
 					if(myPieceIsStoppingCheckMate && !anotherPieceIsStoppingCheckMate)
-						return true; //This move would end in check mate, because no other piece stands in the path of the check-mating move
+					{
+						////This move would end in check mate, because no other piece stands in the path of the check-mating move
+						return true; 
+					}
 				}
 			}
 		}
@@ -477,12 +499,12 @@ public abstract class Move
 	@Override
 	public String toString()
 	{
-		return myPiece + ": " + myPiece.getCurrentPosition() + " -> " + getPositionIfPerformed();
+		return myPiece + ": " + myPiece.getCurrentPosition() + " -> " + getDestination();
 	}
 	
 	/**
 	 * Used to know how many moves to undo during an undo moves action
-	 * @return
+	 * @return true if this move is part of another move (such as a {@link CastlingMove})
 	 */
 	public boolean isPartOfAnotherMove()
 	{
@@ -495,10 +517,12 @@ public abstract class Move
 	 */
 	public String logMessageForLastMove() 
 	{
-		String log = myPiece.getDisplayName() + ": " + getRevertingMove().getPositionIfPerformed() + " -> " + myPiece.getCurrentPosition();
+		String log = myPiece.getDisplayName() + ": " + getRevertingMove().getDestination() + " -> " + myPiece.getCurrentPosition();
 		Piece removedPiece = getPiece().getBoard().getMoveLogger().getRemovedPieceForLastMove();
 		if(removedPiece != null)
+		{
 			log += " (Took over: " + removedPiece.getDisplayName() + ")";
+		}
 		return log;
 	}
 
@@ -520,6 +544,6 @@ public abstract class Move
 	 */
 	public Position getOldPosition()
 	{
-		return getRevertingMove().getPositionIfPerformed();
+		return getRevertingMove().getDestination();
 	}
 }

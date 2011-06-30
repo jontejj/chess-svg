@@ -6,12 +6,12 @@ import javax.swing.filechooser.FileFilter;;
 
 public class ChessFileFilter extends FileFilter
 {
-	public static String fileEnding = ".chess";
+	public static final String FILE_ENDING = ".chess";
 
 	@Override
 	public boolean accept(File pathname)
 	{				
-		return pathname.getAbsolutePath().endsWith(fileEnding);
+		return pathname.getAbsolutePath().endsWith(FILE_ENDING);
 	}
 
 	@Override

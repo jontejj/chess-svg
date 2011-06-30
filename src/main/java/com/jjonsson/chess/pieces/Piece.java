@@ -1,9 +1,9 @@
 package com.jjonsson.chess.pieces;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import static com.jjonsson.utilities.Logger.LOGGER;
+
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -57,24 +57,24 @@ public abstract class Piece
 	protected static final byte ROCK = 5;
 	
 	//The affinity (color) of a piece
-	public static boolean WHITE = false;
-	public static boolean BLACK = true;
+	public static final boolean WHITE = false;
+	public static final boolean BLACK = true;
 	
-	public static boolean NO_SORT = false;
-	public static boolean SORT = true;
+	public static final boolean NO_SORT = false;
+	public static final boolean SORT = true;
 	
-	protected Position myCurrentPosition;
+	private Position myCurrentPosition;
 	private boolean myAffinity;
 	
-	private HashSet<MoveListener> myListeners;
+	private Set<MoveListener> myListeners;
 	
 	/**
 	 * List of "in theory" possible moves that this piece can make 
 	 */
-	private ArrayList<Move> myPossibleMoves;
+	private List<Move> myPossibleMoves;
 	
 	//TODO(jontejj): keep this map updated and use it in the getMoveForPosition functions
-	private HashMap<Position, Move> myMoveMap;
+	private Map<Position, Move> myMoveMap;
 	
 	private Set<Piece> myPiecesThatTakesMyPieceOver;
 	private Piece myCheapestPieceThatTakesMeOver;
@@ -137,7 +137,9 @@ public abstract class Piece
 				myCheapestPieceThatTakesMeOver = new PieceValueOrdering().min(myPiecesThatTakesMyPieceOver);	
 			}
 			else
+			{
 				myCheapestPieceThatTakesMeOver = null;
+			}
 		}
 	}
 	
@@ -229,9 +231,13 @@ public abstract class Piece
 				break;
 			case PAWN:
 				if(affinity == BLACK)
+				{
 					piece = new BlackPawn(position, board);
+				}
 				else
+				{
 					piece = new WhitePawn(position, board);
+				}
 				break;
 		}
 		
@@ -273,11 +279,15 @@ public abstract class Piece
 			
 			//This makes sure the move list is double linked
 			if(lastMove != null)
+			{
 				lastMove.setMoveThatDependsOnMe(newMove);
+			}
 			
 			//Only add the link to the first move in the chain to the possible moves as this move will keep track of it's followers
 			if(lastMove == null)
+			{
 				addPossibleMove(newMove);
+			}
 			
 			lastMove = newMove;
 		}
@@ -292,7 +302,7 @@ public abstract class Piece
 	/**
 	 * @return a list of "in theory" possible moves that this piece can make 
 	 */
-	public ArrayList<Move> getPossibleMoves()
+	public List<Move> getPossibleMoves()
 	{
 		return myPossibleMoves;
 	}
@@ -308,7 +318,7 @@ public abstract class Piece
 	public ImmutableList<Move> getAvailableMoves(boolean sort, ChessBoard board) 
 	{
 		List<Move> availableMoves = Lists.newArrayList();
-		ArrayList<Move> possibleMoves = getPossibleMoves();
+		List<Move> possibleMoves = getPossibleMoves();
 		
 		for(Move m : possibleMoves)
 		{
@@ -324,7 +334,7 @@ public abstract class Piece
 		
 		if(sort)
 		{
-			return MoveOrdering.instance.immutableSortedCopy(availableMoves);
+			return MoveOrdering.getInstance().immutableSortedCopy(availableMoves);
 		}
 		
 		return ImmutableList.copyOf(availableMoves);
@@ -340,7 +350,7 @@ public abstract class Piece
 	public List<Move> getNonAvailableMoves(ChessBoard board) 
 	{
 		List<Move> nonAvailableMoves = Lists.newArrayList();
-		ArrayList<Move> possibleMoves = getPossibleMoves();
+		List<Move> possibleMoves = getPossibleMoves();
 		
 		for(Move m : possibleMoves)
 		{
@@ -371,12 +381,14 @@ public abstract class Piece
 	{
 		//A quick check, you can't move into your own square
 		if(getCurrentPosition().equals(pos))
+		{
 			return null;
+		}
 		
 		for(Move m : getAvailableMoves(false, board))
 		{
 			//TODO(jontejj): faster iteration (ie a map)
-			if(m.getPositionIfPerformed().equals(pos))
+			if(m.getDestination().equals(pos))
 			{
 				return m;
 			}
@@ -395,7 +407,7 @@ public abstract class Piece
 		for(Move m : getNonAvailableMoves(board))
 		{
 			//Note that pos can never be null, but positionIfPerformed can so the check needs to be in this order to avoid unnessecary null checks
-			if(pos.equals(m.getPositionIfPerformed()))
+			if(pos.equals(m.getDestination()))
 			{
 				return m;
 			}
@@ -471,14 +483,20 @@ public abstract class Piece
 	public void performMove(Move move, ChessBoard board, boolean printOut) throws UnavailableMoveException
 	{			
 		if(printOut)
-			System.out.println("Performing: " + move);
+		{
+			LOGGER.finest("Performing: " + move);
+		}
 		
 		move.makeMove(board);
 		
 		if(move instanceof RevertingMove)
+		{
 			myMovesMade--;
+		}
 		else
+		{
 			myMovesMade++;
+		}
 		
 		for(Move m : getPossibleMoves())
 		{
@@ -508,13 +526,21 @@ public abstract class Piece
 	public boolean same(Piece p)
 	{
 		if(p == null)
+		{
 			return false;
+		}
 		if(!this.hasSameAffinityAs(p))
+		{
 			return false;
+		}
 		if(!this.getCurrentPosition().equals(p.getCurrentPosition()))
+		{
 			return false;
+		}
 		if(this.getPersistanceIdentifierType() != p.getPersistanceIdentifierType())
+		{
 			return false;
+		}
 		
 		return true;
 	}

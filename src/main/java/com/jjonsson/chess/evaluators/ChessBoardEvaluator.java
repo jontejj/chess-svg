@@ -11,8 +11,15 @@ import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 
-public class ChessBoardEvaluator
+public final class ChessBoardEvaluator
 {
+	private static final long VALUE_OF_CHECKMATE = 50000;
+	private static final long VALUE_OF_STALEMATE = -10000;
+	private ChessBoardEvaluator()
+	{
+		
+	}
+	
 	public enum ChessState
 	{
 		CHECKMATE,
@@ -27,11 +34,11 @@ public class ChessBoardEvaluator
 		switch(state)
 		{
 			case CHECKMATE:
-				result = 50000;
+				result = VALUE_OF_CHECKMATE;
 				break;
 			case STALEMATE:
 				//TODO(jontejj): this could be beneficial during the end game
-				result = -10000;
+				result = VALUE_OF_STALEMATE;
 				break;
 			case CHECK:
 				result = 0;
@@ -72,7 +79,7 @@ public class ChessBoardEvaluator
 					DependantMove moveThatThisMoveDependUpon = move.getMoveThatIDependUpon();
 					while(moveThatThisMoveDependUpon != null)
 					{
-						ImmutableSet<Move> movesStoppingMove = board.getAvailableMoves(moveThatThisMoveDependUpon.getPositionIfPerformed(), !threateningMove.getAffinity());
+						ImmutableSet<Move> movesStoppingMove = board.getAvailableMoves(moveThatThisMoveDependUpon.getDestination(), !threateningMove.getAffinity());
 						if(movesStoppingMove.size() > 0)
 						{
 							movesStoppingCheck.addAll(movesStoppingMove);
@@ -92,7 +99,9 @@ public class ChessBoardEvaluator
 				}
 				
 				if(moveIsStoppable)
+				{
 					stoppableMoves++;
+				}
 			}
 			
 			movesStoppingCheck.addAll(kingMoves);

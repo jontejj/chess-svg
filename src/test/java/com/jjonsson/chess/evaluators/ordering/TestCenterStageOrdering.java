@@ -2,8 +2,6 @@ package com.jjonsson.chess.evaluators.ordering;
 
 import static junit.framework.Assert.assertEquals;
 
-import java.util.NoSuchElementException;
-
 import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
@@ -18,7 +16,7 @@ public class TestCenterStageOrdering
 {
 
 	@Test
-	public void testCenterStageOrdering() throws InvalidPosition, NoSuchElementException
+	public void testCenterStageOrdering() throws InvalidPosition
 	{
 		ChessBoard board = new ChessBoard(true);
 		Move pawnTwoStepMove = board.getAvailableMove(Position.createPosition(4, Position.C), WHITE);

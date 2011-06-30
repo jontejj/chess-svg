@@ -15,15 +15,14 @@ public class PawnTakeOverMove extends PawnMove
 	@Override
 	public boolean canBeMadeInternal(ChessBoard board)
 	{
-		if(getPieceAtDestination() == null)
-			return false; //The space is free but this move requires a take over
-		else if(getPieceAtDestination().hasSameAffinityAs(myPiece))
-			return false; //You can't take over your own pieces
-		else
+		if(getPieceAtDestination() == null || getPieceAtDestination().hasSameAffinityAs(getPiece()))
 		{
-			//Take over is available
-			return true;
+			//The space is either free (this move requires a take over)
+			//Or it's taken by one of your own pieces
+			return false;
 		}
+		//Take over is available
+		return true;
 	}
 	
 	/**
@@ -36,7 +35,7 @@ public class PawnTakeOverMove extends PawnMove
 		if(isTakeOverMove())
 		{
 			//It may be a move that reaches it's destination as well
-			return getPieceAtDestination().getValue() + 10 + super.getTakeOverValue();
+			return getPieceAtDestination().getValue() + PAWN_PROGRESSIVENESS_VALUE + super.getTakeOverValue();
 		}
 		return super.getTakeOverValue();
 	}

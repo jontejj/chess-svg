@@ -5,11 +5,14 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.KeyStroke;
 
-public class CrossPlatformUtilities
+public final class CrossPlatformUtilities
 {
-	private static final boolean isWindows;
-	private static final boolean isMac; 
-	private static final int shortcutModifier;
+	private static final int WINDOWS_TITLE_HEIGHT = 46;
+	public static final int USUAL_TITLE_HEIGHT = 22;
+	
+	private static boolean isWindows;
+	private static boolean isMac; 
+	private static int shortcutModifier;
 	
 	public static final int NO_ACTION	= -1;
 	public static final int	EXIT		= 0;
@@ -29,6 +32,11 @@ public class CrossPlatformUtilities
 		shortcutModifier = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 	}
 	
+	private CrossPlatformUtilities()
+	{
+		
+	}
+	
 	public static boolean isWindows()
 	{
 		return isWindows;
@@ -37,9 +45,10 @@ public class CrossPlatformUtilities
 	public static int getTitleHeightForCurrentPlatform()
 	{
 		if(isWindows())
-			return 24;
-		else 
-			return 0;
+		{
+			return WINDOWS_TITLE_HEIGHT;
+		}
+		return USUAL_TITLE_HEIGHT;
 	}
 	
 	public static boolean isMac()
@@ -114,7 +123,9 @@ public class CrossPlatformUtilities
 				break;
 			case EXIT:
 				if(isMac)
+				{
 					keyCode = KeyEvent.VK_Q;
+				}
 				else
 				{
 					keyCode = KeyEvent.VK_F4;
@@ -143,9 +154,13 @@ public class CrossPlatformUtilities
 			{
 				case KeyEvent.VK_S:
 					if(event.isShiftDown())
+					{
 						action = SAVE_AS;
+					}
 					else
+					{
 						action = SAVE;
+					}
 					break;
 					
 				case KeyEvent.VK_N:
@@ -162,15 +177,21 @@ public class CrossPlatformUtilities
 					
 				case KeyEvent.VK_Z:
 					if(event.isShiftDown())
+					{
 						action = UNDO;
+					}
 					else
+					{
 						action = UNDO_TWICE;
+					}	
 					break;
 					
 				//Usual exit
 				case KeyEvent.VK_Q:
 					if(event.getModifiers() == shortcutModifier)
+					{
 						action = EXIT;
+					}
 					break;
 				default:
 					break;
@@ -178,7 +199,9 @@ public class CrossPlatformUtilities
 		}
 		//Windows Exit
 		else if(event.getKeyCode() == KeyEvent.VK_F4 && event.isAltDown())
+		{
 			action = EXIT;
+		}
 		
 		return action;
 	}

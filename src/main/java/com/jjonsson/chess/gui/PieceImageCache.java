@@ -3,7 +3,7 @@ package com.jjonsson.chess.gui;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.util.XMLResourceDescriptor;
@@ -11,19 +11,27 @@ import org.w3c.dom.svg.SVGDocument;
 
 import com.google.common.collect.Maps;
 import com.jjonsson.chess.pieces.Piece;
+import com.jjonsson.utilities.Logger;
 
-public class PieceImageCache
+import static com.jjonsson.utilities.Logger.LOGGER;
+
+public final class PieceImageCache
 {
+	private PieceImageCache()
+	{
+		
+	}
 
 	private static SAXSVGDocumentFactory svgFactory = new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());
 	
-	private static HashMap<String, SVGDocument> pieceCache = Maps.newHashMap();
+	private static Map<String, SVGDocument> pieceCache = Maps.newHashMap();
 	public static SVGDocument getSVGForPiece(Piece p)
 	{
 		SVGDocument cachedDocument = pieceCache.get(p.getIdentifier());
 		if(cachedDocument == null)
 		{
 			cachedDocument = imageForPiece(p);
+			//TODO(jontejj) can we actually cache this?
 			//pieceCache.put(p.getIdentifier(), cachedDocument);
 		}
 		return cachedDocument;
@@ -42,13 +50,13 @@ public class PieceImageCache
 		}
 		catch (FileNotFoundException fnfe)
 		{
-			System.out.println("PieceImageCache: Couldn't find resource for image at: " + image);
+			LOGGER.info("PieceImageCache: Couldn't find resource for image at: " + image);
 			return null;
 		}
 		catch (IOException e)
 		{
-			System.out.println("Failed to load image for piece: " + p);
-			e.printStackTrace();
+			LOGGER.info("Failed to load image for piece: " + p);
+			LOGGER.info(Logger.stackTraceToString(e));
 		}
 		return document;
 	}

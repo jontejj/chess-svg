@@ -20,11 +20,11 @@ public class TestChessBoardComponent
 
 	private static final int SLEEP_TIME = 2000;
 	
-	private static long BENCHMARKED_PLAY_TIME;
-	private static long BENCHMARKED_PLAY_TIME_SECONDS;
+	private static long benchmarkedPlaytime;
+	private static long benchmarkedPlaytimeInSeconds;
 	
 	//We can turn this down as the AI gets more efficient
-	private static long BENCHMARKING_FACTOR = 1200;
+	private static final long BENCHMARKING_FACTOR = 1200;
 	
 	@BeforeClass
 	public static void bencmarkComputer()
@@ -42,8 +42,8 @@ public class TestChessBoardComponent
 		
 		long endNanos = System.nanoTime();
 		
-		BENCHMARKED_PLAY_TIME = (endNanos - startNanos) * BENCHMARKING_FACTOR;
-		BENCHMARKED_PLAY_TIME_SECONDS = BENCHMARKED_PLAY_TIME / 1000000000;
+		benchmarkedPlaytime = (endNanos - startNanos) * BENCHMARKING_FACTOR;
+		benchmarkedPlaytimeInSeconds = benchmarkedPlaytime / 1000000000;
 	}
 	
 	
@@ -61,7 +61,7 @@ public class TestChessBoardComponent
 		assertNotNull(component.getSelectedPiece());
 		//TODO(jontejj) validate that it was a good move
 		sleep();
-		component.positionClicked(component.getHintMove().getPositionIfPerformed());
+		component.positionClicked(component.getHintMove().getDestination());
 		sleep();
 	}
 	
@@ -78,23 +78,25 @@ public class TestChessBoardComponent
 		ChessWindow window = new ChessWindow(board);
 		
 		window.displayGame();
-		window.setTitle("Expecting black to win within " + BENCHMARKED_PLAY_TIME_SECONDS + " secs");
+		window.setTitle("Expecting black to win within " + benchmarkedPlaytimeInSeconds + " secs");
 		
 		ChessBoardComponent component = window.getBoardComponent();
 		component.setAIEnabled(false);
 		
 		long startNanos = System.nanoTime();
-		while(ChessBoardEvaluator.inPlay(board) && System.nanoTime() < startNanos + BENCHMARKED_PLAY_TIME)
+		while(ChessBoardEvaluator.inPlay(board) && System.nanoTime() < startNanos + benchmarkedPlaytime)
 		{
 			if(board.getCurrentPlayer() == Piece.BLACK)
 			{
 				ChessMoveEvaluator.performBestMove(board);
 			}
 			else
+			{
 				//Simulate that the white is a bad player that doesn't know what he's doing
 				board.performRandomMove();
+			}
 			long consumedSeconds = (System.nanoTime() - startNanos) / 1000000000;
-			window.setTitle("Expecting black to win within " + (BENCHMARKED_PLAY_TIME_SECONDS - consumedSeconds) + " secs");
+			window.setTitle("Expecting black to win within " + (benchmarkedPlaytimeInSeconds - consumedSeconds) + " secs");
 		}
 		//If the game ended in time the AI should win (i.e white (random) should lose)
 		assertTrue(ChessBoardEvaluator.inPlay(board) || (ChessState.CHECKMATE == board.getCurrentState() && board.getLastMove().getAffinity() == Piece.BLACK));

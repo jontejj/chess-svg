@@ -7,7 +7,7 @@ public interface MoveListener
 	/**
 	 * Called whenever a piece has been moved
 	 */
-	public void movePerformed(Move performedMove);
+	void movePerformed(Move performedMove);
 
-	public void pieceRemoved(Piece removedPiece);
+	void pieceRemoved(Piece removedPiece);
 }

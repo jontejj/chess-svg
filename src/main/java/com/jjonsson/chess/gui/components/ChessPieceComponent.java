@@ -1,5 +1,7 @@
 package com.jjonsson.chess.gui.components;
 
+import static com.jjonsson.utilities.Logger.LOGGER;
+
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
@@ -57,11 +59,10 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	private Point getPointForPiece(Piece piece)
 	{
 		Position currentPosition = piece.getCurrentPosition();
-		Point p = new Point(currentPosition.getColumn() * myBoardComponent.getCurrentPieceSize().width + myBoardComponent.getPieceBorderSize() + myBoardComponent.getPieceMargin(), (ChessBoard.BOARD_SIZE - currentPosition.getRow() - 1) * myBoardComponent.getCurrentPieceSize().height + myBoardComponent.getPieceBorderSize() + myBoardComponent.getPieceMargin());
-		return p;
+		return new Point(currentPosition.getColumn() * myBoardComponent.getCurrentPieceSize().width + myBoardComponent.getPieceBorderSize() + myBoardComponent.getPieceMargin(), (ChessBoard.BOARD_SIZE - currentPosition.getRow() - 1) * myBoardComponent.getCurrentPieceSize().height + myBoardComponent.getPieceBorderSize() + myBoardComponent.getPieceMargin());
 	}
 
-	public void updateSize()
+	public final void updateSize()
 	{
 		if(myBoardComponent == null)
 		{
@@ -75,10 +76,14 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	private void setBackgroundColor()
 	{
 		//setBackground(null);
-        if ( (myPieceToDraw.getCurrentPosition().getRow() % 2) == (myPieceToDraw.getCurrentPosition().getColumn() % 2) )
-        	setBackground(Color.lightGray);
-         else
-        	 setBackground(Color.darkGray); 	
+		if ( (myPieceToDraw.getCurrentPosition().getRow() % 2) == (myPieceToDraw.getCurrentPosition().getColumn() % 2) )
+		{
+			setBackground(Color.lightGray);
+		}
+		else
+		{
+			setBackground(Color.darkGray); 
+		}
 	}
 
 	@Override
@@ -90,17 +95,21 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	}
 
 	@Override
-	public void pieceRemoved(Piece removedPiece)
+	public final void pieceRemoved(Piece removedPiece)
 	{
 		if(removedPiece == myPieceToDraw)
 		{
 			if(this.getPiece() != null)
+			{
 				this.getPiece().removeMoveListener(this);
+			}
 			
 			this.dispose();
 			
 			if(this.getParent() != null)
+			{
 				this.getParent().remove(this);
+			}
 			
 			myBoardComponent = null;
 			myPieceToDraw = null;
@@ -118,7 +127,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 			m.updateMove(myBoardComponent.getBoard());
 		}
 		myBoardComponent.repaint();*/
-		System.out.println(this.getPiece() + " clicked");
+		LOGGER.finest(this.getPiece() + " clicked");
 		ChessBoardComponent boardComponent = myBoardComponent;
 		Piece currentlySelected = boardComponent.getSelectedPiece();
 		if(currentlySelected != null && !currentlySelected.hasSameAffinityAs(this.getPiece()))
@@ -134,7 +143,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 				}
 				catch (UnavailableMoveException ume)
 				{
-					System.out.println(ume);
+					LOGGER.info(ume.toString());
 				}
 			}
 		}
@@ -149,7 +158,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		}
 		long time = (System.nanoTime() - startNanos);
 		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(1000000000));
-		System.out.println("Seconds: " + bd.toPlainString());
+		LOGGER.finest("Seconds: " + bd.toPlainString());
 	}
 	@Override
 	public void mousePressed(MouseEvent e){}

@@ -15,18 +15,23 @@ public class KingMove extends IndependantMove
 	public boolean canBeMade(ChessBoard board)
 	{
 		if(board.isMoveUnavailableDueToCheck(this))
+		{
 			return false;
+		}
 		
 		return myCanBeMadeCache;
 	}
 	
 	public boolean canBeMadeInternal(ChessBoard board) 
 	{
-		Position newPosition = this.getPositionIfPerformed();
+		Position newPosition = this.getDestination();
 		if(newPosition == null)
-			return false; //The move was out of bounds
+		{
+			//The move was out of bounds
+			return false; 
+		}
 		
-		Move threateningMove = board.moveThreateningPosition(newPosition, !myPiece.getAffinity(), myPiece, true);
+		Move threateningMove = board.moveThreateningPosition(newPosition, !getAffinity(), getPiece(), true);
 		
 		if(threateningMove != null)
 		{

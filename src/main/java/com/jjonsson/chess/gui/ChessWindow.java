@@ -25,6 +25,7 @@ import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.ChessFileFilter;
 import static com.jjonsson.utilities.CrossPlatformUtilities.*;
+import static com.jjonsson.utilities.Logger.LOGGER;
 
 public class ChessWindow extends JFrame implements ActionListener, StatusListener
 {	
@@ -39,7 +40,6 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	
 	private static final int STATUS_BAR_HEIGHT = 20;
 	private static final int WINDOW_BORDER_SIZE = 3;
-	private static final int TITLE_BAR_HEIGHT = 22;
 	
 	@VisibleForTesting
 	public static final String NEW_MENU_ITEM = "New";
@@ -64,7 +64,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	private String lastFileChooserLocation;
 	
 	private ChessBoard myBoard;
-	ChessBoardComponent myComponent;
+	private ChessBoardComponent myComponent;
 	
 	private String myCurrentBoardFile;
 	
@@ -97,10 +97,9 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		return myComponent;
 	}
 	
-	public Dimension getBoardComponentSize()
+	public final Dimension getBoardComponentSize()
 	{
-		Dimension boardSize = new Dimension(getSize().width + WINDOW_BORDER_SIZE, getSize().height - getJMenuBar().getHeight() - STATUS_BAR_HEIGHT - TITLE_BAR_HEIGHT);
-		return boardSize;
+		return new Dimension(getSize().width + WINDOW_BORDER_SIZE, getSize().height - getJMenuBar().getHeight() - STATUS_BAR_HEIGHT - USUAL_TITLE_HEIGHT);
 	}
 	
 	private void createStatusBar() 
@@ -116,10 +115,10 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	private void resizeStatusBar()
 	{
 		myStatusBar.setSize(getSize().width, STATUS_BAR_HEIGHT);
-		myStatusBar.setLocation(0, getSize().height - STATUS_BAR_HEIGHT - TITLE_BAR_HEIGHT - getTitleHeightForCurrentPlatform());
+		myStatusBar.setLocation(0, getSize().height - STATUS_BAR_HEIGHT - getTitleHeightForCurrentPlatform());
 	}
 
-	public void updateStatusBar()
+	public final void updateStatusBar()
 	{
 		myGameStatus = getBoard().getStatusString();
 		myStatusBar.setText(myGameStatus);
@@ -212,7 +211,9 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		    showAvailableClicks = new JMenuItem(HIDE_AVAILABLE_CLICKS_MENU_ITEM);
 	    }
 	    else 
+	    {
 	    	showAvailableClicks = new JMenuItem(SHOW_AVAILABLE_CLICKS_MENU_ITEM);
+	    }
 	    
 		showAvailableClicks.addActionListener(this);
 		settingsMenu.add(showAvailableClicks);
@@ -230,12 +231,18 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	private void save(boolean forceDialog)
 	{
 		if(myCurrentBoardFile == null || forceDialog)
+		{
 			selectFile("Save Chess File");
+		}
 		
 		if(BoardLoader.saveBoard(getBoard(), myCurrentBoardFile))
+		{
 			setResultOfInteraction("Saved successfully");
+		}
 		else
+		{
 			setResultOfInteraction("Save failed");		
+		}
 	}
 	
 	private void newGame()
@@ -274,7 +281,9 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 				}
 				
 				if(loadOk)
+				{
 					break;
+				}
 				
 				myStatusBar.setText(myGameStatus + " (Invalid board file format, Select new file to load)");
 				
@@ -284,7 +293,9 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 			myComponent.loadingOfBoardDone();
 			
 			if(loadOk)
+			{
 				setResultOfInteraction("Load Ok");
+			}
 			else
 			{
 				setResultOfInteraction("Load Cancelled");
@@ -298,9 +309,13 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		int undoneMoves = getBoard().undoMoves(nrOfMoves);
 		updateStatusBar();
 		if(undoneMoves == 0)
+		{
 			setResultOfInteraction("Undo not possible");
+		}
 		else
+		{
 			setResultOfInteraction("Reverted " + undoneMoves + " moves");
+		}
 		myComponent.repaint();
 	}
 	
@@ -325,7 +340,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-		System.out.println(e.getActionCommand());
+		LOGGER.finest(e.getActionCommand());
 		if(e.getActionCommand().equals(NEW_MENU_ITEM))
 		{
 			newGame();
@@ -404,12 +419,15 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		File selectedFile = jfc.getSelectedFile();
 		if(selectedFile != null)
 		{
-			if(!selectedFile.getAbsolutePath().endsWith(ChessFileFilter.fileEnding))
+			if(!selectedFile.getAbsolutePath().endsWith(ChessFileFilter.FILE_ENDING))
 			{
-				myCurrentBoardFile = selectedFile.getAbsolutePath() + ChessFileFilter.fileEnding;
+				myCurrentBoardFile = selectedFile.getAbsolutePath() + ChessFileFilter.FILE_ENDING;
 			}
 			else
+			{
 				myCurrentBoardFile = selectedFile.getAbsolutePath();
+			}
+			
 			saveFileChooserPath(selectedFile.getParent());
 			setTitle(selectedFile.getName());
 		}

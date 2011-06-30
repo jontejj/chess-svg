@@ -4,7 +4,6 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
-import com.jjonsson.chess.pieces.Rock;
 
 /**
  * A move that can revert another move
@@ -20,7 +19,7 @@ public class RevertingMove extends IndependantMove {
 	private Piece myPieceThatReplacedMyPiece;
 	public RevertingMove(Move moveToRevert) 
 	{
-		super(-moveToRevert.getRowChange(), -moveToRevert.getColumnChange(), moveToRevert.myPiece);
+		super(-moveToRevert.getRowChange(), -moveToRevert.getColumnChange(), moveToRevert.getPiece());
 		myMoveToRevert = moveToRevert;
 	}
 	
@@ -96,9 +95,9 @@ public class RevertingMove extends IndependantMove {
 	 * Returns the position that the piece this move is connected to previously was at
 	 */
 	@Override
-	public Position getPositionIfPerformed()
+	public Position getDestination()
 	{
-		Position curPos = myPiece.getCurrentPosition();
+		Position curPos = getCurrentPosition();
 		try
 		{
 			//TODO(jontejj): this could be cached
@@ -116,11 +115,13 @@ public class RevertingMove extends IndependantMove {
 	{
 		if(canBeMade(board))
 		{
-			Position oldPosition = myPiece.getCurrentPosition().clone();
+			Position oldPosition = getCurrentPosition().copy();
 			
-			//If a pawn was replaced by another piece
 			if(myPieceThatReplacedMyPiece != null)
+			{
+				//A pawn was replaced by another piece
 				myPieceThatReplacedMyPiece.removeFromBoard(board);
+			}
 			
 			super.makeMove(board);
 			
@@ -132,16 +133,18 @@ public class RevertingMove extends IndependantMove {
 				board.updatePossibilityOfMovesForPosition(myPieceToPlaceAtOldPosition.getCurrentPosition());
 			}
 			
-			myPiece.reEnablePossibleMoves();
+			getPiece().reEnablePossibleMoves();
 			
 			board.popLastMoveIfEqual(myMoveToRevert);
 			//Decrement how many times the move to revert has been made
 			myMoveToRevert.setMovesMade(myMoveToRevert.getMovesMade()-1);
 
-			myPiece.revertedAMove(board, oldPosition);
+			getPiece().revertedAMove(board, oldPosition);
 		}
 		else
+		{
 			throw new UnavailableMoveException(this);
+		}
 	}
 	
 	/**
@@ -151,7 +154,7 @@ public class RevertingMove extends IndependantMove {
 	@Override
 	public Position getOldPosition()
 	{
-		return myMoveToRevert.getPositionIfPerformed();
+		return myMoveToRevert.getDestination();
 	}
 	
 	@Override

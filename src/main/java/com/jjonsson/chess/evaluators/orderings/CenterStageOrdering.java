@@ -13,20 +13,16 @@ import com.jjonsson.chess.moves.Position;
 public class CenterStageOrdering extends Ordering<Move>
 {
 
-	static int center;
-	static 
-	{
-		center = ChessBoard.BOARD_SIZE / 2 - 1;
-	}
+	private static final int CENTER = ChessBoard.BOARD_SIZE / 2 - 1;
 	
 	@Override
 	public int compare(Move left, Move right)
 	{
-		Position rightDestination = left.getPositionIfPerformed();
-		Position leftDestination = right.getPositionIfPerformed();
+		Position rightDestination = left.getDestination();
+		Position leftDestination = right.getDestination();
 		
-		return Math.abs(leftDestination.getRow() - center) - Math.abs(rightDestination.getRow() - center) +
-		(Math.abs(leftDestination.getColumn() - center) - Math.abs(rightDestination.getColumn() - center));
+		return Math.abs(leftDestination.getRow() - CENTER) - Math.abs(rightDestination.getRow() - CENTER) +
+		(Math.abs(leftDestination.getColumn() - CENTER) - Math.abs(rightDestination.getColumn() - CENTER));
 	}
 
 }

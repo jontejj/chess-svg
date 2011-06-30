@@ -7,7 +7,8 @@ import com.jjonsson.chess.moves.Position;
 
 public abstract class Pawn extends Piece
 {
-
+	protected static final int PAWN_VALUE_INCREASE_PER_ROW = 10;
+	
 	private PawnTwoStepMove myTwoStepMove;
 	private PawnOneStepMove myOneStepMove;
 	
@@ -75,15 +76,12 @@ public abstract class Pawn extends Piece
 	@Override
 	public void revertedAMove(ChessBoard board, Position oldPosition)
 	{
-		if(isAtStartingRow())
+		if(isAtStartingRow() && myTwoStepMove.isRemoved())
 		{
-			if(myTwoStepMove.isRemoved())
-			{
-				//The two step move can now be re-enabled
-				myTwoStepMove.reEnable();
-				myOneStepMove.setMoveThatDependsOnMe(myTwoStepMove);
-				myTwoStepMove.updateMove(board);
-			}
+			//The two step move can now be re-enabled
+			myTwoStepMove.reEnable();
+			myOneStepMove.setMoveThatDependsOnMe(myTwoStepMove);
+			myTwoStepMove.updateMove(board);
 		}
 		//The pawn was removed because it reached it's destination, we need to add it again
 		if(isTimeForReplacement(oldPosition))

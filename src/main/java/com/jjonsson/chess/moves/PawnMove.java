@@ -7,6 +7,11 @@ import com.jjonsson.chess.pieces.Piece;
 
 public abstract class PawnMove extends DependantMove
 {
+	/**
+	 * This value determines how much it's prioritized that pawns goes forward
+	 */
+	protected static final int PAWN_PROGRESSIVENESS_VALUE = 20;
+	
 	public PawnMove(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith, DependantMove moveDependingOnMe, DependantMove moveThatIDependUpon)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith, moveDependingOnMe, moveThatIDependUpon);
@@ -21,19 +26,21 @@ public abstract class PawnMove extends DependantMove
 	{
 		super.makeMove(board);
 		
-		if(Pawn.class.cast(myPiece).isTimeForReplacement(myPiece.getCurrentPosition()))
+		if(Pawn.class.cast(getPiece()).isTimeForReplacement(getCurrentPosition()))
 		{
 			//The white/black pawn has reached the bottom/top and now it's time to replace him
-			myRevertingMove.setPieceThatReplacedMyPiece(board.replacePawn(myPiece));
+			getRevertingMove().setPieceThatReplacedMyPiece(board.replacePawn(getPiece()));
 		}
-		Pawn.class.cast(myPiece).removeTwoStepMove(board);
+		Pawn.class.cast(getPiece()).removeTwoStepMove(board);
 	}
 
 	@Override
 	protected boolean canBeMadeInternal(ChessBoard board)
 	{
 		if(getPieceAtDestination() == null)
+		{
 			return true; //The space is free
+		}
 		
 		return false;
 	}
@@ -41,7 +48,7 @@ public abstract class PawnMove extends DependantMove
 	@Override
 	public int getProgressiveValue()
 	{
-		return 20;
+		return PAWN_PROGRESSIVENESS_VALUE;
 	}
 	
 	/**
@@ -51,7 +58,7 @@ public abstract class PawnMove extends DependantMove
 	@Override
 	public int getTakeOverValue()
 	{
-		if(Pawn.isTimeForReplacement(getPositionIfPerformed(), getAffinity()))
+		if(Pawn.isTimeForReplacement(getDestination(), getAffinity()))
 		{
 			return Piece.QUEEN_VALUE - Piece.PAWN_VALUE;
 		}

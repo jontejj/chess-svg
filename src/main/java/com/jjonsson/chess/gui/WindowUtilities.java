@@ -4,8 +4,13 @@ import java.awt.RenderingHints;
 
 import javax.swing.*;
 
-public class WindowUtilities {
+public final class WindowUtilities {
 
+	private WindowUtilities()
+	{
+		
+	}
+	
 	private static RenderingHints renderHints;
 	static
 	{
@@ -16,18 +21,20 @@ public class WindowUtilities {
 	/**
 	 * Tell system to use native look and feel, as in previous
      * releases. Metal (Java) LAF is the default otherwise.
-	 * @throws UnsupportedLookAndFeelException 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 * @throws ClassNotFoundException 
 	 */
-	public static void setNativeLookAndFeel() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException 
+	public static void setNativeLookAndFeel() 
 	{
 		//For Mac's we want to use the native menu bar
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
 		System.setProperty("com.apple.mrj.application.apple.menu.about.name", ChessWindow.NAME);
-		
-		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		try
+		{
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		}
+		catch (UnsupportedLookAndFeelException e){}
+		catch (ClassNotFoundException e){}
+		catch (InstantiationException e){}
+		catch (IllegalAccessException e){}
 	}
 	  
 	public static RenderingHints getRenderingHints()

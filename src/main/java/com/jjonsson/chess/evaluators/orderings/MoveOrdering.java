@@ -10,11 +10,21 @@ import com.jjonsson.chess.moves.Move;
  * @author jonatanjoensson
  *
  */
-public class MoveOrdering
+public final class MoveOrdering
 {
-	public static final Ordering<Move> instance = Ordering.compound(ImmutableList.of(
+	private MoveOrdering()
+	{
+		
+	}
+	
+	private static final Ordering<Move> INSTANCE = Ordering.compound(ImmutableList.of(
 																	new TakeOverValueOrdering(), 
 																	new EvadeOrdering(), 
 																	new ProgressivenessOrdering(),
 																	new CenterStageOrdering()));
+	
+	public static Ordering<Move> getInstance()
+	{
+		return INSTANCE;
+	}
 }

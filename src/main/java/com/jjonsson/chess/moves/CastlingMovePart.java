@@ -12,26 +12,20 @@ import com.jjonsson.chess.pieces.Rock;
  */
 public class CastlingMovePart extends IndependantMove
 {
-
-	/**
-	 * The move that this Castling Move Part is a part of
-	 */
-	private CastlingMove myCastlingMove;
 	/**
 	 * Note this move doesn't handle bad positions
 	 * @param rowChange
 	 * @param columnChange
 	 * @param pieceThatTheMoveWillBeMadeWith a Rock or a King
 	 */
-	public CastlingMovePart(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith, CastlingMove castlingMove)
+	public CastlingMovePart(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
-		myCastlingMove = castlingMove;
-		Position currentPosition = myPiece.getCurrentPosition();
+		Position currentPosition = getCurrentPosition();
 		byte newRow = (byte)(currentPosition.getRow()+rowChange);
 		byte newColumn = (byte)(currentPosition.getColumn()+columnChange);
-		myDestination = new Position(newRow, newColumn);
-		setPieceAtDestination(getPiece().getBoard().getPiece(myDestination));
+		setDestination(new Position(newRow, newColumn));
+		setPieceAtDestination(getPiece().getBoard().getPiece(getDestination()));
 	}
 	
 	@Override
@@ -39,13 +33,15 @@ public class CastlingMovePart extends IndependantMove
 	{
 		//A castling move depends on unmoved pieces
 		if(getPiece().getMovesMade() > 0)
+		{
 			return false;
+		}
 		
 		//The king may never move into a threatened position
 		if(getPiece() instanceof King)
 		{
 			//The Rock is going to protect the King if the threatening piece is standing on the same row
-			Move threateningMove = board.moveThreateningPosition(this.getPositionIfPerformed(), !myPiece.getAffinity(), myPiece, false);
+			Move threateningMove = board.moveThreateningPosition(this.getDestination(), !getAffinity(), getPiece(), false);
 			
 			if(threateningMove != null)
 			{
@@ -55,7 +51,10 @@ public class CastlingMovePart extends IndependantMove
 		}
 		
 		if(getPieceAtDestination() == null)
-			return true; //The space is free
+		{
+			//The space is free
+			return true; 
+		}
 		
 		return false;
 	}
@@ -73,7 +72,7 @@ public class CastlingMovePart extends IndependantMove
 	@Override
 	public void updateDestination(ChessBoard board)
 	{
-		setPieceAtDestination(board.getPiece(myDestination));
+		setPieceAtDestination(board.getPiece(getDestination()));
 	}
 	
 	@Override

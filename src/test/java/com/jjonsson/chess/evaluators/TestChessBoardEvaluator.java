@@ -11,12 +11,13 @@ import com.jjonsson.chess.scenarios.TestScenarios;
 public class TestChessBoardEvaluator
 {
 
+	private static final String GAME_STATE = "Game state";
 	@Test
 	public void testCheck()
 	{
 		ChessBoard board = TestScenarios.loadBoard("king_should_not_be_able_to_move");
 		ChessState currentState = board.getCurrentState();
-		assertEquals("Game state", currentState, ChessState.CHECK);
+		assertEquals(GAME_STATE, currentState, ChessState.CHECK);
 	}
 	
 	@Test
@@ -24,7 +25,7 @@ public class TestChessBoardEvaluator
 	{
 		ChessBoard board = TestScenarios.loadBoard("should_be_checkmate");
 		ChessState currentState = board.getCurrentState();
-		assertEquals("Game state", currentState, ChessState.CHECKMATE);
+		assertEquals(GAME_STATE, currentState, ChessState.CHECKMATE);
 	}
 
 	@Test
@@ -32,7 +33,7 @@ public class TestChessBoardEvaluator
 	{
 		ChessBoard board = TestScenarios.loadBoard("should_not_be_check");
 		ChessState currentState = board.getCurrentState();
-		assertEquals("Game state", currentState, ChessState.PLAYING);
+		assertEquals(GAME_STATE, currentState, ChessState.PLAYING);
 	}
 	
 	@Test
@@ -40,6 +41,6 @@ public class TestChessBoardEvaluator
 	{
 		ChessBoard board = TestScenarios.loadBoard("should_be_stalemate");
 		ChessState currentState = board.getCurrentState();
-		assertEquals("Game state", currentState, ChessState.STALEMATE);
+		assertEquals(GAME_STATE, currentState, ChessState.STALEMATE);
 	}
 }

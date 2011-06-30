@@ -42,6 +42,6 @@ public class WhitePawn extends Pawn
 	@Override
 	public int getValue()
 	{
-		return Piece.PAWN_VALUE + (getCurrentPosition().getRow() * 10);
+		return Piece.PAWN_VALUE + (getCurrentPosition().getRow() * PAWN_VALUE_INCREASE_PER_ROW);
 	}
 }

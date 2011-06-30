@@ -57,10 +57,6 @@ public class TestChessMoveEvaluator
 		{
 			ChessMoveEvaluator.performBestMove(board);
 		}
-		catch(NullPointerException npe)
-		{
-			assertFalse(ChessBoardEvaluator.inPlay(board));
-		}
 		catch (NoMovesAvailableException e)
 		{
 			assertFalse(ChessBoardEvaluator.inPlay(board));

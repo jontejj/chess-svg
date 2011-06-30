@@ -7,7 +7,7 @@ package com.jjonsson.chess.gui;
  */
 public interface StatusListener
 {
-	public void statusHasBeenUpdated();
+	void statusHasBeenUpdated();
 	
-	public void setResultOfInteraction(String resultText);
+	void setResultOfInteraction(String resultText);
 }

@@ -29,7 +29,7 @@ public class TestScenarios
 	
 	public static ChessBoard loadBoard(String testName)
 	{
-		String scenarioFile = "/scenarios/" + testName + ChessFileFilter.fileEnding;
+		String scenarioFile = "/scenarios/" + testName + ChessFileFilter.FILE_ENDING;
 		ChessBoard board = new ChessBoard(false);
 		
 		assertTrue("Could not load:" + scenarioFile, BoardLoader.loadStreamIntoBoard(BoardLoader.class.getResourceAsStream(scenarioFile), board));
@@ -59,7 +59,7 @@ public class TestScenarios
 		Assert.assertNotNull(stoppingMove);
 		
 		Move takeOverMove = q.getAvailableMoveForPosition(Position.createPosition(4, Position.H), board);
-		Position oldQueenPosition = takeOverMove.getCurrentPosition().clone();
+		Position oldQueenPosition = takeOverMove.getCurrentPosition().copy();
 		Assert.assertNotNull(takeOverMove);
 		
 		assertEquals(ChessState.PLAYING, board.getCurrentState());

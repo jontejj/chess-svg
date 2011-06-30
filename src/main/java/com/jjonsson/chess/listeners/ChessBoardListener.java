@@ -7,39 +7,39 @@ import com.jjonsson.chess.pieces.Piece;
 
 public interface ChessBoardListener
 {
-	public void piecePlaced(Piece p);
+	void piecePlaced(Piece p);
 
-	public void gameStateChanged(ChessState newState);
+	void gameStateChanged(ChessState newState);
 
 	/**
 	 * Called if the UI shouldn't refresh itself as this will be done later on instead when the loading is done
 	 * @param p
 	 */
-	public void piecePlacedLoadingInProgress(Piece p);
+	void piecePlacedLoadingInProgress(Piece p);
 	
-	public void loadingOfBoardDone();
+	void loadingOfBoardDone();
 	
 	/**
 	 * Called when the current player has moved and it's the next players turn
 	 */
-	public void nextPlayer();
+	void nextPlayer();
 	
 	/**
 	 * Called when the requested undo command has been performed
 	 */
-	public void undoDone();
+	void undoDone();
 	
 	/**
 	 * 
 	 * @return true if the listener wishes to decide which piece a pawn should be replaced with
 	 */
-	public boolean supportsPawnReplacementDialog();
+	boolean supportsPawnReplacementDialog();
 	
 	/**
 	 * 
 	 * @return null if you don't support pawn replacement dialogs
 	 */
-	public Piece getPawnReplacementFromDialog();
+	Piece getPawnReplacementFromDialog();
 	
-	public void squareScores(ImmutableMap<Position, String> positionScores);
+	void squareScores(ImmutableMap<Position, String> positionScores);
 }

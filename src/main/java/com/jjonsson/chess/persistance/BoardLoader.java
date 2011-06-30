@@ -8,9 +8,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.exceptions.InvalidPosition;
 
-public class BoardLoader
+public final class BoardLoader
 {
+	private BoardLoader()
+	{
+		
+	}
+	
 	/**
 	 * @param input the stream to load the board from
 	 * @param boardToLoadInto the board to load the board into
@@ -18,19 +24,23 @@ public class BoardLoader
 	 */
 	public static boolean loadStreamIntoBoard(InputStream input, ChessBoard boardToLoadInto)
 	{
+		BufferedInputStream bis = new BufferedInputStream(input);
 		try
 		{
-			BufferedInputStream bis = new BufferedInputStream(input);
 			boardToLoadInto.readPersistanceData(bis);
-			boardToLoadInto.setPossibleMoves();
-			boardToLoadInto.updateGameState();
-			return true;
 		}
-		catch (Throwable t)
+		catch (IOException e)
 		{
-			t.printStackTrace();
 			return false;
 		}
+		catch (InvalidPosition e)
+		{
+			return false;
+		}
+		boardToLoadInto.setPossibleMoves();
+		boardToLoadInto.updateGameState();
+
+		return true;
 	}
 	
 	/**
@@ -42,7 +52,9 @@ public class BoardLoader
 	public static boolean saveBoard(ChessBoard board, String pathToFile)
 	{
 		if(pathToFile == null)
+		{
 			return false;
+		}
 		
 		File toFile = new File(pathToFile);
 		if(!toFile.exists())

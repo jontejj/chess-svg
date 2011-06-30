@@ -6,7 +6,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -47,14 +46,14 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 		myMoveHistory.push(move);
 	}
 	
-	public Move popMove() throws NoSuchElementException
+	public Move popMove()
 	{
 		return myMoveHistory.pop();
 	}
 	
 	/**
 	 * This also sets the correct piece to restore if this move took over a piece for the returned move's RevertingMove
-	 * @return
+	 * @return the last move that was made on the connected board or null if no moves has been made
 	 */
 	public Move getLastMove()
 	{
@@ -165,7 +164,9 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 		for(Move m : myMoveHistory)
 		{
 			if(moves.size() >= numberOfMoves)
+			{
 				break;
+			}
 			moves.add(m);
 		}
 		return ImmutableList.copyOf(moves);

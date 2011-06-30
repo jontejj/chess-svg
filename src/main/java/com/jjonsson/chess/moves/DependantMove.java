@@ -32,19 +32,25 @@ public abstract class DependantMove extends Move
 	 */
 	public boolean furtherMovesInChainMayBePossible(ChessBoard board)
 	{
-		//Check if we have gone out of the board
-		if(getPositionIfPerformed() == null)
+		if(getDestination() == null)
+		{
+			//Check if we have gone out of the board
 			return false;
+		}
 		
 		//This move relies on the possibility of the previous move in the chain
 		if(myMoveThatIDependUpon != null)
 		{
-			//Some previous move may have been either a take over or if a piece standing in the way, this means this move won't be possible 
 			if(isAMoveThatIDependOnBlocked())
+			{
+				//Some previous move may have been either a take over or if a piece standing in the way, this means this move won't be possible 
 				return false;
+			}
 			
 			if(board.getCurrentState() != ChessState.CHECK && !myMoveThatIDependUpon.canBeMade(board))
+			{
 				return false;
+			}
 		}
 		return true;
 	}
@@ -57,7 +63,9 @@ public abstract class DependantMove extends Move
 		{
 			//No jumping over pieces
 			if(move.getPieceAtDestination() != null)
+			{
 				return true;
+			}
 			
 			move = move.getMoveThatIDependUpon();
 		}
@@ -73,7 +81,9 @@ public abstract class DependantMove extends Move
 			if(move.getPieceAtDestination() != null 
 					&& !move.getPieceAtDestination().getCurrentPosition().equals(ignoreIfPositionIsBlocked)
 					 && !move.getPieceAtDestination().getCurrentPosition().equals(ignoreIfPositionIsBlocked2))
+			{
 				return true;
+			}
 			
 			move = move.getMoveThatIDependUpon();
 		}
@@ -83,7 +93,9 @@ public abstract class DependantMove extends Move
 	private boolean canBeMadeDependantInternal(ChessBoard board)
 	{
 		if(furtherMovesInChainMayBePossible(board))
+		{
 			return canBeMadeInternal(board);
+		}
 		
 		return false;	
 	}
@@ -148,11 +160,11 @@ public abstract class DependantMove extends Move
 		if(myCanBeMadeCache)
 		{
 			//The move is now possible
-			board.addAvailableMove(myDestination, myPiece, this);
+			board.addAvailableMove(getDestination(), getPiece(), this);
 		}
 		else
 		{
-			board.addNonAvailableMove(myDestination, myPiece, this);
+			board.addNonAvailableMove(getDestination(), getPiece(), this);
 		}
 	}
 
@@ -228,7 +240,7 @@ public abstract class DependantMove extends Move
 	{
 		List<Move> dependantMoves = null;
 		//Check if we have gone out of the board
-		if(myDestination != null)
+		if(getDestination() != null)
 		{
 			//Performs a dive into the dependant moves and stops when it finds either null or when it's not possible to perform a move further down
 			DependantMove move = myMoveDependingOnMe;
@@ -237,18 +249,24 @@ public abstract class DependantMove extends Move
 				if(move.canBeMade(board))
 				{
 					if(dependantMoves == null)
+					{
 						dependantMoves = Lists.newArrayList();
+					}
 					
 					dependantMoves.add(move);
 				}
 				if(!move.furtherMovesInChainMayBePossible(board))
+				{
 					break;
+				}
 				
 				move = move.getMoveDependingOnMe();
 			}
 		}
 		if(dependantMoves == null)
+		{
 			return Collections.emptyList();
+		}
 		
 		return dependantMoves;
 	}
@@ -311,7 +329,7 @@ public abstract class DependantMove extends Move
 	@Override
 	public void reEnable()
 	{
-		myIsRemoved = false;
+		super.reEnable();
 		if(myMoveDependingOnMe != null)
 		{
 			myMoveDependingOnMe.reEnable();

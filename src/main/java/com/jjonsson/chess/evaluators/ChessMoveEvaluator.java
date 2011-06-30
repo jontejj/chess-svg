@@ -1,9 +1,10 @@
 package com.jjonsson.chess.evaluators;
 
+import static com.jjonsson.utilities.Logger.LOGGER;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -14,10 +15,20 @@ import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
+import com.jjonsson.utilities.Logger;
 
-public class ChessMoveEvaluator
+public final class ChessMoveEvaluator
 {
+	private ChessMoveEvaluator()
+	{
+		
+	}
+	
 	private static long deepestSearch = 0;
+	/**
+	 * Determines how badly we want to repeat a previous made move
+	 */
+	private static final int REPITIVE_PUNISHMENT_FACTOR = 10;
 	
 	/**
 	 * Performs a directed DFS (not all moves to a given level are evaluated) and tries to return the best move available
@@ -29,28 +40,37 @@ public class ChessMoveEvaluator
 	{
 		Move bestMove = null;
 		deepestSearch = 0;
-		ChessBoard copyOfBoard = board.clone();
+		ChessBoard copyOfBoard;
+		try
+		{
+			copyOfBoard = board.clone();
+		}
+		catch (CloneNotSupportedException e)
+		{
+			LOGGER.warning("ChessBoard doesn't support cloning");
+			throw new NoMovesAvailableException();
+		}
 		SearchLimiter limiter = new SearchLimiter();
 		SearchResult result = deepSearch(copyOfBoard, limiter);
 		if(result.bestMove == null)
 		{
 			throw new NoMovesAvailableException();
 		}
-		System.out.println("Best move: " + result.bestMove);
-		System.out.println("Best move value: " + result.bestMoveValue);
+		LOGGER.finest("Best move: " + result.bestMove);
+		LOGGER.finest("Best move value: " + result.bestMoveValue);
 		Piece chosenPiece = board.getPiece(result.bestMove.getCurrentPosition());
 		if(chosenPiece == null)
 		{
 			//TODO(jontejj) this shouldn't be needed
 			throw new NoMovesAvailableException();
 		}
-		bestMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getPositionIfPerformed(), board);
+		bestMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getDestination(), board);
 		if(bestMove == null)
 		{
 			//TODO(jontejj) this shouldn't be needed
 			throw new NoMovesAvailableException();
 		}
-		System.out.println("Reached " + deepestSearch + " steps ahead on the deepest path");
+		LOGGER.finest("Reached " + deepestSearch + " steps ahead on the deepest path");
 		
 		return bestMove;
 	}
@@ -69,7 +89,7 @@ public class ChessMoveEvaluator
 		}
 		catch (UnavailableMoveException evaluationFailedException)
 		{
-			evaluationFailedException.printStackTrace();
+			LOGGER.info(Logger.stackTraceToString(evaluationFailedException));
 			//In the worst case scenario we make a random move if possible
 			board.performRandomMove();
 		}
@@ -105,10 +125,10 @@ public class ChessMoveEvaluator
 		else
 		{
 			Collection<Move> moves = board.getAvailableMoves(board.getCurrentPlayer()).values();
-			Iterator<Move> sortedMoves = MoveOrdering.instance.greatestOf(moves, moves.size()).iterator();
+			Iterator<Move> sortedMoves = MoveOrdering.getInstance().greatestOf(moves, moves.size()).iterator();
 			
 			//The deeper we go, the less we branch, this assumes that a reasonable ordering of the moves has been made already
-			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.depth * 8, 0) + 2;
+			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.depth * ChessBoard.BOARD_SIZE, 0) + 2;
 			
 			while(sortedMoves.hasNext())
 			{
@@ -149,9 +169,13 @@ public class ChessMoveEvaluator
 					
 					//Underflow protection
 					if(deepValue == Long.MIN_VALUE)
+					{
 						moveValue = Long.MIN_VALUE;
+					}
 					else
+					{
 						moveValue += deepValue;
+					}
 					limiter.scoreFactor *= -1;
 					
 					//Reset depth factors for the next iteration
@@ -181,19 +205,13 @@ public class ChessMoveEvaluator
 						}
 					}
 					
-					if(limiter.depth == SearchLimiter.MAX_DEPTH)
+					if(limiter.depth == SearchLimiter.MAX_DEPTH && move.getDestination() != null)
 					{
-						if(move.getPositionIfPerformed() != null)
+						Long curVal = positionScoresValues.get(move.getDestination());
+						if((curVal == null || moveValue > curVal.longValue()) && (move.canBeMade(board)))
 						{
-							Long curVal = positionScoresValues.get(move.getPositionIfPerformed());
-							if(curVal == null || moveValue > curVal.longValue())
-							{
-								if(move.canBeMade(board))
-								{
-									positionScores.put(move.getPositionIfPerformed(), moveValue + ":" + move.getCurrentPosition());
-									positionScoresValues.put(move.getPositionIfPerformed(), moveValue);
-								}
-							}
+							positionScores.put(move.getDestination(), moveValue + ":" + move.getCurrentPosition());
+							positionScoresValues.put(move.getDestination(), moveValue);
 						}
 					}
 				}
@@ -212,16 +230,25 @@ public class ChessMoveEvaluator
 	
 	private static boolean shouldContinueDeeper(ChessBoard board, SearchLimiter limiter, long movesLeftOnBranch, long moveValue, boolean isTakeOverMove)
 	{
-		if(!ChessBoardEvaluator.inPlay(board)) //Don't search deeper if we already are at check mate
+		if(!ChessBoardEvaluator.inPlay(board))
+		{ 
+			//Don't search deeper if we already are at check mate
 			return false;
+		}
 		
-		if(moveValue == Long.MIN_VALUE) //For invalid moves we don't continue
+		if(moveValue == Long.MIN_VALUE) 
+		{
+			//For invalid moves we don't continue
 			return false;
+		}
 		
 		boolean minimumDepthNotReached = (limiter.getCurrentDepth() <= SearchLimiter.MINIMUM_DEPTH_TO_SEARCH);
 		
-		if(movesLeftOnBranch <= 0 && !minimumDepthNotReached) //This filters out deeper searches for moves that initially don't look so good
+		if(movesLeftOnBranch <= 0 && !minimumDepthNotReached)
+		{ 
+			//This filters out deeper searches for moves that initially don't look so good
 			return false;
+		}
 		
 		boolean finalDepthNotReached = (limiter.depth >= 0 && limiter.movesLeft > 0);
 		//If we take over a piece we continue that path to not give too positive results
@@ -278,7 +305,7 @@ public class ChessMoveEvaluator
 		moveValue += accumulatedTakeOverValue;
 		
 		//If we have made this move recently we punish it for being repetitive
-		moveValue -= (move.getMovesMade() - 1) * 10;
+		moveValue -= (move.getMovesMade() - 1) * REPITIVE_PUNISHMENT_FACTOR;
 		
 		return moveValue;
 	}

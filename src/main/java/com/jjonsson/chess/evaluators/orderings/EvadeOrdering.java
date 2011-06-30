@@ -21,21 +21,21 @@ public class EvadeOrdering extends Ordering<Move>
 		if(pieceThreateningLeftPiece != null && pieceThreateningRightPiece != null)
 		{
 			//TODO(jontejj): if this is expensive it needs to be cached in a better way, but how?
-			int movesThreateningLeftDestination = left.getPiece().getBoard().getNumberOfMovesThreateningPosition(left.getPositionIfPerformed(), !left.getAffinity(), left.getPiece());
-			int movesThreateningRightDestination = right.getPiece().getBoard().getNumberOfMovesThreateningPosition(right.getPositionIfPerformed(), !right.getAffinity(), right.getPiece());
+			int movesThreateningLeftDestination = left.getPiece().getBoard().getNumberOfMovesThreateningPosition(left.getDestination(), !left.getAffinity(), left.getPiece());
+			int movesThreateningRightDestination = right.getPiece().getBoard().getNumberOfMovesThreateningPosition(right.getDestination(), !right.getAffinity(), right.getPiece());
 			
 			return left.getPiece().getValue() - right.getPiece().getValue() + (movesThreateningRightDestination - movesThreateningLeftDestination);
 			//return pieceThreateningRightPiece.getValue() - pieceThreateningLeftPiece.getValue();
 		}
 		else if(pieceThreateningLeftPiece != null)
 		{
-			int movesThreateningLeftDestination = left.getPiece().getBoard().getNumberOfMovesThreateningPosition(left.getPositionIfPerformed(), !left.getAffinity(), left.getPiece());
+			int movesThreateningLeftDestination = left.getPiece().getBoard().getNumberOfMovesThreateningPosition(left.getDestination(), !left.getAffinity(), left.getPiece());
 			return left.getPiece().getValue() - movesThreateningLeftDestination;
 			//return pieceThreateningLeftPiece.getValue();
 		}
 		else if(pieceThreateningRightPiece != null)
 		{
-			int movesThreateningRightDestination = right.getPiece().getBoard().getNumberOfMovesThreateningPosition(right.getPositionIfPerformed(), !right.getAffinity(), right.getPiece());
+			int movesThreateningRightDestination = right.getPiece().getBoard().getNumberOfMovesThreateningPosition(right.getDestination(), !right.getAffinity(), right.getPiece());
 			return -(right.getPiece().getValue() - movesThreateningRightDestination);
 			//return -pieceThreateningRightPiece.getValue();
 		}

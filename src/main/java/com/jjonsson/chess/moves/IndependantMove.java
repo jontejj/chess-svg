@@ -23,11 +23,11 @@ public abstract class IndependantMove extends Move
 		if(myCanBeMadeCache)
 		{
 			//The move is now possible
-			board.addAvailableMove(myDestination, myPiece, this);
+			board.addAvailableMove(getDestination(), getPiece(), this);
 		}
 		else
 		{
-			board.addNonAvailableMove(myDestination, myPiece, this);
+			board.addNonAvailableMove(getDestination(), getPiece(), this);
 		}
 	}
 	
