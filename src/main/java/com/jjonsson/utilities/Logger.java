@@ -24,6 +24,7 @@ public final class Logger
 		{
 			// create a 'file' handler (default level = ALL)
 			ConsoleHandler ch = new ConsoleHandler();
+			ch.setFormatter(new LoggingFormatter());
 			ch.setLevel(Level.ALL);
 			/*FileHandler fh = new FileHandler("myAppLogFile%g.log", 50000, 10, false);
 			fh.setFormatter(new SimpleFormatter());

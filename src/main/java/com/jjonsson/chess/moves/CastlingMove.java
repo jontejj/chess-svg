@@ -29,7 +29,7 @@ public class CastlingMove extends IndependantMove
 	public CastlingMove(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
-		myKingMove = new CastlingMovePart(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
+		myKingMove = new KingCastlingMovePart(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
 		if(isQueenSideCastlingMove())
 		{
 			myQueenSideCastlingKingStepPosition = new Position(getCurrentPosition().getRow(), (byte) (getCurrentPosition().getColumn() - 3));
@@ -57,11 +57,11 @@ public class CastlingMove extends IndependantMove
 			myRock = aRock;
 			if(isQueenSideCastlingMove())
 			{
-				myRockMove = new CastlingMovePart(0, 3, myRock);
+				myRockMove = new RockCastlingMovePart(0, 3, myRock);
 			}
 			else
 			{
-				myRockMove = new CastlingMovePart(0, -2, myRock);
+				myRockMove = new RockCastlingMovePart(0, -2, myRock);
 			}
 		}
 	}

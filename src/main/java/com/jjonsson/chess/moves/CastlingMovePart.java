@@ -10,7 +10,7 @@ import com.jjonsson.chess.pieces.Rock;
  * @author jonatanjoensson
  *
  */
-public class CastlingMovePart extends IndependantMove
+public abstract class CastlingMovePart extends IndependantMove
 {
 	/**
 	 * Note this move doesn't handle bad positions
@@ -26,53 +26,6 @@ public class CastlingMovePart extends IndependantMove
 		byte newColumn = (byte)(currentPosition.getColumn()+columnChange);
 		setDestination(new Position(newRow, newColumn));
 		setPieceAtDestination(getPiece().getBoard().getPiece(getDestination()));
-	}
-	
-	@Override
-	protected boolean canBeMadeInternal(ChessBoard board)
-	{
-		//A castling move depends on unmoved pieces
-		if(getPiece().getMovesMade() > 0)
-		{
-			return false;
-		}
-		
-		//The king may never move into a threatened position
-		if(getPiece() instanceof King)
-		{
-			if(board.getAvailableMoves(getCurrentPosition(), !getAffinity()).size() > 0)
-			{
-				//Castling moves should be unavailable when in check
-				return false;
-			}
-			
-			//The Rock is going to protect the King if the threatening piece is standing on the same row
-			Move threateningMove = board.moveThreateningPosition(this.getDestination(), !getAffinity(), getPiece(), false);
-			
-			if(threateningMove != null)
-			{
-				//If this is true for all the king's moves then the game is over
-				return false;
-			}
-		}
-		
-		if(getPieceAtDestination() == null)
-		{
-			//The space is free
-			return true; 
-		}
-		
-		return false;
-	}
-	
-	@Override
-	public boolean isPartOfAnotherMove()
-	{
-		if(getPiece() instanceof Rock)
-		{
-			return true;
-		}
-		return false;
 	}
 	
 	@Override
