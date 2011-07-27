@@ -70,5 +70,10 @@ public abstract class PawnMove extends DependantMove
 	{
 		return false;
 	}
-
+	
+	@Override
+	protected int getFirstDimensionIndexInternal()
+	{
+		return 0;
+	}
 }

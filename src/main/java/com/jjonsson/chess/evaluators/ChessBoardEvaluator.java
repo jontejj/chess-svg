@@ -8,7 +8,9 @@ import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.Move;
+import com.jjonsson.chess.pieces.Bishop;
 import com.jjonsson.chess.pieces.King;
+import com.jjonsson.chess.pieces.Knight;
 import com.jjonsson.chess.pieces.Piece;
 
 public final class ChessBoardEvaluator
@@ -120,16 +122,43 @@ public final class ChessBoardEvaluator
 		{
 			return ChessState.STALEMATE;
 		}
-		/*TODO(jontejj) there are more stalemate games:
-		The game is immediately drawn when one of the following endings arises:
-
-		    king against king;
-		    king against king and bishop;
-		    king against king and knight;
-		    king and bishop against king and bishop, with both bishops on diagonals of the same colour.
-		*/
-
-		
+		//Only the kings remain
+		else if(board.getTotalPieceCount() == 2)
+		{
+			return ChessState.STALEMATE;
+		}
+		else if(board.getTotalPieceCount() == 3)
+		{
+		    /**
+		     * king against king and bishop;
+		     * king against king and knight;
+		     */
+			for(Piece piece : board.getPieces())
+			{
+				if((piece instanceof Bishop) || (piece instanceof Knight))
+				{
+					return ChessState.STALEMATE;
+				}
+			}
+		}
+		else if(board.getTotalPieceCount() == 4)
+		{
+			Set<Boolean> sameDiagonals = Sets.newHashSet();
+		    /**
+		     * king and bishop against king and bishop, with both bishops on diagonals of the same colour.
+		     */
+			for(Piece piece : board.getPieces())
+			{
+				if(piece instanceof Bishop)
+				{
+					boolean evenDiagonal = ((piece.getCurrentPosition().getColumn() + piece.getCurrentPosition().getRow()) % 2 == 0);
+					if(!sameDiagonals.add(evenDiagonal))
+					{
+						return ChessState.STALEMATE;
+					}
+				}
+			}
+		}
 		return ChessState.PLAYING;
 	}
 }

@@ -5,10 +5,13 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import java.util.HashMap;
+import java.util.Set;
 
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 
 
@@ -21,17 +24,17 @@ public class TestPosition
 	@Test
 	public void testHashCode()
 	{
-		HashMap<Position, Position> test = Maps.newHashMap();
-		for(byte r = 1;r<=9; r++)
+		Set<Integer> test = Sets.newHashSet();
+		for(byte r = 1;r<=ChessBoard.BOARD_SIZE + 1; r++)
 		{
-			for(byte c = 1;c<=9; c++)
+			for(byte c = 1;c<=ChessBoard.BOARD_SIZE + 1; c++)
 			{
 				
 				Position p;
 				try
 				{
 					p = Position.createPosition(r, c);
-					assertNull(test.put(p, p));
+					assertTrue(test.add(p.hashCode()));
 				}
 				catch (InvalidPosition e)
 				{

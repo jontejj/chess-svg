@@ -4,6 +4,7 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.CastlingMove;
 import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Position;
+import static com.jjonsson.chess.moves.Move.*;
 
 public class King extends Piece 
 {
@@ -31,14 +32,14 @@ public class King extends Piece
 
 	public void addPossibleMoves()
 	{
-		addPossibleMove(new KingMove(1, -1, this)); //Up left
-		addPossibleMove(new KingMove(1, 0, this)); //Up
-		addPossibleMove(new KingMove(1, 1, this)); //Up Right
-		addPossibleMove(new KingMove(0, 1, this)); //Right
-		addPossibleMove(new KingMove(-1, 1, this)); //Down Right
-		addPossibleMove(new KingMove(-1, 0, this)); //Down
-		addPossibleMove(new KingMove(-1, -1, this)); //Down left
-		addPossibleMove(new KingMove(0, -1, this)); //Left
+		addPossibleMove(new KingMove(UP, LEFT, this));
+		addPossibleMove(new KingMove(UP, NO_CHANGE, this));
+		addPossibleMove(new KingMove(UP, RIGHT, this));
+		addPossibleMove(new KingMove(NO_CHANGE, 1, this));
+		addPossibleMove(new KingMove(DOWN, RIGHT, this));
+		addPossibleMove(new KingMove(DOWN, NO_CHANGE, this));
+		addPossibleMove(new KingMove(DOWN, LEFT, this));
+		addPossibleMove(new KingMove(NO_CHANGE, LEFT, this));
 		if(isAtStartingPosition())
 		{
 			myKingSideCastlingMove = new CastlingMove(0, 2, this);
@@ -67,6 +68,11 @@ public class King extends Piece
 	@Override
 	protected byte getPersistanceIdentifierType()
 	{
+		if(getMovesMade() > 0)
+		{
+			return Piece.MOVED_KING;
+		}
+		
 		return Piece.KING;
 	}
 	
@@ -86,5 +92,17 @@ public class King extends Piece
 	public CastlingMove getQueenSideCastlingMove()
 	{
 		return myQueenSideCastlingMove;
+	}
+	
+	@Override
+	public int getFirstDimensionMaxIndex()
+	{
+		return 0;
+	}
+	
+	@Override
+	public int getSecondDimensionMaxIndex()
+	{
+		return 9; //8 one step moves in each direction plus two castling moves
 	}
 }

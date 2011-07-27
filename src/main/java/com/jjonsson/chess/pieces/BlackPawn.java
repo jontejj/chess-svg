@@ -1,10 +1,13 @@
 package com.jjonsson.chess.pieces;
 
+import static com.jjonsson.chess.moves.Move.DOWN;
+import static com.jjonsson.chess.moves.Move.LEFT;
+import static com.jjonsson.chess.moves.Move.RIGHT;
+
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
-import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.PawnTwoStepMove;
 import com.jjonsson.chess.moves.Position;
 
@@ -21,8 +24,8 @@ public class BlackPawn extends Pawn
 	@Override
 	public void addPossibleMoves()
 	{
-		PawnMove step1 = new PawnOneStepMove(1 * Move.DOWN, 0, this, null, null);
-		PawnMove step2 = new PawnTwoStepMove(2 * Move.DOWN, 0, this, null, step1);
+		PawnMove step1 = new PawnOneStepMove(1 * DOWN, 0, this, null, null);
+		PawnMove step2 = new PawnTwoStepMove(2 * DOWN, 0, this, null, step1);
 		//If this isn't true then the pawn already has moved from it's initial position and the 2-step move shouln't be available then
 		if(isAtStartingRow())
 		{
@@ -30,8 +33,8 @@ public class BlackPawn extends Pawn
 		}
 		
 		addPossibleMove(step1);
-		addPossibleMove(new PawnTakeOverMove(1 * Move.DOWN, 1 * Move.LEFT, this, null, null));
-		addPossibleMove(new PawnTakeOverMove(1 * Move.DOWN, 1 * Move.RIGHT, this, null, null));
+		addPossibleMove(new PawnTakeOverMove(1 * DOWN, 1 * LEFT, this, null, null));
+		addPossibleMove(new PawnTakeOverMove(1 * DOWN, 1 * RIGHT, this, null, null));
 	}
 	
 	@Override

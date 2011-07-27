@@ -84,7 +84,7 @@ public class CastlingMove extends IndependantMove
 		{
 			return false;
 		}
-		
+		//TODO: remove this when the test case files have been updated with the new piece identifiers
 		if(!King.class.cast(getPiece()).isAtStartingPosition())
 		{
 			return false;
@@ -159,6 +159,25 @@ public class CastlingMove extends IndependantMove
 	public RevertingMove getRevertingMove()
 	{
 		return myRockMove.getRevertingMove();
+	}
+	
+	@Override
+	protected int getFirstDimensionIndexInternal()
+	{
+		return 0;
+	}
+	
+	/**
+	 * Part of the King's moves
+	 */
+	@Override
+	protected int getSecondDimensionIndexInternal()
+	{
+		if(isQueenSideCastlingMove())
+		{
+			return 8;
+		}
+		return 9;
 	}
 
 }

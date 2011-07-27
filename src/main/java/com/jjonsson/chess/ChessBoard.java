@@ -43,10 +43,12 @@ import com.jjonsson.chess.pieces.WhitePawn;
 
 import static com.jjonsson.utilities.Logger.LOGGER;
 import static com.jjonsson.chess.pieces.Piece.*;
+import static com.jjonsson.chess.moves.Position.*;
 
 public class ChessBoard implements Cloneable
 {
 	public static final byte BOARD_SIZE = 8;
+	public static final byte MOVES_IN_ONE_DIRECTION = BOARD_SIZE - 1;
 	
 	/**
 	 * Defines how important it is to keep available moves for one's king
@@ -199,7 +201,8 @@ public class ChessBoard implements Cloneable
 		for(Piece p : getPieces())
 		{
 			List<Move> toMoves = p.getPossibleMoves();
-			List<Move> fromMoves = chessBoard.getPiece(p.getCurrentPosition()).getPossibleMoves();
+			Piece originalPiece = chessBoard.getPiece(p.getCurrentPosition());
+			List<Move> fromMoves = originalPiece.getPossibleMoves();
 			
 			//Note that if the arrays differ only the common moves will be copied, the rest is ignored
 			int endIndex = Math.min(fromMoves.size(), toMoves.size());
@@ -402,7 +405,7 @@ public class ChessBoard implements Cloneable
 		}
 		catch(UnavailableMoveException ume)
 		{
-			throw new NoMovesAvailableException();
+			throw new NoMovesAvailableException(ume);
 		}
 	}
 	
@@ -451,29 +454,29 @@ public class ChessBoard implements Cloneable
 		{
 			for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
 			{
-				addPiece(new WhitePawn(Position.createPosition(2, column), this), false, true);
+				addPiece(new WhitePawn(createPosition(WHITE_PAWN_ROW, column), this), false, true);
 			}
 			
-			addPiece(new Knight(Position.createPosition(1, Position.B), WHITE, this), false, true);
-			addPiece(new Knight(Position.createPosition(1, Position.G), WHITE, this), false, true);
+			addPiece(new Knight(createPosition(WHITE_STARTING_ROW, B), WHITE, this), false, true);
+			addPiece(new Knight(createPosition(WHITE_STARTING_ROW, G), WHITE, this), false, true);
 			
-			Rock leftRock = new Rock(Position.createPosition(1, Position.A), WHITE, this);
+			Rock leftRock = new Rock(createPosition(WHITE_STARTING_ROW, A), WHITE, this);
 			addPiece(leftRock, false, true);
-			Rock rightRock = new Rock(Position.createPosition(1, Position.H), WHITE, this);
+			Rock rightRock = new Rock(createPosition(WHITE_STARTING_ROW, H), WHITE, this);
 			addPiece(rightRock, false, true);
 			
-			addPiece(new Queen(Position.createPosition(1, Position.D), WHITE, this), false, true);
-			addPiece(new Bishop(Position.createPosition(1, Position.C), WHITE, this), false, true);
-			addPiece(new Bishop(Position.createPosition(1, Position.F), WHITE, this), false, true);
+			addPiece(new Queen(createPosition(WHITE_STARTING_ROW, D), WHITE, this), false, true);
+			addPiece(new Bishop(createPosition(WHITE_STARTING_ROW, C), WHITE, this), false, true);
+			addPiece(new Bishop(createPosition(WHITE_STARTING_ROW, F), WHITE, this), false, true);
 			
-			addPiece(new King(Position.createPosition(1, Position.E), WHITE, this), false, true);
+			addPiece(new King(createPosition(WHITE_STARTING_ROW, E), WHITE, this), false, true);
 			
 			myWhiteKing.getKingSideCastlingMove().setRock(rightRock);
 			myWhiteKing.getQueenSideCastlingMove().setRock(leftRock);
 		}
 		catch(InvalidPosition ip)
 		{
-			LOGGER.warning("Something wrong with board setup, got " + ip);
+			throw new UnsupportedOperationException("Wrong with board setup", ip);
 		}
 	}
 	
@@ -486,30 +489,30 @@ public class ChessBoard implements Cloneable
 		{
 			for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
 			{
-				addPiece(new BlackPawn(Position.createPosition(7, column), this), false, true);
+				addPiece(new BlackPawn(createPosition(BLACK_PAWN_ROW, column), this), false, true);
 			}
 			
-			addPiece(new Knight(Position.createPosition(8, Position.B), BLACK, this), false, true);
-			addPiece(new Knight(Position.createPosition(8, Position.G), BLACK, this), false, true);
+			addPiece(new Knight(createPosition(BLACK_STARTING_ROW, B), BLACK, this), false, true);
+			addPiece(new Knight(createPosition(BLACK_STARTING_ROW, G), BLACK, this), false, true);
 			
-			Rock leftRock = new Rock(Position.createPosition(8, Position.A), BLACK, this);
+			Rock leftRock = new Rock(createPosition(BLACK_STARTING_ROW, A), BLACK, this);
 			addPiece(leftRock, false, true);
 			
-			Rock rightRock = new Rock(Position.createPosition(8, Position.H), BLACK, this);
+			Rock rightRock = new Rock(createPosition(BLACK_STARTING_ROW, H), BLACK, this);
 			addPiece(rightRock, false, true);
 			
-			addPiece(new Queen(Position.createPosition(8, Position.D), BLACK, this), false, true);
-			addPiece(new Bishop(Position.createPosition(8, Position.C), BLACK, this), false, true);
-			addPiece(new Bishop(Position.createPosition(8, Position.F), BLACK, this), false, true);
+			addPiece(new Queen(createPosition(BLACK_STARTING_ROW, D), BLACK, this), false, true);
+			addPiece(new Bishop(createPosition(BLACK_STARTING_ROW, C), BLACK, this), false, true);
+			addPiece(new Bishop(createPosition(BLACK_STARTING_ROW, F), BLACK, this), false, true);
 			
-			addPiece(new King(Position.createPosition(8, Position.E), BLACK, this), false, true);
+			addPiece(new King(createPosition(BLACK_STARTING_ROW, E), BLACK, this), false, true);
 			
 			myBlackKing.getKingSideCastlingMove().setRock(rightRock);
 			myBlackKing.getQueenSideCastlingMove().setRock(leftRock);
 		}
 		catch(InvalidPosition ip)
 		{
-			LOGGER.warning("Something wrong with board setup, got " + ip);
+			throw new UnsupportedOperationException("Wrong with board setup", ip);
 		}
 	}
 	
@@ -519,15 +522,15 @@ public class ChessBoard implements Cloneable
 		{
 			if(myBlackKing.isAtStartingPosition())
 			{
-				Piece blackLeftRock = getPiece(Position.createPosition(8, Position.A));
-				Piece blackRightRock = getPiece(Position.createPosition(8, Position.H));
+				Piece blackLeftRock = getPiece(createPosition(BLACK_STARTING_ROW, A));
+				Piece blackRightRock = getPiece(createPosition(BLACK_STARTING_ROW, H));
 				myBlackKing.getQueenSideCastlingMove().setRock(blackLeftRock);
 				myBlackKing.getKingSideCastlingMove().setRock(blackRightRock);
 			}
 			if(myWhiteKing.isAtStartingPosition())
 			{
-				Piece whiteLeftRock = getPiece(Position.createPosition(1, Position.A));
-				Piece whiteRightRock = getPiece(Position.createPosition(1, Position.H));
+				Piece whiteLeftRock = getPiece(createPosition(WHITE_STARTING_ROW, A));
+				Piece whiteRightRock = getPiece(createPosition(WHITE_STARTING_ROW, H));
 				myWhiteKing.getQueenSideCastlingMove().setRock(whiteLeftRock);
 				myWhiteKing.getKingSideCastlingMove().setRock(whiteRightRock);
 			}
@@ -871,12 +874,37 @@ public class ChessBoard implements Cloneable
 		return myBlackPieces.get(atPosition);
 	}
 	
+	/**
+	 * Looks at the given move's properties and retrieves a move from this board that does the same
+	 * @param from
+	 * @return a move on this board that looks like the one given
+	 * @throws UnavailableMoveException if no such move could be found on this board
+	 */
+	public Move getMove(Move from) throws UnavailableMoveException
+	{
+		Piece piece = getPiece(from.getCurrentPosition());
+		if(piece != null)
+		{
+			return piece.getMove(from);
+		}
+		throw new UnavailableMoveException(from);
+	}
+	
 	public List<Piece> getPieces()
 	{
 		List<Piece> list = Lists.newArrayList();
 		list.addAll(myBlackPieces.values());
 		list.addAll(myWhitePieces.values());
 		return list;
+	}
+	
+	/**
+	 * 
+	 * @return the number of pieces on this board
+	 */
+	public int getTotalPieceCount()
+	{
+		return myBlackPieces.size() + myWhitePieces.size();
 	}
 	
 	public void movePiece(Piece pieceToMove, Move moveToPerform)
@@ -964,7 +992,7 @@ public class ChessBoard implements Cloneable
 		for(Piece p : pieces)
 		{
 			short persistanceForPiece = p.getPersistanceData();
-			stream.write(new byte[]{(byte)(persistanceForPiece >> 8), (byte)(persistanceForPiece & 0xFF)});
+			stream.write(new byte[]{(byte)(persistanceForPiece >> Byte.SIZE), (byte)(persistanceForPiece & 0xFF)});
 		}
 	}
 	
@@ -981,7 +1009,7 @@ public class ChessBoard implements Cloneable
 			readBytes = stream.read(piece);
 			if(readBytes == 2)
 			{
-				Piece p = Piece.getPieceFromPersistanceData((short)(piece[0] << 8 | piece[1]), this);
+				Piece p = Piece.getPieceFromPersistanceData((short)(piece[0] << Byte.SIZE | piece[1]), this);
 				//Don't place a piece where one is already placed
 				if(p != null && this.getPiece(p.getCurrentPosition()) == null)
 				{

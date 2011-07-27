@@ -152,4 +152,10 @@ public class RevertingMove extends IndependantMove {
 	{
 		return myMoveToRevert.isPartOfAnotherMove();
 	}
+	
+	@Override
+	public boolean shouldBeIncludedInMoveTable()
+	{
+		return false;
+	}
 }

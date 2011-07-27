@@ -34,4 +34,10 @@ public class PawnTwoStepMove extends PawnMove
 	{
 		
 	}
+	
+	@Override
+	protected int getSecondDimensionIndexInternal()
+	{
+		return 1;
+	}
 }

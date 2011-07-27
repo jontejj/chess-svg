@@ -161,6 +161,21 @@ public class TestScenarios
 		k.performMove(takeQueenMove, board, false);
 		
 		assertEquals(ChessState.PLAYING, board.getCurrentState());
+	}
+	
+	@Test
+	public void testStalemateSituations()
+	{
+		ChessBoard board = loadBoard("only_knight_should_be_stalemate");
+		assertEquals(ChessState.STALEMATE, board.getCurrentState());
+		board = loadBoard("only_bishop_should_be_stalemate");
+		assertEquals(ChessState.STALEMATE, board.getCurrentState());
+		board = loadBoard("only_kings_should_be_stalemate");
+		assertEquals(ChessState.STALEMATE, board.getCurrentState());
+		board = loadBoard("two_bishops_on_the_same_diagonal_should_be_stalemate");
+		assertEquals(ChessState.STALEMATE, board.getCurrentState());
+		board = loadBoard("bishops_on_different_diagonals_should_not_be_stalemate");
+		assertEquals(ChessState.PLAYING, board.getCurrentState());
 		
 	}
 }

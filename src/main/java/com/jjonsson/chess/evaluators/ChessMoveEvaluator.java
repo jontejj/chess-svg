@@ -3,20 +3,23 @@ package com.jjonsson.chess.evaluators;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableList;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
+import com.jjonsson.chess.exceptions.SearchInterruptedError;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.gui.StatusListener;
 import com.jjonsson.chess.moves.Move;
-import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.utilities.Logger;
 
+/**
+ * TODO: clean up this code mess
+ * @author jonatanjoensson
+ *
+ */
 public final class ChessMoveEvaluator
 {
 	private ChessMoveEvaluator()
@@ -34,11 +37,12 @@ public final class ChessMoveEvaluator
 	 * Performs a directed DFS (not all moves to a given level are evaluated) and tries to return the best move available
 	 * @param board
 	 * @return the best move for the current player on the given board
-	 * @throws NoMovesAvailableException if the evaluation of available moves didn't return a move
+	 * @throws NoMovesAvailableException if the evaluation of available moves didn't return a move<p/>
+	 * This may also throw SearchInterruptedError if interrupted by something (e.g the GUI)
 	 */
-	public static Move getBestMove(ChessBoard board) throws NoMovesAvailableException
+	public static Move getBestMove(ChessBoard board, StatusListener listener) throws NoMovesAvailableException
 	{
-		Move bestMove = null;
+		Move result = null;
 		deepestSearch = 0;
 		ChessBoard copyOfBoard;
 		try
@@ -47,39 +51,64 @@ public final class ChessMoveEvaluator
 		}
 		catch (CloneNotSupportedException e)
 		{
-			LOGGER.warning("ChessBoard doesn't support cloning");
-			throw new NoMovesAvailableException();
+			throw new UnsupportedOperationException("Cloning of chessboard not possible", e);
 		}
+		ProgressTracker.setStatusListener(listener);
 		SearchLimiter limiter = new SearchLimiter(board.getDifficulty());
-		SearchResult result = deepSearch(copyOfBoard, limiter);
-		if(result.bestMove == null)
+		SearchResult searchResult = deepSearch(copyOfBoard, limiter);
+		result = searchResult.getBestMove();
+		if(result == null)
 		{
 			throw new NoMovesAvailableException();
 		}
-		LOGGER.finest("Best move: " + result.bestMove);
-		LOGGER.finest("Best move value: " + result.bestMoveValue);
-		Piece chosenPiece = board.getPiece(result.bestMove.getCurrentPosition());
-		if(chosenPiece == null)
-		{
-			//TODO(jontejj) this shouldn't be needed
-			throw new NoMovesAvailableException();
-		}
-		bestMove = chosenPiece.getAvailableMoveForPosition(result.bestMove.getDestination(), board);
-		if(bestMove == null)
-		{
-			//TODO(jontejj) this shouldn't be needed
-			throw new NoMovesAvailableException();
-		}
+		LOGGER.finest("Best move: " + result);
+		LOGGER.finest("Best move value: " + searchResult.getBestMoveValue());
 		LOGGER.finest("Reached " + deepestSearch + " steps ahead on the deepest path");
-		
-		return bestMove;
+		ProgressTracker.done();
+		try
+		{
+			result = board.getMove(result);
+		}
+		catch (UnavailableMoveException e)
+		{
+			//Should not happen :)
+			throw new NoMovesAvailableException();
+		}
+		return result;
 	}
 	
+	/**
+	 * 
+	 * @param board
+	 * @return
+	 * @throws NoMovesAvailableException, SearchInterruptedError
+	 */
+	public static Move getBestMove(ChessBoard board) throws NoMovesAvailableException
+	{
+		return getBestMove(board, null);
+	}
+	
+	/**
+	 * Performs a move without progress tracking
+	 * @param board
+	 * @throws NoMovesAvailableException, SearchInterruptedError
+	 */
 	public static void performBestMove(ChessBoard board) throws NoMovesAvailableException
+	{
+		performBestMove(board, null);
+	}
+	
+	/**
+	 * Performs a move and keeps the StatusListener updated with the latest progress information
+	 * @param board
+	 * @param listener
+	 * @throws NoMovesAvailableException, SearchInterruptedError
+	 */
+	public static void performBestMove(ChessBoard board, StatusListener listener) throws NoMovesAvailableException
 	{
 		try
 		{
-			Move bestMove = getBestMove(board);
+			Move bestMove = getBestMove(board, listener);
 			bestMove.getPiece().performMove(bestMove, board);
 		}
 		catch(NoMovesAvailableException evaluationNoMovesException)
@@ -94,7 +123,7 @@ public final class ChessMoveEvaluator
 			board.performRandomMove();
 		}
 	}
-	
+
 	/**
 	 * Searches for the move that has the best take over value and that is the closest to the center.
 	 * It also takes into account the new game state and if your own piece was taken and the difference in number of available moves for both players
@@ -108,127 +137,109 @@ public final class ChessMoveEvaluator
 	 */
 	private static SearchResult deepSearch(ChessBoard board, SearchLimiter limiter)
 	{	
-		if(SearchLimiter.MAX_DEPTH - limiter.depth > deepestSearch)
+		if(SearchLimiter.MAX_DEPTH - limiter.getDepth() > deepestSearch)
 		{
-			deepestSearch = SearchLimiter.MAX_DEPTH - limiter.depth;
+			deepestSearch = SearchLimiter.MAX_DEPTH - limiter.getDepth();
 		}
 		SearchResult result = new SearchResult();
-		HashMap<Position, String> positionScores = Maps.newHashMap();
-		HashMap<Position, Long> positionScoresValues = Maps.newHashMap();
-		
 		//The game doesn't allow us to traverse further
 		if(!ChessBoardEvaluator.inPlay(board))
 		{
 			//No move to return, only the game state's value
-			result.bestMoveValue = ChessBoardEvaluator.valueOfState(board.getCurrentState());
+			result.setBestMoveIfBetter(null, ChessBoardEvaluator.valueOfState(board.getCurrentState()));
 		}
 		else
 		{
 			Collection<Move> moves = board.getAvailableMoves(board.getCurrentPlayer()).values();
-			Iterator<Move> sortedMoves = MoveOrdering.getInstance().greatestOf(moves, moves.size()).iterator();
+			ImmutableList<Move> sortedMoves = MoveOrdering.getInstance().immutableSortedCopy(moves);
 			
 			//The deeper we go, the less we branch, this assumes that a reasonable ordering of the moves has been made already
-			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.depth * ChessBoard.BOARD_SIZE, 0) + 2;
-			
-			while(sortedMoves.hasNext())
+			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.getDepth() * ChessBoard.BOARD_SIZE, 0) + 2;
+			CountDownLatch workersDoneSignal = new CountDownLatch(sortedMoves.size());
+			for(Move move : sortedMoves)
 			{
 				//TODO(jontejj): how to search deeper when time allows us to
-				if(limiter.depth == SearchLimiter.MAX_DEPTH)
+				if(limiter.getDepth() == SearchLimiter.MAX_DEPTH)
 				{
-					//For each main branch we reset the moves left
-					limiter.movesLeft = SearchLimiter.MAX_BRANCH_MOVES;
+					//For each main branch
+					limiter.resetMovesLeft();
 				}
-				Move move = sortedMoves.next();
-				//if(limiter.depth == SearchLimiter.MAX_DEPTH)
-				//	System.out.println("Testing: " + move);
-				
-				boolean takeOverMove = move.isTakeOverMove();
-				long moveValue = performMoveWithMeasurements(move, board, limiter);
 				movesLeftToEvaluateOnThisBranch--;
-				boolean deeperSearch = shouldContinueDeeper(board, limiter, movesLeftToEvaluateOnThisBranch, moveValue, takeOverMove);
-				if(deeperSearch)
-				{
-					limiter.depth--;
-					/*if(!takeOverMove)
-						//Regular depth decrementing
-						limiter.depth--;
-					else if(limiter.scoreFactor == -1)
-						//If the opponent takes over a piece we punish that path and searches less deep there
-						limiter.depth -= 2;
-					else
-						////If we took over a piece we dig deeper into that path (the attacking strategy)
-						limiter.depth++;*/
-					
-					limiter.movesLeft--;
-					limiter.scoreFactor *= -1;
-					SearchResult deepResult = deepSearch(board, limiter);
-					long deepValue = deepResult.bestMoveValue;
-					limiter.scoreFactor *= -1;
-					
-					deepValue *= limiter.scoreFactor;
-					
-					//Underflow protection
-					if(deepValue == Long.MIN_VALUE)
-					{
-						moveValue = Long.MIN_VALUE;
-					}
-					else
-					{
-						moveValue += deepValue;
-					}
-					limiter.scoreFactor *= -1;
-					
-					//Reset depth factors for the next iteration
-					/*if(!takeOverMove)
-						limiter.depth++;
-					else if(limiter.scoreFactor == -1)
-						limiter.depth += 2;
-					else
-						limiter.depth--;*/
-					
-					limiter.depth++;
-				}
-				if(board.undoMove(move, false))
-				{
-					//Moves that has not been searched deeper than one level risks an immediate take over from the other player 
-					//so to avoid making really stupid moves we only make those moves if they have a really high value
-					//
-					long moveValueWithMarginForAPossibleTakeOver = moveValue - move.getPiece().getValue();
-					
-					if(deeperSearch || moveValueWithMarginForAPossibleTakeOver > result.bestMoveValue)
-					{
-						//Only return the move if it was undoable because otherwise it means that it was a bad/invalid move
-						if(moveValue > result.bestMoveValue)
-						{	
-							result.bestMove = move;
-							result.bestMoveValue = moveValue;
-						}
-					}
-					
-					if(limiter.depth == SearchLimiter.MAX_DEPTH && move.getDestination() != null)
-					{
-						Long curVal = positionScoresValues.get(move.getDestination());
-						if((curVal == null || moveValue > curVal.longValue()) && (move.canBeMade(board)))
-						{
-							positionScores.put(move.getDestination(), moveValue + ":" + move.getCurrentPosition());
-							positionScoresValues.put(move.getDestination(), moveValue);
-						}
-					}
-				}
+				MoveEvaluatingThread moveEvaluator = new MoveEvaluatingThread(board, move, limiter, result, movesLeftToEvaluateOnThisBranch, workersDoneSignal);
+				moveEvaluator.advancedRun();
+			}
+			try
+			{
+				workersDoneSignal.await();
+			}
+			catch (InterruptedException e)
+			{
+				throw new SearchInterruptedError(e);
 			}
 		}
 		//Inverses the factor making it possible to evaluate a good move for the other player
-		result.bestMoveValue *= limiter.scoreFactor;
-		
-		if(limiter.depth == SearchLimiter.MAX_DEPTH)
-		{
-			board.getOriginatingBoard().newMoveEvaluationHasBeenDone(ImmutableMap.copyOf(positionScores));
-		}
+		result.applyPlayerAffinityFactor(limiter.getScoreFactor());
 		
 		return result;
 	}
 	
-	private static boolean shouldContinueDeeper(ChessBoard board, SearchLimiter limiter, long movesLeftOnBranch, long moveValue, boolean isTakeOverMove)
+	/**
+	 * Evaluates the given move and if the limits allows it, this also searches deeper
+	 * if the move is better than the move in the given result
+	 * @param move
+	 * @param board
+	 * @param limiter
+	 * @param result
+	 * @param movesLeftToEvaluateOnThisBranch
+	 */
+	static void evaluateMove(Move move, ChessBoard board, SearchLimiter limiter, SearchResult result, long movesLeftToEvaluateOnThisBranch)
+	{
+		boolean takeOverMove = move.isTakeOverMove();
+		long moveValue = performMoveWithMeasurements(move, board, limiter);
+		ProgressTracker.moveHasBeenMade();
+		boolean deeperSearch = shouldContinueDeeper(board, limiter, movesLeftToEvaluateOnThisBranch, moveValue, takeOverMove);
+		if(deeperSearch)
+		{
+			moveValue = delveDeeper(limiter, board, moveValue);
+		}
+		if(board.undoMove(move, false))
+		{
+			//Moves that has not been searched deeper than one level risks an immediate take over from the other player 
+			//so to avoid making really stupid moves we only make those moves if they have a really high value
+			//
+			long moveValueWithMarginForAPossibleTakeOver = moveValue - move.getPiece().getValue();
+			
+			if(deeperSearch || moveValueWithMarginForAPossibleTakeOver > result.getBestMoveValue())
+			{
+				//Only return the move if it was undoable because otherwise it means that it was a bad/invalid move
+				result.setBestMoveIfBetter(move, moveValue);
+			}
+		}
+	}
+	
+	private static long delveDeeper(SearchLimiter limiter, ChessBoard board, long currentMoveValue)
+	{
+		long totalMoveValue = currentMoveValue;
+		limiter.goDown();
+		SearchResult deepResult = deepSearch(board, limiter);
+		long deepValue = deepResult.getBestMoveValue();
+
+		deepValue *= limiter.getScoreFactor() * -1;
+		
+		//Underflow protection
+		if(deepValue == Long.MIN_VALUE)
+		{
+			totalMoveValue = Long.MIN_VALUE;
+		}
+		else
+		{
+			totalMoveValue += deepValue;
+		}
+		limiter.goUp();
+		return totalMoveValue;
+	}
+
+	static boolean shouldContinueDeeper(ChessBoard board, SearchLimiter limiter, long movesLeftOnBranch, long moveValue, boolean isTakeOverMove)
 	{
 		if(!ChessBoardEvaluator.inPlay(board))
 		{ 
@@ -250,9 +261,9 @@ public final class ChessMoveEvaluator
 			return false;
 		}
 		
-		boolean finalDepthNotReached = (limiter.depth >= 0 && limiter.movesLeft > 0);
+		boolean finalDepthNotReached = (limiter.getDepth() >= 0 && limiter.getMovesLeft() > 0);
 		//If we take over a piece we continue that path to not give too positive results
-		boolean iTookOverAPiece = (isTakeOverMove && limiter.scoreFactor == 1 && limiter.depth <= 0);
+		boolean iTookOverAPiece = (isTakeOverMove && limiter.getScoreFactor() == 1 && limiter.getDepth() <= 0);
 		
 		return minimumDepthNotReached || finalDepthNotReached || iTookOverAPiece;
 	}

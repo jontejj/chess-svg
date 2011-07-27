@@ -151,8 +151,6 @@ public class TestChessMoveEvaluator
 		board.setDifficulty(2);
 		ChessMoveEvaluator.performBestMove(board);
 		
-		assertTrue(ChessState.CHECK == board.getCurrentState());
-		
 		//Moves the king to the only available slot
 		board.performRandomMove();
 		

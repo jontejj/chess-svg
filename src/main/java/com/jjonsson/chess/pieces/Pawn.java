@@ -4,6 +4,7 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTwoStepMove;
 import com.jjonsson.chess.moves.Position;
+import static com.jjonsson.chess.moves.Position.*;
 
 public abstract class Pawn extends Piece
 {
@@ -69,7 +70,7 @@ public abstract class Pawn extends Piece
 	 */
 	public static boolean isTimeForReplacement(Position position, boolean affinity)
 	{
-		int destinationRow = (affinity == Piece.BLACK) ? 0 :(ChessBoard.BOARD_SIZE - 1);
+		int destinationRow = (affinity == BLACK) ? WHITE_STARTING_ROW_INDEX : BLACK_STARTING_ROW_INDEX;
 		return position.getRow() == destinationRow;
 	}
 	
@@ -88,5 +89,17 @@ public abstract class Pawn extends Piece
 		{
 			board.addPiece(this, true, false);
 		}
+	}
+	
+	@Override
+	public int getFirstDimensionMaxIndex()
+	{
+		return 0;
+	}
+	
+	@Override
+	public int getSecondDimensionMaxIndex()
+	{
+		return 3; //Two steps forward, two take over moves
 	}
 }

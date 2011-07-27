@@ -1,9 +1,7 @@
 package com.jjonsson.chess.moves;
 
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
-import com.jjonsson.chess.pieces.Rock;
 
 /**
  * Two instances of this move can represent the King's move and the Rock's move during a castling move
@@ -47,6 +45,13 @@ public abstract class CastlingMovePart extends IndependantMove
 	public void syncCountersWithBoard(ChessBoard board)
 	{
 		
+	}
+	
+	//Only the main "King" castling move should be included in the move table
+	@Override
+	public boolean shouldBeIncludedInMoveTable()
+	{
+		return false;
 	}
 	
 }

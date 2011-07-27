@@ -1,7 +1,8 @@
 package com.jjonsson.chess.pieces;
 
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.moves.Move;
+import static com.jjonsson.chess.ChessBoard.MOVES_IN_ONE_DIRECTION;
+import static com.jjonsson.chess.moves.Move.*;
 import com.jjonsson.chess.moves.Position;
 
 public class Rock extends Piece
@@ -15,16 +16,16 @@ public class Rock extends Piece
 	@Override
 	public void addPossibleMoves()
 	{
-		addMoveChain(Move.NO_CHANGE, Move.LEFT, ChessBoard.BOARD_SIZE);
-		addMoveChain(Move.UP, Move.NO_CHANGE, ChessBoard.BOARD_SIZE);
-		addMoveChain(Move.NO_CHANGE, Move.RIGHT, ChessBoard.BOARD_SIZE);
-		addMoveChain(Move.DOWN, Move.NO_CHANGE, ChessBoard.BOARD_SIZE);
+		addMoveChain(NO_CHANGE, LEFT, MOVES_IN_ONE_DIRECTION);
+		addMoveChain(UP, NO_CHANGE, MOVES_IN_ONE_DIRECTION);
+		addMoveChain(NO_CHANGE, RIGHT, MOVES_IN_ONE_DIRECTION);
+		addMoveChain(DOWN, NO_CHANGE, MOVES_IN_ONE_DIRECTION);
 	}
 
 	@Override
 	public int getValue()
 	{
-		return Piece.TOWER_VALUE;
+		return Piece.ROCK_VALUE;
 	}
 
 	@Override
@@ -36,6 +37,8 @@ public class Rock extends Piece
 	@Override
 	protected byte getPersistanceIdentifierType()
 	{
+		if(getMovesMade() > 0)
+			return Piece.MOVED_ROCK;
 		return Piece.ROCK;
 	}
 }

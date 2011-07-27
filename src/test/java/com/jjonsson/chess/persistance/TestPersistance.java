@@ -10,13 +10,14 @@ import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
+import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Rock;
-import com.jjonsson.chess.scenarios.TestScenarios;
+import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static com.jjonsson.chess.pieces.Piece.*;
 
 public class TestPersistance
@@ -44,7 +45,7 @@ public class TestPersistance
 	public void testSaveBoard() throws InvalidPosition, UnavailableMoveException, FileNotFoundException
 	{
 		//Load a board and make changes to it
-		ChessBoard board = TestScenarios.loadBoard("king_should_not_be_able_to_move");
+		ChessBoard board = loadBoard("king_should_not_be_able_to_move");
 		Piece blackRock = board.getPiece(Position.createPosition(8, Position.H));
 		Move rockMove = board.getAvailableMove(Position.createPosition(8, Position.F), BLACK);
 		rockMove.getPiece().performMove(rockMove, board);
@@ -64,9 +65,24 @@ public class TestPersistance
 	public void testLoadBoard() throws InvalidPosition
 	{
 		//Load a board and make changes to it
-		ChessBoard board = TestScenarios.loadBoard("king_to_3D_should_not_be_possible");
+		ChessBoard board = loadBoard("king_to_3D_should_not_be_possible");
 		King whiteKing = King.class.cast(board.getPiece(Position.createPosition(2, Position.E)));
 		
 		assertNull(whiteKing.getAvailableMoveForPosition(Position.createPosition(3, Position.D), board));
+	}
+	
+	@Test 
+	public void testCloneBoard() throws CloneNotSupportedException, NoMovesAvailableException
+	{
+		ChessBoard board = loadBoard("null_pointer_save");
+		for(int i = 0;i<100; i++)
+		{
+			board.performRandomMove();
+			ChessBoard clone = board.clone();
+			clone.performRandomMove();
+			clone = clone.clone();
+			clone.performRandomMove();
+			assertNotNull(clone);
+		}
 	}
 }

@@ -4,6 +4,8 @@ import static com.jjonsson.utilities.Logger.LOGGER;
 
 import java.util.List;
 import java.util.Set;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -27,7 +29,7 @@ import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 public abstract class Piece
 {	
 	//Used to figure out the take over value of a move
-	public static final int TOWER_VALUE = 500;
+	public static final int ROCK_VALUE = 500;
 	public static final int KNIGHT_VALUE = 300;
 	public static final int BISHOP_VALUE = 320;
 	public static final int PAWN_VALUE = 100;
@@ -53,6 +55,8 @@ public abstract class Piece
 	protected static final byte KNIGHT = 3;
 	protected static final byte QUEEN = 4;
 	protected static final byte ROCK = 5;
+	protected static final byte MOVED_KING = 6;
+	protected static final byte MOVED_ROCK = 7;
 	
 	//The affinity (color) of a piece
 	public static final boolean WHITE = false;
@@ -71,8 +75,7 @@ public abstract class Piece
 	 */
 	private List<Move> myPossibleMoves;
 	
-	//TODO(jontejj): keep this map updated and use it in the getMoveForPosition functions
-	//private Map<Position, Move> myMoveMap;
+	private Move[][] myMoves;
 	
 	private Set<Piece> myPiecesThatTakesMyPieceOver;
 	private Piece myCheapestPieceThatTakesMeOver;
@@ -99,6 +102,7 @@ public abstract class Piece
 	 */
 	public Piece(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
 	{
+		myMoves = createMoveTable();
 		myListeners = Sets.newHashSet();
 		myPossibleMoves = Lists.newArrayList();
 		
@@ -108,6 +112,29 @@ public abstract class Piece
 		myAffinity = affinity;
 		myBoard = boardPieceIsToBePlacedOn;
 		addPossibleMoves();
+	}
+	
+	@VisibleForTesting
+	public int getFirstDimensionMaxIndex()
+	{
+		return ChessBoard.BOARD_SIZE - 1;
+	}
+	
+	@VisibleForTesting
+	public int getSecondDimensionMaxIndex()
+	{
+		return ChessBoard.BOARD_SIZE - 1;
+	}
+	
+	@VisibleForTesting
+	public final Move[][] createMoveTable()
+	{
+		Move[][] moves = new Move[getFirstDimensionMaxIndex()+1][getSecondDimensionMaxIndex()+1];
+		for(int index = 0;index<moves.length;index++)
+		{
+			moves[index] = new Move[getSecondDimensionMaxIndex()+1];
+		}
+		return moves;
 	}
 	
 	public ChessBoard getBoard()
@@ -185,7 +212,7 @@ public abstract class Piece
 		byte positionData = (byte) (getCurrentPosition().getRow() << 4);
 		positionData |= getCurrentPosition().getColumn();
 		
-		short persistanceData = (short) (positionData << 8);
+		short persistanceData = (short) (positionData << Byte.SIZE);
 		persistanceData |= getPersistanceIdentifier();
 		return persistanceData;
 	}
@@ -202,7 +229,7 @@ public abstract class Piece
 		Piece piece = null;
 		//From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
 		byte row = (byte) (persistanceData >> 12);
-		byte column = (byte) (persistanceData >> 8 & 0xF);
+		byte column = (byte) (persistanceData >> Byte.SIZE & 0xF);
 		
 		Position position = Position.createPosition(row + 1, column + 1);
 		
@@ -222,6 +249,14 @@ public abstract class Piece
 				break;
 			case KING:
 				piece = new King(position, affinity, board);
+				break;
+			case MOVED_KING:
+				piece = new King(position, affinity, board);
+				piece.increaseMovesMade();
+				break;
+			case MOVED_ROCK:
+				piece = new Rock(position, affinity, board);
+				piece.increaseMovesMade();
 				break;
 			case KNIGHT:
 				piece = new Knight(position, affinity, board);
@@ -364,6 +399,22 @@ public abstract class Piece
 		return nonAvailableMoves;
 	}
 	
+	public List<Move> getMoves() 
+	{
+		List<Move> moves = Lists.newArrayList();
+		List<Move> possibleMoves = getPossibleMoves();
+		
+		for(Move m : possibleMoves)
+		{
+			moves.add(m);
+			if(m instanceof DependantMove)
+			{
+				moves.addAll(((DependantMove)m).getMovesThatIsDependantOnMe());
+			}
+		}
+		return moves;
+	}
+	
 	public boolean canMakeAMove(ChessBoard board)
 	{
 		return getAvailableMoves(NO_SORT, board).size() > 0;
@@ -410,6 +461,14 @@ public abstract class Piece
 			}
 		}
 		return null;
+	}
+	/**
+	 * @param from
+	 * @return a move that this piece can do that matches the given move or null if no such move exists
+	 */
+	public Move getMove(Move from)
+	{
+		return myMoves[from.getFirstDimensionIndex()][from.getSecondDimensionIndex()];
 	}
 	
 	/**
@@ -513,6 +572,14 @@ public abstract class Piece
 		{
 			board.nextPlayer();
 		}
+	}
+	
+	/**
+	 * This can be used when loading a saved game in order to remember the possibility of castling moves
+	 */
+	public void increaseMovesMade()
+	{
+		myMovesMade++;
 	}
 	
 	/**
@@ -642,6 +709,18 @@ public abstract class Piece
 				m.reEnable();
 			}
 			myIsRemoved = false;
+		}
+	}
+	
+	/**
+	 * Use this if the given move wants to be returned by getMove(rowChange, columnChange)
+	 * @param move
+	 */
+	public void addToMoveTable(Move move)
+	{
+		if(move.shouldBeIncludedInMoveTable())
+		{
+			myMoves[move.getFirstDimensionIndex()][move.getSecondDimensionIndex()] = move;
 		}
 	}
 }

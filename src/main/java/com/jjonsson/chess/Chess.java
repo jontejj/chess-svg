@@ -9,7 +9,7 @@ public final class Chess {
 	{
 		
 	}
-
+	
 	/**
 	 * @param args not used
 	 */

@@ -1,5 +1,6 @@
 package com.jjonsson.chess.gui.components;
 
+import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.*;
@@ -96,6 +97,31 @@ public class TestChessWindow
 		assertNotNull(board.getPiece(fromPosition));
 		
 		exit(window);
+	}
+	
+	@Test
+	public void testInterruptingAI()
+	{
+		ChessBoard board = loadBoard("bishop_should_move_rational");
+		//Make sure we think a long time :)
+		board.setDifficulty(5);
+		ChessWindow window = new ChessWindow(board);
+		ChessBoardComponent component = window.getBoardComponent();
+
+		window.displayGame();
+		window.setTitle("Testing interruption of an AI move");
+		
+		//Triggers the AI
+		component.loadingOfBoardDone();
+		
+		//Verify that the AI is thinking
+		assertTrue(component.isWorking());
+		
+		//Interrupt the AI
+		disableAI(window);
+		
+		//The AI thread should have been aborted
+		assertFalse(component.isWorking());
 	}
 	
 	

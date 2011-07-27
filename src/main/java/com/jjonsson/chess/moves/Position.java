@@ -18,6 +18,13 @@ public class Position implements Cloneable
 	public static final int G = 7;
 	public static final int H = 8;
 	
+	public static final int BLACK_STARTING_ROW = ChessBoard.BOARD_SIZE;
+	public static final int BLACK_PAWN_ROW = ChessBoard.BOARD_SIZE - 1;
+	public static final int BLACK_STARTING_ROW_INDEX = ChessBoard.BOARD_SIZE - 1;
+	public static final int WHITE_STARTING_ROW = 1;
+	public static final int WHITE_PAWN_ROW = 2;
+	public static final int WHITE_STARTING_ROW_INDEX = 0;
+	
 	private static final char[] COLUMNS = {'A','B','C','D','E','F','G','H'}; 
 	
 	/**
@@ -140,6 +147,10 @@ public class Position implements Cloneable
 		return (myRow+1) + "" + COLUMNS[myColumn];
 	}
 	
+	/**
+	 * Same as clone() but without the CloneNotSupportedException
+	 * @return
+	 */
 	public Position copy()
 	{
 		Position p = null;
@@ -149,6 +160,7 @@ public class Position implements Cloneable
 		}
 		catch (CloneNotSupportedException e)
 		{
+		    throw new UnsupportedOperationException("Position should be clonable but it was not", e);
 		}
 		return p;
 	}

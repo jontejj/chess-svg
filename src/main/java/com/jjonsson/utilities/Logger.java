@@ -2,8 +2,10 @@ package com.jjonsson.utilities;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
+
+import com.jjonsson.utilities.logging.ConsoleHandler;
+import com.jjonsson.utilities.logging.LoggingFormatter;
 
 public final class Logger
 {	

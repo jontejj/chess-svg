@@ -25,6 +25,7 @@ import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
+import com.jjonsson.chess.exceptions.SearchInterruptedError;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.Settings;
 import com.jjonsson.chess.gui.StatusListener;
@@ -33,7 +34,10 @@ import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
+import com.jjonsson.utilities.ThreadTracker;
+
 import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.TimeConstants.ONE_SECOND_IN_NANOS;
 
 public class ChessBoardComponent extends JComponent implements MouseListener, ChessBoardListener
 {
@@ -70,6 +74,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 
 	private StatusListener	myStatusListener;
 	
+	private ThreadTracker myTracker;
+	
 	/**
 	 * 
 	 * @param size the dimensions for this component
@@ -83,6 +89,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		}
 		mySize = size;
 		myBoard = board;
+		myTracker = new ThreadTracker();
 		
 		myPositionScores = ImmutableMap.of();
 		pieces = Sets.newHashSet();
@@ -266,6 +273,10 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			myHintMove = null;
 			setResultOfInteraction("No hint could be found");
 		}
+		catch(SearchInterruptedError sie)
+		{
+			LOGGER.info("Aborted the search for a hint move");
+		}
 	}
 	
 	public Move getHintMove()
@@ -439,7 +450,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		positionClicked(selectedPosition);
 		
 		long time = (System.nanoTime() - startNanos);
-		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(1000000000));
+		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(ONE_SECOND_IN_NANOS));
 		LOGGER.finest("Seconds: " + bd.toPlainString());
 	}
 	@Override
@@ -531,23 +542,31 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			{
 				setResultOfInteraction("Thinking ...");
 				//Run in a seperate thread to let the eventQueue run along
-				new Thread()
+				Thread t = new Thread()
 				{
 					@Override
 					public void run()
 					{
 						try
 						{
-							ChessMoveEvaluator.performBestMove(getBoard());
+							ChessMoveEvaluator.performBestMove(getBoard(), myStatusListener);
 						}
 						catch (NoMovesAvailableException e)
 						{
 							setResultOfInteraction("No valid moves found");
 						}
+						catch(SearchInterruptedError interrupted)
+						{
+							LOGGER.info("Aborted searching for a move");
+							return;
+						}
 						statusChange();
 						repaint();
+						myTracker.removeJob(this);
 					}
-				}.start();
+				};
+				myTracker.addJob(t);
+				t.start();
 			}
 			/*else
 			{
@@ -561,6 +580,16 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				}
 			}*/
 		}
+	}
+	
+	public boolean isWorking()
+	{
+		return myTracker.isWorking();
+	}
+	
+	public void interruptCurrentJobs()
+	{
+		myTracker.interruptCurrentJobs();
 	}
 
 	@Override

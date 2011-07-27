@@ -10,4 +10,6 @@ public interface StatusListener
 	void statusHasBeenUpdated();
 	
 	void setResultOfInteraction(String resultText);
+	
+	void setProgressInformation(String progressText);
 }

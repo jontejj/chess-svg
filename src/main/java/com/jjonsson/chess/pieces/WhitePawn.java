@@ -1,7 +1,7 @@
 package com.jjonsson.chess.pieces;
 
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.moves.Move;
+import static com.jjonsson.chess.moves.Move.*;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
@@ -19,8 +19,8 @@ public class WhitePawn extends Pawn
 	@Override
 	public void addPossibleMoves()
 	{
-		PawnMove step1 = new PawnOneStepMove(1 * Move.UP, 0, this, null, null);
-		PawnMove step2 = new PawnTwoStepMove(2 * Move.UP, 0, this, null, step1);
+		PawnMove step1 = new PawnOneStepMove(1 * UP, 0, this, null, null);
+		PawnMove step2 = new PawnTwoStepMove(2 * UP, 0, this, null, step1);
 		//If this isn't true then the pawn already has moved from it's initial position and the 2-step move shouln't be available then
 		if(isAtStartingRow())
 		{
@@ -28,8 +28,8 @@ public class WhitePawn extends Pawn
 		}
 		
 		addPossibleMove(step1);
-		addPossibleMove(new PawnTakeOverMove(1 * Move.UP, 1 * Move.LEFT, this, null, null));
-		addPossibleMove(new PawnTakeOverMove(1 * Move.UP, 1 * Move.RIGHT, this, null, null));
+		addPossibleMove(new PawnTakeOverMove(1 * UP, 1 * LEFT, this, null, null));
+		addPossibleMove(new PawnTakeOverMove(1 * UP, 1 * RIGHT, this, null, null));
 	}
 
 	@Override

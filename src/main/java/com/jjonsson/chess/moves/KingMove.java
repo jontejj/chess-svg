@@ -41,4 +41,37 @@ public class KingMove extends IndependantMove
 		
 		return canBeMadeEnding();
 	}
+	
+	@Override
+	protected int getFirstDimensionIndexInternal()
+	{
+		return 0;
+	}
+	
+	@Override
+	protected int getSecondDimensionIndexInternal()
+	{
+		int columnChange = getColumnChange();
+		switch(getRowChange())
+		{
+			case -1:
+				if(columnChange == -1)
+					return 0;
+				else if(columnChange == 0)
+					return 1;
+				return 2;
+			case 0:
+				if(columnChange == -1)
+					return 3;
+				return 4;
+			case 1:
+				if(columnChange == -1)
+					return 5;
+				else if(columnChange == 0)
+					return 6;
+				return 7;
+		}
+		//Detect faulty moves early
+		return -1;
+	}
 }

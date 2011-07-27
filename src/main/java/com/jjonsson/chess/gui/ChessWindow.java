@@ -24,6 +24,8 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.ChessFileFilter;
+import com.jjonsson.utilities.ThreadTracker;
+
 import static com.jjonsson.utilities.CrossPlatformUtilities.*;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
@@ -70,12 +72,23 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	
 	private JLabel myStatusBar;
 	
+	/**
+	 * Tells us the status of the game, who's turn it is, the last move that was made
+	 */
 	private String myGameStatus;
+	
+	/**
+	 * The current text within the parentheses in the status bar, loading/saving result, reverting moves result
+	 */
+	private String myInteractionResultText;
+	
+	private ThreadTracker myTracker;
 	
 	public ChessWindow(ChessBoard board)
 	{
 		super(NAME);
 		myBoard = board;
+		myTracker = new ThreadTracker();
 		
 	    this.setBackground(Color.DARK_GRAY);
 	    createMenuBar();
@@ -120,6 +133,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 
 	public final void updateStatusBar()
 	{
+		myInteractionResultText = "";
 		myGameStatus = getBoard().getStatusString();
 		myStatusBar.setText(myGameStatus);
 	}
@@ -222,6 +236,8 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	    disableAI.addActionListener(this);
 	    settingsMenu.add(disableAI);
 	    
+	    //TODO: make it possible to change difficulty
+	    
 	    
 	    menuBar.add(fileMenu);
 	    menuBar.add(actionsMenu);
@@ -257,7 +273,13 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	 */
 	public void setResultOfInteraction(String msg)
 	{
+		myInteractionResultText = msg;
 		myStatusBar.setText(myGameStatus + " (" + msg + ")");
+	}
+	
+	public void setProgressInformation(String msg)
+	{
+		myStatusBar.setText(myGameStatus + " (" + myInteractionResultText + ") (" + msg + ")");
 	}
 	
 	private void load()
@@ -341,6 +363,10 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	public void actionPerformed(ActionEvent e)
 	{
 		LOGGER.finest(e.getActionCommand());
+		//Cancel current jobs such as when the AI is thinking of the next move or when a hint move is searched for
+		myComponent.interruptCurrentJobs();
+		myTracker.interruptCurrentJobs();
+		
 		if(e.getActionCommand().equals(NEW_MENU_ITEM))
 		{
 			newGame();
@@ -398,14 +424,17 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	private void showHint()
 	{
 		setResultOfInteraction("Thinking of a hint");
-		new Thread()
+		Thread t = new Thread()
 		{
 			@Override
 			public void run()
 			{
 				myComponent.showHint();
+				myTracker.removeJob(this);
 			}
-		}.start();
+		};
+		myTracker.addJob(t);
+		t.start();
 		
 	}
 

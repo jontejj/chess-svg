@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.pieces.Piece;
+import static com.jjonsson.utilities.Logger.LOGGER;
 
 /**
  * A move that either cares about the possibility of another move or is a move that someone else cares about
@@ -218,9 +219,20 @@ public abstract class DependantMove extends Move
 	{
 		super.copyMoveCounter(moveToCopyFrom);
 		DependantMove moveDependingOnMe = getMoveDependingOnMe();
-		if(moveDependingOnMe != null)
+		DependantMove fromMove = null;
+		try
 		{
-			moveDependingOnMe.copyMoveCounter(DependantMove.class.cast(moveToCopyFrom).getMoveDependingOnMe());
+			fromMove = DependantMove.class.cast(moveToCopyFrom).getMoveDependingOnMe();
+		}
+		catch(ClassCastException cce)
+		{
+			LOGGER.warning("Could not cast: " + moveToCopyFrom + ", Move that tried to copy was: " + this);
+			//It's okey to fail silently because a King or Rock is saved differently if they can't make a castling move
+			return;
+		}
+		if(moveDependingOnMe != null && fromMove != null)
+		{
+			moveDependingOnMe.copyMoveCounter(fromMove);
 		}
 	}
 	
@@ -287,6 +299,23 @@ public abstract class DependantMove extends Move
 			{
 				dependantMoves.add(move);
 			}
+			move = move.getMoveDependingOnMe();
+		}
+		return dependantMoves;
+	}
+	
+	/**
+	 * 
+	 * @return regardless if the moves can be made or not
+	 */
+	public List<Move> getMovesThatIsDependantOnMe()
+	{
+		List<Move> dependantMoves = Lists.newArrayList();
+		//Performs a dive into the dependant moves and stops when it finds either null or when it's not possible to perform a move further down
+		DependantMove move = myMoveDependingOnMe;
+		while(move != null)
+		{
+			dependantMoves.add(move);
 			move = move.getMoveDependingOnMe();
 		}
 		return dependantMoves;

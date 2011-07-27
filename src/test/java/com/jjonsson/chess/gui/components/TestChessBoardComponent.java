@@ -1,5 +1,6 @@
 package com.jjonsson.chess.gui.components;
 
+import static com.jjonsson.utilities.TimeConstants.ONE_SECOND_IN_NANOS;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -12,12 +13,17 @@ import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.gui.ChessWindow;
+import com.jjonsson.chess.gui.WindowUtilities;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.pieces.Piece;
 
 public class TestChessBoardComponent
 {
-
+	static
+	{
+		WindowUtilities.setNativeLookAndFeel();
+	}
+	
 	private static final int SLEEP_TIME = 2000;
 	
 	private static long benchmarkedPlaytime;
@@ -43,7 +49,7 @@ public class TestChessBoardComponent
 		long endNanos = System.nanoTime();
 		
 		benchmarkedPlaytime = (endNanos - startNanos) * BENCHMARKING_FACTOR;
-		benchmarkedPlaytimeInSeconds = benchmarkedPlaytime / 1000000000;
+		benchmarkedPlaytimeInSeconds = benchmarkedPlaytime / ONE_SECOND_IN_NANOS;
 	}
 	
 	
@@ -68,6 +74,7 @@ public class TestChessBoardComponent
 	/**
 	 * Simulating a match between a white random player and a black AI player
 	 * Note that on a MacBook Pro with a core i7 the AI usually wins within 60 seconds
+	 * As I've discovered that this is a good stability test this serves several purposes :)
 	 * @throws NoMovesAvailableException
 	 * @throws InterruptedException
 	 */
@@ -95,7 +102,7 @@ public class TestChessBoardComponent
 				//Simulate that the white is a bad player that doesn't know what he's doing
 				board.performRandomMove();
 			}
-			long consumedSeconds = (System.nanoTime() - startNanos) / 1000000000;
+			long consumedSeconds = (System.nanoTime() - startNanos) / ONE_SECOND_IN_NANOS;
 			window.setTitle("Expecting black to win within " + (benchmarkedPlaytimeInSeconds - consumedSeconds) + " secs");
 		}
 		//If the game ended in time the AI should win (i.e white (random) should lose)

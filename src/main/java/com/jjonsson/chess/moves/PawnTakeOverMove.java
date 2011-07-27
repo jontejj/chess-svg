@@ -46,4 +46,10 @@ public class PawnTakeOverMove extends PawnMove
 	{
 		return true;
 	}
+	
+	@Override
+	protected int getSecondDimensionIndexInternal()
+	{
+		return (getColumnChange() > 0) ? 2 : 3;
+	}
 }

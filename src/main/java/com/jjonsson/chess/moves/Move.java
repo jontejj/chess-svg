@@ -56,6 +56,9 @@ public abstract class Move
 	 */
 	private long myMovesMade;
 	
+	private int myFirstDimensionIndex;
+	private int mySecondDimensionIndex;
+	
 	/**
 	 * 
 	 * @param rowChange the row change for this move, valid numbers are (-7) to (+7)
@@ -67,6 +70,9 @@ public abstract class Move
 		myColumnChange = (byte)columnChange;
 		myPiece = pieceThatTheMoveWillBeMadeWith;
 		setRevertingMove();
+		myFirstDimensionIndex = getFirstDimensionIndexInternal();
+		mySecondDimensionIndex = getSecondDimensionIndexInternal();
+		pieceThatTheMoveWillBeMadeWith.addToMoveTable(this);
 	}
 	
 	protected void setRevertingMove()
@@ -510,6 +516,15 @@ public abstract class Move
 	{
 		return false;
 	}
+	
+	/**
+	 * Used when initializing the move table
+	 * @return true if this move should be returned by the getMove(rowChange, columnChange) function
+	 */
+	public boolean shouldBeIncludedInMoveTable()
+	{
+		return true;
+	}
 
 	/**
 	 * 
@@ -545,5 +560,70 @@ public abstract class Move
 	public Position getOldPosition()
 	{
 		return getRevertingMove().getDestination();
+	}
+	
+	/**
+	 * 
+	 * @return a value between 0-7 (inclusive) that binds the row/column change of this move to a particular row index in a two
+	 * dimensional array. -1 is returned if columnChange and rowChange are zero but that should never happen. 
+	 */
+	protected int getFirstDimensionIndexInternal()
+	{
+		if(myRowChange > 0)
+		{
+			 if(myColumnChange == 0)
+				 return 0;
+			 else if(myColumnChange > 0)
+				 return 1;
+			 else if(myColumnChange < 0)
+				 return 2;
+		}
+		else if(myRowChange == 0)
+		{
+			 if(myColumnChange > 0)
+				 return 3;
+			 else if(myColumnChange < 0)
+				 return 4;
+		}
+		else
+		{
+			 if(myColumnChange == 0)
+				 return 5;
+			 else if(myColumnChange > 0)
+				 return 6;
+			 else
+				 return 7;
+		}
+		//Detect faulty moves early
+		return -1;
+	}
+	
+	/**
+	 * 
+	 * @return a value between 0-7 (inclusive) that binds the row/column change of this move to a particular row index in a two
+	 * dimensional array. -1 is returned if columnChange and rowChange is zero but that should never happen. 
+	 */
+	public int getFirstDimensionIndex()
+	{
+		return myFirstDimensionIndex;
+	}
+	/**
+	 * 
+	 * @return a value between 0-7 (inclusive) that binds the row/column change of this move to a particular column index in a two
+	 * dimensional array. 
+	 */
+	protected int getSecondDimensionIndexInternal()
+	{
+		return Math.max(Math.abs(myColumnChange), Math.abs(myRowChange));
+	}
+	
+	/**
+	 * 
+	 * @return a value between 0-7 (inclusive) that binds the row/column change of this move to a particular column index in a two
+	 * dimensional array. 
+	 */
+	public int getSecondDimensionIndex()
+	{
+		return mySecondDimensionIndex;
 	}
 }
