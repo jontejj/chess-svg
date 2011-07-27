@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -19,6 +20,7 @@ import javax.swing.JMenuItem;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
@@ -358,14 +360,24 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	{
 		myComponent.setAIEnabled(enable);
 	}
+	
+	private static Map<String, Boolean> noAbortionNecessaryCommands = Maps.newHashMap();
+	static
+	{
+		noAbortionNecessaryCommands.put(SHOW_AVAILABLE_CLICKS_MENU_ITEM, true);
+		noAbortionNecessaryCommands.put(HIDE_AVAILABLE_CLICKS_MENU_ITEM, true);
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
 		LOGGER.finest(e.getActionCommand());
-		//Cancel current jobs such as when the AI is thinking of the next move or when a hint move is searched for
-		myComponent.interruptCurrentJobs();
-		myTracker.interruptCurrentJobs();
+		if(!noAbortionNecessaryCommands.containsKey(e.getActionCommand()))
+		{
+			//Cancel current jobs such as when the AI is thinking of the next move or when a hint move is searched for
+			myComponent.interruptCurrentJobs();
+			myTracker.interruptCurrentJobs();
+		}
 		
 		if(e.getActionCommand().equals(NEW_MENU_ITEM))
 		{
