@@ -42,7 +42,8 @@ public final class ProgressTracker
 	{
 		if(myStatusTracker != null)
 		{
-			long movesPerSecond = (movesMade / ((System.nanoTime() - startTime) / ONE_SECOND_IN_NANOS));
+			double passedSeconds = Math.max(((System.nanoTime() - startTime) / ONE_SECOND_IN_NANOS), 1.0);
+			long movesPerSecond = (long) (movesMade / passedSeconds);
 			LOGGER.info("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
 		}
 	}
