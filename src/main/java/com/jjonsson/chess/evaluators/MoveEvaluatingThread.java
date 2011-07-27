@@ -51,6 +51,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 		mySignal.countDown();
 	}
 	
+	public static volatile long threadsCreated = 0;
 	/**
 	 * This may run in the caller thread instead of running in a new thread if it's more efficient not to allocate a new thread (
 	 * which involves creating a clone of the chessboard etc.)
@@ -58,8 +59,8 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	 */
 	public void advancedRun()
 	{
-		boolean willProbablyGoDeeper = ChessMoveEvaluator.shouldContinueDeeper(myBoard, myLimiter, myMovesLeftOnBranch, 0, myMoveToEvaluate.isTakeOverMove());
-		if(willProbablyGoDeeper && ResourceAllocator.claimThread())
+		boolean shouldContinueInNewThread = ChessMoveEvaluator.shouldContinueInNewThread(myBoard, myLimiter, myMovesLeftOnBranch, myMoveToEvaluate);
+		if(shouldContinueInNewThread && ResourceAllocator.claimThread())
 		{
 			//Only copy the board/limiter if we aren't running in the "main" thread
 			try
@@ -76,6 +77,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 			{
 				throw new NullPointerException("Could not find " + myMoveToEvaluate + " on the cloned board");
 			}
+			threadsCreated++;
 			Thread t = new Thread(this);
 			t.setUncaughtExceptionHandler(this);
 			t.start();

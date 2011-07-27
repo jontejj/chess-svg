@@ -368,35 +368,8 @@ public abstract class Piece
 		{
 			return MoveOrdering.getInstance().immutableSortedCopy(availableMoves);
 		}
-		
+		//TODO: this may be too expensive
 		return ImmutableList.copyOf(availableMoves);
-	}
-	
-	/**
-	 * Returns the cached evaluation of all the possible moves for this piece and excludes the ones that are possible at the moment
-	 * Override this method if you want to optimize it for a specific piece
-	 * @param board 
-	 * @return the non available moves for this piece on the supplied board and within it's bounds ordered by their take over value
-	 */
-
-	public List<Move> getNonAvailableMoves(ChessBoard board) 
-	{
-		List<Move> nonAvailableMoves = Lists.newArrayList();
-		List<Move> possibleMoves = getPossibleMoves();
-		
-		for(Move m : possibleMoves)
-		{
-			if(!m.canBeMade(board))
-			{
-				nonAvailableMoves.add(m);
-				if(m instanceof DependantMove)
-				{
-					nonAvailableMoves.addAll(((DependantMove)m).getNonPossibleMovesThatIsDependantOnMe(board));
-				}
-			}
-		}
-		
-		return nonAvailableMoves;
 	}
 	
 	public List<Move> getMoves() 
@@ -419,49 +392,7 @@ public abstract class Piece
 	{
 		return getAvailableMoves(NO_SORT, board).size() > 0;
 	}
-	/**
-	 * 
-	 * @param pos
-	 * @param board 
-	 * @return an available move if one was found, otherwise null meaning that this piece can't move into the given position
-	 */
-	public Move getAvailableMoveForPosition(Position pos, ChessBoard board)
-	{
-		//A quick check, you can't move into your own square
-		if(getCurrentPosition().equals(pos))
-		{
-			return null;
-		}
-		
-		for(Move m : getAvailableMoves(false, board))
-		{
-			//TODO(jontejj): faster iteration (ie a map)
-			if(m.getDestination().equals(pos))
-			{
-				return m;
-			}
-		}
-		return null;
-	}
-	
-	/**
-	 * 
-	 * @param pos
-	 * @param board 
-	 * @return a non available move if one was found, otherwise null meaning that this piece can move into the given position
-	 */
-	public Move getNonAvailableMoveForPosition(Position pos, ChessBoard board)
-	{
-		for(Move m : getNonAvailableMoves(board))
-		{
-			//Note that pos can never be null, but positionIfPerformed can so the check needs to be in this order to avoid unnessecary null checks
-			if(pos.equals(m.getDestination()))
-			{
-				return m;
-			}
-		}
-		return null;
-	}
+
 	/**
 	 * @param from
 	 * @return a move that this piece can do that matches the given move or null if no such move exists

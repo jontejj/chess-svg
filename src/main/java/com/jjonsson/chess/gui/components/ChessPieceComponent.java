@@ -133,7 +133,8 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		Piece currentlySelected = boardComponent.getSelectedPiece();
 		if(currentlySelected != null && !currentlySelected.hasSameAffinityAs(this.getPiece()))
 		{
-			Move takeOverMove = currentlySelected.getAvailableMoveForPosition(this.getPiece().getCurrentPosition(), boardComponent.getBoard());
+			ChessBoard board = boardComponent.getBoard();
+			Move takeOverMove = board.getAvailableMove(currentlySelected, this.getPiece().getCurrentPosition());
 			if(takeOverMove != null)
 			{
 				//The currently selected piece is going to take over this one

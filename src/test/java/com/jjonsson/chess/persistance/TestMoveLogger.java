@@ -34,17 +34,17 @@ public class TestMoveLogger
 		while(movesDone < MoveLogger.REPITION_HISTORY_RESET_INTERVAL)
 		{
 			//Moves the rocks back and forth until we reach the reset point
-			Move whiteRockMove = whiteRock.getAvailableMoveForPosition(whiteRockMoveDestination, board);
+			Move whiteRockMove = board.getAvailableMove(whiteRock, whiteRockMoveDestination);
 			whiteRock.performMove(whiteRockMove, board, false);
-			Move blackRockMove = blackRock.getAvailableMoveForPosition(blackRockMoveDestination, board);
+			Move blackRockMove = board.getAvailableMove(blackRock, blackRockMoveDestination);
 			blackRock.performMove(blackRockMove, board, false);
-			whiteRockMove = whiteRock.getAvailableMoveForPosition(whiteRockStartingPosition, board);
+			whiteRockMove = board.getAvailableMove(whiteRock, whiteRockStartingPosition);
 			whiteRock.performMove(whiteRockMove, board, false);
-			blackRockMove = blackRock.getAvailableMoveForPosition(blackRockStartingPosition, board);
+			blackRockMove = board.getAvailableMove(blackRock, blackRockStartingPosition);
 			blackRock.performMove(blackRockMove, board, false);
 			movesDone +=4;
 		}
 		//It may be made one time depending on what interval we use but it shouldn't be more
-		assertFalse(whiteRock.getAvailableMoveForPosition(whiteRockMoveDestination, board).getMovesMade() > 1);
+		assertFalse(board.getAvailableMove(whiteRock, whiteRockMoveDestination).getMovesMade() > 1);
 	}
 }

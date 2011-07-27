@@ -268,6 +268,29 @@ public final class ChessMoveEvaluator
 		return minimumDepthNotReached || finalDepthNotReached || iTookOverAPiece;
 	}
 	
+	static boolean shouldContinueInNewThread(ChessBoard board, SearchLimiter limiter, long movesLeftOnBranch, Move move)
+	{
+		if(!ChessBoardEvaluator.inPlay(board))
+		{ 
+			//Don't search deeper if we already are at check mate
+			return false;
+		}
+		
+		boolean minimumDepthNotReached = (limiter.getCurrentDepth() <= limiter.getMinimumDepthToSearch());
+		
+		if(movesLeftOnBranch <= 0 && !minimumDepthNotReached)
+		{ 
+			//This filters out deeper searches for moves that initially don't look so good
+			return false;
+		}
+		
+		boolean finalDepthNotReached = (limiter.getDepth() >= 0 && limiter.getMovesLeft() > 0);
+		//If we take over a piece we continue that path to not give too positive results
+		boolean iTookOverAPiece = (move.isTakeOverMove() && limiter.getScoreFactor() == 1 && limiter.getDepth() <= 0);
+		
+		return (minimumDepthNotReached || finalDepthNotReached || iTookOverAPiece);
+	}
+	
 	/**
 	 * Performs the given move and returns a measurement of how good it was
 	 * <br>The measurements are: 

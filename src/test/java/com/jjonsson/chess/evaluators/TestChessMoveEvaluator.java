@@ -70,7 +70,7 @@ public class TestChessMoveEvaluator
 		assertEquals(ChessState.PLAYING, board.getCurrentState());
 		makeSureMoveWasNotMade(board, Position.createPosition(8, Position.G));
 		Piece blackQueen = board.getPiece(Position.createPosition(7, Position.G));
-		Move possibleCheckMateMove = blackQueen.getAvailableMoveForPosition(Position.createPosition(3, Position.G), board);
+		Move possibleCheckMateMove = board.getAvailableMove(blackQueen, Position.createPosition(3, Position.G));
 		blackQueen.performMove(possibleCheckMateMove, board);
 		//The King should be able to flee
 		assertFalse(ChessState.CHECKMATE == board.getCurrentState());
@@ -133,11 +133,11 @@ public class TestChessMoveEvaluator
 		//The king should still be able to protect the knight after this move
 		ChessMoveEvaluator.performBestMove(board);
 		
-		Move bishopMove = bishop.getAvailableMoveForPosition(knightPosition, board);
+		Move bishopMove = board.getAvailableMove(bishop, knightPosition);
 		bishop.performMove(bishopMove, board);
 		
 		//The king should now be able to take over the bishop
-		Move bishopTakeOverMove = blackDefendingKing.getAvailableMoveForPosition(knightPosition, board);
+		Move bishopTakeOverMove = board.getAvailableMove(blackDefendingKing, knightPosition);
 		blackDefendingKing.performMove(bishopTakeOverMove, board);
 		
 		assertTrue(bishop.isRemoved());

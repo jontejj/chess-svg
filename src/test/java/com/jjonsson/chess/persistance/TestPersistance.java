@@ -68,21 +68,6 @@ public class TestPersistance
 		ChessBoard board = loadBoard("king_to_3D_should_not_be_possible");
 		King whiteKing = King.class.cast(board.getPiece(Position.createPosition(2, Position.E)));
 		
-		assertNull(whiteKing.getAvailableMoveForPosition(Position.createPosition(3, Position.D), board));
-	}
-	
-	@Test 
-	public void testCloneBoard() throws CloneNotSupportedException, NoMovesAvailableException
-	{
-		ChessBoard board = loadBoard("null_pointer_save");
-		for(int i = 0;i<100; i++)
-		{
-			board.performRandomMove();
-			ChessBoard clone = board.clone();
-			clone.performRandomMove();
-			clone = clone.clone();
-			clone.performRandomMove();
-			assertNotNull(clone);
-		}
+		assertNull(board.getAvailableMove(whiteKing, Position.createPosition(3, Position.D)));
 	}
 }

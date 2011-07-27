@@ -41,10 +41,10 @@ public class TestScenarios
 	{
 		ChessBoard board = loadBoard("pawn_take_over_move_should_remove_two_step_move");
 		WhitePawn wp = (WhitePawn)board.getPiece(Position.createPosition(2, Position.F));
-		Move takeOverMove = wp.getAvailableMoveForPosition(Position.createPosition(3, Position.G), board);
+		Move takeOverMove = board.getAvailableMove(wp, Position.createPosition(3, Position.G));
 		Assert.assertNotNull(takeOverMove);
 		wp.performMove(takeOverMove, board, false);
-		Move twoStepMove = wp.getAvailableMoveForPosition(Position.createPosition(5, Position.G), board);
+		Move twoStepMove = board.getAvailableMove(wp, Position.createPosition(5, Position.G));
 		assertNull(twoStepMove);
 	}
 	
@@ -55,10 +55,10 @@ public class TestScenarios
 		
 		Queen q = (Queen)board.getPiece(Position.createPosition(2, Position.F));
 		
-		Move stoppingMove = q.getAvailableMoveForPosition(Position.createPosition(3, Position.G), board);
+		Move stoppingMove = board.getAvailableMove(q, Position.createPosition(3, Position.G));
 		Assert.assertNotNull(stoppingMove);
 		
-		Move takeOverMove = q.getAvailableMoveForPosition(Position.createPosition(4, Position.H), board);
+		Move takeOverMove = board.getAvailableMove(q, Position.createPosition(4, Position.H));
 		Position oldQueenPosition = takeOverMove.getCurrentPosition().copy();
 		Assert.assertNotNull(takeOverMove);
 		
@@ -85,7 +85,7 @@ public class TestScenarios
 		ChessBoard board = loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");		
 		WhitePawn pawn = (WhitePawn)board.getPiece(Position.createPosition(7, Position.A));
 
-		Move replacementMove = pawn.getAvailableMoveForPosition(Position.createPosition(8, Position.B), board);
+		Move replacementMove = board.getAvailableMove(pawn, Position.createPosition(8, Position.B));
 		assertNotNull(replacementMove);
 		
 		//Takes over the rock, replacing the pawn with a queen, checking the black king
@@ -95,7 +95,7 @@ public class TestScenarios
 		
 		Piece defendingKnight = board.getPiece(Position.createPosition(6, Position.C));
 		assertNotNull(defendingKnight);
-		Move defendingMove = defendingKnight.getAvailableMoveForPosition(Position.createPosition(8, Position.B), board);
+		Move defendingMove = board.getAvailableMove(defendingKnight, Position.createPosition(8, Position.B));
 		assertNotNull(defendingMove);
 		
 		//Take over the queen
@@ -112,12 +112,12 @@ public class TestScenarios
 		ChessBoard board = loadBoard("queen_left_move_check_king_not_possible_to_move_down");		
 		Queen q = (Queen)board.getPiece(Position.createPosition(4, Position.H));
 
-		Move takeOverMove = q.getAvailableMoveForPosition(Position.createPosition(4, Position.E), board);
+		Move takeOverMove = board.getAvailableMove(q, Position.createPosition(4, Position.E));
 		q.performMove(takeOverMove, board, false);
 
 		assertEquals(ChessState.CHECK, board.getCurrentState());
 		King k = (King)board.getPiece(Position.createPosition(2, Position.E));
-		Move downMove = k.getAvailableMoveForPosition(Position.createPosition(1, Position.E), board);
+		Move downMove = board.getAvailableMove(k, Position.createPosition(1, Position.E));
 		assertNull(downMove);
 	}
 	
@@ -126,7 +126,7 @@ public class TestScenarios
 	{
 		ChessBoard board = loadBoard("knight_should_not_be_possible_to_take");		
 		King k = (King)board.getPiece(Position.createPosition(8, Position.F));
-		Move takeOverMove = k.getAvailableMoveForPosition(Position.createPosition(8, Position.E), board);
+		Move takeOverMove = board.getAvailableMove(k, Position.createPosition(8, Position.E));
 		assertNull(takeOverMove);
 	}
 	
@@ -136,12 +136,12 @@ public class TestScenarios
 		ChessBoard board = loadBoard("pawn_two_step_move_should_not_be_able_to_pass_by_king_and_protect_him");		
 		Queen q = Queen.class.cast(board.getPiece(Position.createPosition(6, Position.D)));
 
-		Move checkMove = q.getAvailableMoveForPosition(Position.createPosition(5, Position.E), board);
+		Move checkMove = board.getAvailableMove(q, Position.createPosition(5, Position.E));
 		q.performMove(checkMove, board, false);
 		
 		WhitePawn wp = WhitePawn.class.cast(board.getPiece(Position.createPosition(2, Position.E)));
 
-		Move unavailableMove = wp.getAvailableMoveForPosition(Position.createPosition(4, Position.E), board);
+		Move unavailableMove = board.getAvailableMove(wp, Position.createPosition(4, Position.E));
 		
 		assertNull("PawnTwoStepMove should not be able to pass through a piece", unavailableMove);
 	}
@@ -151,13 +151,13 @@ public class TestScenarios
 	{
 		ChessBoard board = loadBoard("queen_to_3D_should_not_checkmate");
 		Queen q = Queen.class.cast(board.getPiece(Position.createPosition(3, Position.B)));
-		Move checkingMove = q.getAvailableMoveForPosition(Position.createPosition(3, Position.D), board);
+		Move checkingMove = board.getAvailableMove(q, Position.createPosition(3, Position.D));
 		q.performMove(checkingMove, board, false);
 		
 		assertEquals(ChessState.CHECK, board.getCurrentState());
 		
 		King k = King.class.cast(board.getPiece(Position.createPosition(2, Position.E)));
-		Move takeQueenMove = k.getAvailableMoveForPosition(Position.createPosition(3, Position.D), board);
+		Move takeQueenMove = board.getAvailableMove(k, Position.createPosition(3, Position.D));
 		k.performMove(takeQueenMove, board, false);
 		
 		assertEquals(ChessState.PLAYING, board.getCurrentState());

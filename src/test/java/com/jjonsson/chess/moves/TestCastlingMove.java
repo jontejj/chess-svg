@@ -34,7 +34,7 @@ public class TestCastlingMove
 		
 		Piece whiteKing = board.getKing(WHITE);
 		
-		Move castlingMove = whiteKing.getAvailableMoveForPosition(castlingKingDestination, board);
+		Move castlingMove = board.getAvailableMove(whiteKing, castlingKingDestination);
 		
 		assertNotNull("Castling move unavailable", castlingMove);
 		whiteKing.performMove(castlingMove, board);
@@ -54,7 +54,7 @@ public class TestCastlingMove
 		
 		Piece blackKing = board.getKing(BLACK);
 		
-		Move castlingMove = blackKing.getAvailableMoveForPosition(castlingKingDestination, board);
+		Move castlingMove = board.getAvailableMove(blackKing, castlingKingDestination);
 		
 		assertNotNull("Castling move unavailable", castlingMove);
 		blackKing.performMove(castlingMove, board);
@@ -71,7 +71,7 @@ public class TestCastlingMove
 		
 		Piece blackKing = board.getKing(BLACK);
 		
-		assertNull(blackKing.getAvailableMoveForPosition(castlingKingDestination, board));
+		assertNull(board.getAvailableMove(blackKing, castlingKingDestination));
 	}
 	
 }

@@ -88,7 +88,7 @@ public class TestUndoMoves
 		//The white pawn that was taken over first should now be able to remove again
 		Piece whitePawn = board.getPiece(takeOverOneSpot);
 		//It should exist and it should be able to take over the black pawn that took it over
-		assertNotNull(whitePawn.getAvailableMoveForPosition(blackPawnPosition, board));
+		assertNotNull(board.getAvailableMove(whitePawn, blackPawnPosition));
 		
 		whitePawn = board.getPiece(takeOverTwoSpot);
 		assertNotNull(whitePawn);

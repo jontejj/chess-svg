@@ -466,7 +466,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	{
 		if(myCurrentlySelectedPiece != null)
 		{
-			Move m = myCurrentlySelectedPiece.getAvailableMoveForPosition(positionThatWasClicked, getBoard());
+			Move m = getBoard().getAvailableMove(myCurrentlySelectedPiece, positionThatWasClicked);
 			if(m != null)
 			{
 				LOGGER.finest("Destination available: " + positionThatWasClicked);
@@ -568,17 +568,17 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				myTracker.addJob(t);
 				t.start();
 			}
-			/*else
+			else
 			{
 				//just for fun
-				try
+				/*try
 				{
 					getBoard().performRandomMove();
 				}
 				catch (NoMovesAvailableException e)
 				{
-				}
-			}*/
+				}*/
+			}
 		}
 	}
 	
