@@ -5,6 +5,7 @@ import org.junit.Test;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 
 import static com.jjonsson.chess.pieces.Piece.*;
@@ -32,7 +33,7 @@ public class TestCastlingMove
 		
 		assertNotNull(whiteRock);
 		
-		Piece whiteKing = board.getKing(WHITE);
+		King whiteKing = board.getKing(WHITE);
 		
 		Move castlingMove = board.getAvailableMove(whiteKing, castlingKingDestination);
 		
@@ -52,7 +53,7 @@ public class TestCastlingMove
 		
 		assertNotNull(blackRock);
 		
-		Piece blackKing = board.getKing(BLACK);
+		King blackKing = board.getKing(BLACK);
 		
 		Move castlingMove = board.getAvailableMove(blackKing, castlingKingDestination);
 		
@@ -69,7 +70,7 @@ public class TestCastlingMove
 		ChessBoard board = loadBoard("queenside_castling_not_available_during_check");
 		Position castlingKingDestination = Position.createPosition(8, Position.C);
 		
-		Piece blackKing = board.getKing(BLACK);
+		King blackKing = board.getKing(BLACK);
 		
 		assertNull(board.getAvailableMove(blackKing, castlingKingDestination));
 	}

@@ -2,7 +2,7 @@ package com.jjonsson.chess.evaluators;
 
 public final class ResourceAllocator
 {
-	private static long availableThreads = Runtime.getRuntime().availableProcessors() - 1;
+	private static volatile long availableThreads = Runtime.getRuntime().availableProcessors() - 1;
 	
 	private ResourceAllocator()
 	{

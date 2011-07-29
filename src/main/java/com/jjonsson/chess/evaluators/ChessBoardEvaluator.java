@@ -1,9 +1,9 @@
 package com.jjonsson.chess.evaluators;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.DependantMove;
@@ -65,7 +65,7 @@ public final class ChessBoardEvaluator
 	public static ChessState getState(ChessBoard board)
 	{
 		King currentKing = board.getCurrentKing();
-		ImmutableSet<Move> movesThreateningKing = board.getAvailableMoves(currentKing.getCurrentPosition(), !currentKing.getAffinity());
+		Collection<Move> movesThreateningKing = board.getAvailableMoves(currentKing.getCurrentPosition(), !currentKing.getAffinity());
 		if(movesThreateningKing.size() > 0)
 		{
 			List<Move> kingMoves = currentKing.getAvailableMoves(Piece.NO_SORT, board);
@@ -81,7 +81,7 @@ public final class ChessBoardEvaluator
 					DependantMove moveThatThisMoveDependUpon = move.getMoveThatIDependUpon();
 					while(moveThatThisMoveDependUpon != null)
 					{
-						ImmutableSet<Move> movesStoppingMove = board.getAvailableMoves(moveThatThisMoveDependUpon.getDestination(), !threateningMove.getAffinity());
+						Collection<Move> movesStoppingMove = board.getAvailableMoves(moveThatThisMoveDependUpon.getDestination(), !threateningMove.getAffinity());
 						if(movesStoppingMove.size() > 0)
 						{
 							movesStoppingCheck.addAll(movesStoppingMove);
@@ -93,7 +93,7 @@ public final class ChessBoardEvaluator
 				}
 				
 				//If the threatening piece can be taken in one move then the king can be saved
-				ImmutableSet<Move> defendingMoves = board.getAvailableMoves(threateningMove.getCurrentPosition(), currentKing.getAffinity());
+				Collection<Move> defendingMoves = board.getAvailableMoves(threateningMove.getCurrentPosition(), currentKing.getAffinity());
 				if(defendingMoves.size() > 0)
 				{
 					movesStoppingCheck.addAll(defendingMoves);

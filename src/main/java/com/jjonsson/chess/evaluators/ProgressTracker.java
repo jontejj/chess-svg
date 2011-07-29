@@ -3,6 +3,7 @@ package com.jjonsson.chess.evaluators;
 import static com.jjonsson.utilities.Logger.LOGGER;
 import static com.jjonsson.utilities.TimeConstants.ONE_SECOND_IN_NANOS;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.jjonsson.chess.gui.StatusListener;
 
 public final class ProgressTracker
@@ -18,7 +19,8 @@ public final class ProgressTracker
 		
 	}
 	
-	static synchronized void setStatusListener(StatusListener listener)
+	@VisibleForTesting
+	public static synchronized void setStatusListener(StatusListener listener)
 	{
 		myStatusTracker = listener;
 		movesMade = 0;
@@ -44,8 +46,12 @@ public final class ProgressTracker
 	{
 		if(myStatusTracker != null)
 		{
-			double passedSeconds = Math.max(((System.nanoTime() - startTime) / ONE_SECOND_IN_NANOS), 0.0001);
-			long movesPerSecond = (long) (movesMade / passedSeconds);
+			double passedSeconds = ((double)(System.nanoTime() - startTime) / ONE_SECOND_IN_NANOS);
+			long movesPerSecond;
+			if(passedSeconds == 0.0)
+				movesPerSecond = movesMade;
+			else
+				movesPerSecond = (long) (movesMade / passedSeconds);
 			LOGGER.info("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
 			LOGGER.info("Threads Created: " + MoveEvaluatingThread.threadsCreated);
 		}

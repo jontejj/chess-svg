@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.exceptions.DuplicatePieceException;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 
 public final class BoardLoader
@@ -34,6 +35,10 @@ public final class BoardLoader
 			return false;
 		}
 		catch (InvalidPosition e)
+		{
+			return false;
+		}
+		catch (DuplicatePieceException e)
 		{
 			return false;
 		}

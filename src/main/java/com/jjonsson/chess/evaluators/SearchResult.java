@@ -2,7 +2,7 @@ package com.jjonsson.chess.evaluators;
 
 import com.jjonsson.chess.moves.Move;
 
-class SearchResult
+public class SearchResult
 {
 	private volatile Move myBestMove = null;
 	private volatile long myBestMoveValue = Long.MIN_VALUE;

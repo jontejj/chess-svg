@@ -4,7 +4,9 @@ import static com.jjonsson.utilities.Logger.LOGGER;
 
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
@@ -16,7 +18,7 @@ import com.jjonsson.chess.moves.Move;
 import com.jjonsson.utilities.Logger;
 
 /**
- * TODO: clean up this code mess
+ * TODO: clean up this code mess (i.e make this into an "instanceiatable" class)
  * @author jonatanjoensson
  *
  */
@@ -42,6 +44,7 @@ public final class ChessMoveEvaluator
 	 */
 	public static Move getBestMove(ChessBoard board, StatusListener listener) throws NoMovesAvailableException
 	{
+		long startTime = System.nanoTime();
 		Move result = null;
 		deepestSearch = 0;
 		ChessBoard copyOfBoard;
@@ -74,6 +77,8 @@ public final class ChessMoveEvaluator
 			//Should not happen :)
 			throw new NoMovesAvailableException();
 		}
+		double duration = (double)(System.nanoTime() - startTime) / 1000000000;
+		LOGGER.warning("getBestMove took " + duration + " secs");
 		return result;
 	}
 	
@@ -152,6 +157,7 @@ public final class ChessMoveEvaluator
 		{
 			Collection<Move> moves = board.getAvailableMoves(board.getCurrentPlayer()).values();
 			ImmutableList<Move> sortedMoves = MoveOrdering.getInstance().immutableSortedCopy(moves);
+			//TODO: instead of doing DFS do BFS and sort the moves before diving (this will also fix concurrency problems)
 			
 			//The deeper we go, the less we branch, this assumes that a reasonable ordering of the moves has been made already
 			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.getDepth() * ChessBoard.BOARD_SIZE, 0) + 2;
@@ -166,6 +172,7 @@ public final class ChessMoveEvaluator
 				}
 				movesLeftToEvaluateOnThisBranch--;
 				MoveEvaluatingThread moveEvaluator = new MoveEvaluatingThread(board, move, limiter, result, movesLeftToEvaluateOnThisBranch, workersDoneSignal);
+				//TODO: use the ThreadTracker and abort when SearchInteruptedException happens
 				moveEvaluator.advancedRun();
 			}
 			try
@@ -192,7 +199,8 @@ public final class ChessMoveEvaluator
 	 * @param result
 	 * @param movesLeftToEvaluateOnThisBranch
 	 */
-	static void evaluateMove(Move move, ChessBoard board, SearchLimiter limiter, SearchResult result, long movesLeftToEvaluateOnThisBranch)
+	@VisibleForTesting
+	public static void evaluateMove(Move move, ChessBoard board, SearchLimiter limiter, SearchResult result, long movesLeftToEvaluateOnThisBranch)
 	{
 		boolean takeOverMove = move.isTakeOverMove();
 		long moveValue = performMoveWithMeasurements(move, board, limiter);
@@ -303,7 +311,8 @@ public final class ChessMoveEvaluator
 	 * @return the estimated value of the move performed 
 	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
-	private static long performMoveWithMeasurements(Move move, ChessBoard board, SearchLimiter limiter)
+	@VisibleForTesting
+	public static long performMoveWithMeasurements(Move move, ChessBoard board, SearchLimiter limiter)
 	{
 		//Save some measurements for the before state
 		int takeOverValue = move.getTakeOverValue();

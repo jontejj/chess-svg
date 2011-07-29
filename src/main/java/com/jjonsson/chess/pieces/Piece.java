@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.primitives.Shorts;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.InvalidPosition;
@@ -206,15 +207,15 @@ public abstract class Piece
 		return type;
 	}
 	
+	/**
+	 * @return a short containing one byte of position data and one byte of affinity and type data
+	 */
 	public short getPersistanceData()
 	{
 		//From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
 		byte positionData = (byte) (getCurrentPosition().getRow() << 4);
 		positionData |= getCurrentPosition().getColumn();
-		
-		short persistanceData = (short) (positionData << Byte.SIZE);
-		persistanceData |= getPersistanceIdentifier();
-		return persistanceData;
+		return Shorts.fromBytes(positionData, getPersistanceIdentifier());
 	}
 	/**
 	 * 
@@ -345,9 +346,10 @@ public abstract class Piece
 	 * @param sort true if the returned map should be ordered by the moves take over value
 	 * @param board 
 	 * @return the available moves for this piece on the supplied board and within it's bounds ordered by their take over value
+	 * Note: the returned list may be mutable because of performance issues
 	 */
 
-	public ImmutableList<Move> getAvailableMoves(boolean sort, ChessBoard board) 
+	public List<Move> getAvailableMoves(boolean sort, ChessBoard board) 
 	{
 		List<Move> availableMoves = Lists.newArrayList();
 		List<Move> possibleMoves = getPossibleMoves();
@@ -368,8 +370,7 @@ public abstract class Piece
 		{
 			return MoveOrdering.getInstance().immutableSortedCopy(availableMoves);
 		}
-		//TODO: this may be too expensive
-		return ImmutableList.copyOf(availableMoves);
+		return availableMoves;
 	}
 	
 	public List<Move> getMoves() 
@@ -589,10 +590,12 @@ public abstract class Piece
 			return currentPieceAtMyPosition.removeFromBoard(board);
 		}
 		
-		for(MoveListener listener : ImmutableSet.copyOf(myListeners))
+		for(MoveListener listener : myListeners)
 		{
 			listener.pieceRemoved(returnPiece);
 		}
+		myListeners.clear();
+		
 		return returnPiece;
 	}
 	

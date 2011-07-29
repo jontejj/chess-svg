@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,8 +20,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import com.google.common.primitives.Shorts;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.exceptions.DuplicatePieceException;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
@@ -197,6 +202,11 @@ public class ChessBoard implements Cloneable
 		{
 			newBoard = null;
 		}
+		catch (DuplicatePieceException e)
+		{
+			LOGGER.warning("Got a duplicate piece: " + e.getDuplicatePiece() + ", conflicted with: " + e.getExistingPiece());
+			newBoard = null;
+		}
 		return newBoard;
 	}
 	
@@ -284,7 +294,7 @@ public class ChessBoard implements Cloneable
 	 */
 	public boolean isMoveUnavailableDueToCheck(KingMove kingMove)
 	{
-		ImmutableSet<Move> movesBehindKing = getNonAvailableMoves(kingMove.getDestination(), !kingMove.getAffinity());
+		Collection<Move> movesBehindKing = getNonAvailableMoves(kingMove.getDestination(), !kingMove.getAffinity());
 		for(Move behindMove : movesBehindKing)
 		{
 			if(behindMove instanceof DependantMove)
@@ -700,7 +710,7 @@ public class ChessBoard implements Cloneable
 	}
 	
 
-	public Piece getKing(boolean affinity)
+	public King getKing(boolean affinity)
 	{
 		if(affinity == Piece.BLACK)
 		{
@@ -755,7 +765,7 @@ public class ChessBoard implements Cloneable
 	 * @param position the wanted position
 	 * @param affinity the affinity of the player that should be able to move into the position
 	 */
-	public ImmutableSet<Move> getAvailableMoves(Position position, boolean affinity)
+	public Collection<Move> getAvailableMoves(Position position, boolean affinity)
 	{
 		Collection<Move> moves = null;
 		if(affinity == WHITE)
@@ -766,9 +776,7 @@ public class ChessBoard implements Cloneable
 		{
 			moves = myBlackAvailableMoves.get(position);
 		}
-		
-		//TODO: this may be too expensive...
-		return ImmutableSet.copyOf(moves);	
+		return moves;	
 	}
 	
 	/**
@@ -799,11 +807,11 @@ public class ChessBoard implements Cloneable
 	}
 
 	/**
-	 * 
+	 * Note because of performance issues this returns a modifiable map that you really shouldn't modify :)
 	 * @param position
 	 * @param affinity
 	 */
-	public ImmutableSet<Move> getNonAvailableMoves(Position position, boolean affinity)
+	public Collection<Move> getNonAvailableMoves(Position position, boolean affinity)
 	{
 		Collection<Move> moves = null;
 		if(affinity == BLACK)
@@ -814,8 +822,7 @@ public class ChessBoard implements Cloneable
 		{
 			moves = myWhiteNonAvailableMoves.get(position);
 		}
-		//TODO: this may be too expensive...
-		return ImmutableSet.copyOf(moves);	
+		return moves;	
 	}
 	
 	/**
@@ -828,11 +835,11 @@ public class ChessBoard implements Cloneable
 	 */
 	public Move moveThreateningPosition(Position position, boolean affinity, Piece pieceThatWonders, boolean passThroughKing)
 	{
-		ImmutableSet<Move> moves = getAvailableMoves(position, affinity);
+		Collection<Move> moves = getAvailableMoves(position, affinity);
 		
 		//Pieces may be able to move into this position if a piece moves there so 
 		//we check all pieces that has a currently non possible move that leads to this position
-		ImmutableSet<Move> possibleTakeOverMoves = getNonAvailableMoves(position, affinity);
+		Collection<Move> possibleTakeOverMoves = getNonAvailableMoves(position, affinity);
 		
 		for(Move m : possibleTakeOverMoves)
 		{
@@ -873,11 +880,11 @@ public class ChessBoard implements Cloneable
 	public int getNumberOfMovesThreateningPosition(Position position, boolean affinity, Piece pieceThatWonders)
 	{
 		int numberOfMoves = 0;
-		ImmutableSet<Move> moves = getAvailableMoves(position, affinity);
+		Collection<Move> moves = getAvailableMoves(position, affinity);
 		
 		//Pieces may be able to move into this position if a piece moves there so 
 		//we check all pieces that has a currently non possible move that leads to this position
-		ImmutableSet<Move> possibleTakeOverMoves = getNonAvailableMoves(position, affinity);
+		Collection<Move> possibleTakeOverMoves = getNonAvailableMoves(position, affinity);
 		for(Move m : possibleTakeOverMoves)
 		{
 			//No threatening move
@@ -1030,37 +1037,44 @@ public class ChessBoard implements Cloneable
 		myBlackKing = null;
 	}
 
+	/**
+	 * First this writes the state of the game to the given stream and then 
+	 * it writes the position, affinity and type of each piece
+	 * @param stream the stream to write to
+	 * @throws IOException
+	 */
 	public void writePersistanceData(OutputStream stream) throws IOException
 	{
-		//Write the state of the game
 		stream.write(getGameStatePersistanceData());
-		List<Piece> pieces = getPieces();
-		//Write each piece to the file
-		for(Piece p : pieces)
+		for(Piece p : getPieces())
 		{
-			short persistanceForPiece = p.getPersistanceData();
-			stream.write(new byte[]{(byte)(persistanceForPiece >> Byte.SIZE), (byte)(persistanceForPiece & 0xFF)});
+			stream.write(Shorts.toByteArray(p.getPersistanceData()));
 		}
 	}
 	
-	public void readPersistanceData(InputStream stream) throws IOException, InvalidPosition
+	public void readPersistanceData(InputStream stream) throws IOException, InvalidPosition, DuplicatePieceException
 	{
 		//Read the state of the game
 		readGameStatePersistanceData(stream);
-		
 		//Read each piece from the file
-		byte[] piece = new byte[2];
+		byte[] pieceBytes = new byte[2];
 		int readBytes = 0;
 		while(readBytes != -1)
 		{
-			readBytes = stream.read(piece);
+			readBytes = stream.read(pieceBytes);
 			if(readBytes == 2)
 			{
-				Piece p = Piece.getPieceFromPersistanceData((short)(piece[0] << Byte.SIZE | piece[1]), this);
-				//Don't place a piece where one is already placed
-				if(p != null && this.getPiece(p.getCurrentPosition()) == null)
+				short persistanceData = Shorts.fromByteArray(pieceBytes);
+				Piece piece = Piece.getPieceFromPersistanceData(persistanceData, this);
+				if(piece != null)
 				{
-					addPiece(p, false, true);
+					Piece existingPiece = this.getPiece(piece.getCurrentPosition());
+					if(existingPiece != null && existingPiece.getPersistanceData() != persistanceData)
+					{
+						//Don't place a piece where one is already placed
+						throw new DuplicatePieceException(existingPiece, piece);
+					}
+					addPiece(piece, false, true);
 				}
 			}
 		}

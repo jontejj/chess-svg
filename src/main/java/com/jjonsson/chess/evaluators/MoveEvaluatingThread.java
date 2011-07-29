@@ -29,6 +29,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	 */
 	public MoveEvaluatingThread(ChessBoard board, Move moveToEvaluate, SearchLimiter limiter, SearchResult result, long movesLeftOnBranch, CountDownLatch workersDoneSignal)
 	{
+		super();
 		myBoard = board;
 		myLimiter = limiter;
 		myMoveToEvaluate = moveToEvaluate;
@@ -63,20 +64,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 		if(shouldContinueInNewThread && ResourceAllocator.claimThread())
 		{
 			//Only copy the board/limiter if we aren't running in the "main" thread
-			try
-			{
-				myBoard = myBoard.clone();
-				myLimiter = myLimiter.copy();
-				myMoveToEvaluate = myBoard.getMove(myMoveToEvaluate);
-			}
-			catch (CloneNotSupportedException e)
-			{
-				throw new UnsupportedOperationException("Cloning of chessboard not possible", e);
-			}
-			catch (UnavailableMoveException e)
-			{
-				throw new NullPointerException("Could not find " + myMoveToEvaluate + " on the cloned board");
-			}
+			makeThreadSafe();
 			threadsCreated++;
 			Thread t = new Thread(this);
 			t.setUncaughtExceptionHandler(this);
@@ -84,8 +72,31 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 		}
 		else
 		{
+			//TODO: this seems to fix a concurrency bug which it shouldn't have to (:
+			if(myLimiter.getCurrentDepth() == 1)
+			{
+				makeThreadSafe();
+			}
 			ChessMoveEvaluator.evaluateMove(myMoveToEvaluate, myBoard, myLimiter, myResult, myMovesLeftOnBranch);
 			mySignal.countDown();
+		}
+	}
+	
+	private void makeThreadSafe()
+	{
+		try
+		{
+			myBoard = myBoard.clone();
+			myLimiter = myLimiter.copy();
+			myMoveToEvaluate = myBoard.getMove(myMoveToEvaluate);
+		}
+		catch (CloneNotSupportedException e)
+		{
+			throw new UnsupportedOperationException("Cloning of chessboard not possible", e);
+		}
+		catch (UnavailableMoveException e)
+		{
+			throw new NullPointerException("Could not find " + myMoveToEvaluate + " on the cloned board");
 		}
 	}
 

@@ -1,6 +1,6 @@
 package com.jjonsson.chess.evaluators;
 
-class SearchLimiter
+public class SearchLimiter
 {
 	static final long MAX_DEPTH = 2;
 	static final long MAX_BRANCH_MOVES = 30;
@@ -20,7 +20,7 @@ class SearchLimiter
 	 */
 	private long myScoreFactor;
 	
-	SearchLimiter(int difficulty)
+	public SearchLimiter(int difficulty)
 	{
 		myMovesLeft = MAX_BRANCH_MOVES;
 		myDepth = MAX_DEPTH;

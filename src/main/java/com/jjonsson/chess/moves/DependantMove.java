@@ -105,6 +105,7 @@ public abstract class DependantMove extends Move
 	public void updateDestination(ChessBoard board)
 	{
 		//First update destination of moves that this move is dependent on
+		//TODO: is this really necessary?
 		updateDestinationUpwards(board);
 		//Update myself
 		updateDestinationInternal(board);

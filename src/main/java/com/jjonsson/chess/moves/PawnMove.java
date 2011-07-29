@@ -58,7 +58,7 @@ public abstract class PawnMove extends DependantMove
 	@Override
 	public int getTakeOverValue()
 	{
-		if(Pawn.isTimeForReplacement(getDestination(), getAffinity()))
+		if(Pawn.isTimeForReplacement(getDestination(), getAffinity()) && myCanBeMadeCache)
 		{
 			return Piece.QUEEN_VALUE - Piece.PAWN_VALUE;
 		}

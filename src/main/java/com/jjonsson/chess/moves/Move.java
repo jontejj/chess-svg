@@ -1,6 +1,9 @@
 package com.jjonsson.chess.moves;
 
-import com.google.common.collect.ImmutableSet;
+import static com.jjonsson.utilities.Logger.LOGGER;
+
+import java.util.Collection;
+
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
@@ -432,7 +435,7 @@ public abstract class Move
 	 */
 	public boolean isMoveUnavailableDueToCheckMate(ChessBoard board)
 	{
-		ImmutableSet<Move> kingThreateningMoves = board.getNonAvailableMoves(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity());
+		Collection<Move> kingThreateningMoves = board.getNonAvailableMoves(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity());
 		if(kingThreateningMoves.size() > 0)
 		{
 			for(Move threateningMove : kingThreateningMoves)
@@ -490,6 +493,12 @@ public abstract class Move
 		if(!canBeMade(board))
 		{
 			throw new UnavailableMoveException(this);
+		}
+		Piece currentPieceAtDestination = board.getPiece(myDestination);
+		if(currentPieceAtDestination != myPieceAtDestination)
+		{
+			LOGGER.warning("Move out of sync, Old piece at destination:" + myPieceAtDestination +
+					"Actual piece at destination:" + currentPieceAtDestination);
 		}
 		if(myPieceAtDestination != null)
 		{
