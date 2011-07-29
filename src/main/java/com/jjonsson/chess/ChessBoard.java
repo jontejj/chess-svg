@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,20 +75,25 @@ public class ChessBoard implements Cloneable
 	 * To each possible position there is a sorted map (sorted by the pieces value) of pieces 
 	 * 	and the move that would reach this position
 	 */
-	private Multimap<Position, Move> myBlackAvailableMoves;
+	private Map<Position, Set<Move>> myBlackAvailableMoves;
 	/**
 	 * A map that keeps track of every position reachable by a move by the white player
 	 * To each possible position there is a sorted map (sorted by the pieces value) of pieces 
 	 * 	and the move that would reach this position
 	 */
-	private Multimap<Position, Move> myWhiteAvailableMoves;
+	private Map<Position, Set<Move>> myWhiteAvailableMoves;
 	/**
 	 * A map that keeps track of every move by the black player that isn't available right now
 	 * To each possible position there is a sorted map (by the pieces value) of pieces 
 	 * 	and the move that would reach this position
 	 */
-	private Multimap<Position, Move> myBlackNonAvailableMoves;
-	private Multimap<Position, Move> myWhiteNonAvailableMoves;
+	private Map<Position, Set<Move>> myBlackNonAvailableMoves;
+	private Map<Position, Set<Move>> myWhiteNonAvailableMoves;
+	
+	private short myBlackAvailableMovesCount;
+	private short myBlackNonAvailableMovesCount;
+	private short myWhiteAvailableMovesCount;
+	private short myWhiteNonAvailableMovesCount;
 	
 	Map<Piece, Map<Position, Move>> myPieceToPositionAvailableMoves;
 	Map<Piece, Map<Position, Move>> myPieceToPositionNonAvailableMoves;
@@ -150,12 +156,7 @@ public class ChessBoard implements Cloneable
 		addChessBoardListener(myMoveLogger);
 		
 		myBlackPieces = Maps.newHashMap();
-		myBlackAvailableMoves = HashMultimap.create();
-		myBlackNonAvailableMoves = HashMultimap.create();
-		
 		myWhitePieces = Maps.newHashMap();
-		myWhiteAvailableMoves = HashMultimap.create();
-		myWhiteNonAvailableMoves = HashMultimap.create();
 		
 		myPieceToPositionAvailableMoves = Maps.newHashMap();
 		myPieceToPositionNonAvailableMoves = Maps.newHashMap();
@@ -164,6 +165,42 @@ public class ChessBoard implements Cloneable
 		{
 			this.reset();
 		}
+		else
+		{
+			createMoveMaps();
+		}
+	}
+	
+	private void createMoveMaps()
+	{
+		myWhiteAvailableMoves = createMoveMap();
+		myWhiteAvailableMovesCount = 0;
+		myWhiteNonAvailableMoves = createMoveMap();
+		myWhiteNonAvailableMovesCount = 0;
+		myBlackAvailableMoves = createMoveMap();
+		myBlackAvailableMovesCount = 0;
+		myBlackNonAvailableMoves = createMoveMap();
+		myBlackNonAvailableMovesCount = 0;
+	}
+	
+	private Map<Position, Set<Move>> createMoveMap()
+	{
+		Map<Position, Set<Move>> map = new HashMap<Position, Set<Move>>();
+		try
+		{
+			for(int r = 1; r <= BOARD_SIZE; r++)
+			{
+				for(int c = 1; c <= BOARD_SIZE; c++)
+				{
+					map.put(createPosition(r, c), new HashSet<Move>());
+				}
+			}
+		}
+		catch(InvalidPosition ip)
+		{
+			throw new UnsupportedOperationException("Wrong with board setup", ip);
+		}
+		return map;
 	}
 	
 	public void setDifficulty(int newDifficulty)
@@ -399,10 +436,7 @@ public class ChessBoard implements Cloneable
 			throw new NoMovesAvailableException();
 		}
 		
-		Multimap<Position, Move> availableMoves = getAvailableMoves(getCurrentPlayer());
-		
-		
-		List<Move> shuffledMoves = Lists.newArrayList(availableMoves.values());
+		List<Move> shuffledMoves = getMoves(getAvailableMoves(getCurrentPlayer()));
 		Collections.shuffle(shuffledMoves);
 		
 		try
@@ -618,16 +652,28 @@ public class ChessBoard implements Cloneable
 	
 	public void removeAvailableMove(Position pos, Piece piece, Move move)
 	{
-		Multimap<Position, Move> availableMoves = getAvailableMoves(piece.getAffinity());
-		availableMoves.remove(pos, move);
-		myPieceToPositionAvailableMoves.get(piece).remove(pos);
+		if(pos != null)
+		{
+			Map<Position, Set<Move>> availableMoves = getAvailableMoves(piece.getAffinity());
+			if(availableMoves.get(pos).remove(move))
+			{
+				decrementAvailableMoves(piece.getAffinity());
+			}
+			myPieceToPositionAvailableMoves.get(piece).remove(pos);
+		}
 	}
 
 	public void removeNonAvailableMove(Position pos, Piece piece, Move move)
 	{
-		Multimap<Position, Move> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
-		nonAvailableMoves.remove(pos, move);
-		myPieceToPositionNonAvailableMoves.get(piece).remove(pos);
+		if(pos != null)
+		{
+			Map<Position, Set<Move>> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
+			if(nonAvailableMoves.get(pos).remove(move))
+			{
+				decrementNonAvailableMoves(piece.getAffinity());
+			}
+			myPieceToPositionNonAvailableMoves.get(piece).remove(pos);
+		}
 	}
 	
 	public void addNonAvailableMove(Position pos, Piece piece, Move move)
@@ -635,8 +681,11 @@ public class ChessBoard implements Cloneable
 		//Out of bounds moves aren't handled here
 		if(pos != null)
 		{	
-			Multimap<Position, Move> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
-			nonAvailableMoves.put(pos, move);
+			Map<Position, Set<Move>> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
+			if(nonAvailableMoves.get(pos).add(move))
+			{
+				incrementNonAvailableMoves(piece.getAffinity());
+			}
 			myPieceToPositionNonAvailableMoves.get(piece).put(pos, move);
 			
 			//Check if the opposite king previously couldn't move into this position, if so then maybe he can now?
@@ -652,18 +701,72 @@ public class ChessBoard implements Cloneable
 		}
 	}
 	
+	private void incrementAvailableMoves(boolean affinity)
+	{
+		if(affinity == BLACK)
+		{
+			myBlackAvailableMovesCount++;
+		}
+		else
+		{
+			myWhiteAvailableMovesCount++;
+		}
+	}
+	
+	private void incrementNonAvailableMoves(boolean affinity)
+	{
+		if(affinity == BLACK)
+		{
+			myBlackNonAvailableMovesCount++;
+		}
+		else
+		{
+			myWhiteNonAvailableMovesCount++;
+		}
+	}
+	
+	private void decrementAvailableMoves(boolean affinity)
+	{
+		if(affinity == BLACK)
+		{
+			myBlackAvailableMovesCount--;
+		}
+		else
+		{
+			myWhiteAvailableMovesCount--;
+		}
+	}
+	
+	private void decrementNonAvailableMoves(boolean affinity)
+	{
+		if(affinity == BLACK)
+		{
+			myBlackNonAvailableMovesCount--;
+		}
+		else
+		{
+			myWhiteNonAvailableMovesCount--;
+		}
+	}
+	
 	public void addAvailableMove(Position pos, Piece piece, Move move)
 	{	
-		Multimap<Position, Move> availableMoves = getAvailableMoves(piece.getAffinity());
-		availableMoves.put(pos, move);
-		myPieceToPositionAvailableMoves.get(piece).put(pos, move);
-		
-		//Check if the opposite king previously could move into this position, if so remove that move because now he can't
-		King oppositeKing = getOppositeKing(piece.getAffinity());
-		Move kingMove = getAvailableMove(oppositeKing, pos);
-		if(kingMove != null)
+		if(pos != null)
 		{
-			kingMove.updateMove(this);
+			Map<Position, Set<Move>> availableMoves = getAvailableMoves(piece.getAffinity());
+			if(availableMoves.get(pos).add(move))
+			{
+				incrementAvailableMoves(piece.getAffinity());
+			}
+			myPieceToPositionAvailableMoves.get(piece).put(pos, move);
+			
+			//Check if the opposite king previously could move into this position, if so remove that move because now he can't
+			King oppositeKing = getOppositeKing(piece.getAffinity());
+			Move kingMove = getAvailableMove(oppositeKing, pos);
+			if(kingMove != null)
+			{
+				kingMove.updateMove(this);
+			}
 		}
 	}
 	
@@ -750,7 +853,7 @@ public class ChessBoard implements Cloneable
 	 * @param affinity the affinity of the player's moves that should be returned
 	 * @return the available moves for the given affinity
 	 */
-	public Multimap<Position, Move> getAvailableMoves(boolean affinity)
+	public Map<Position, Set<Move>> getAvailableMoves(boolean affinity)
 	{
 		if(affinity == WHITE)
 		{
@@ -758,6 +861,21 @@ public class ChessBoard implements Cloneable
 		}
 		
 		return myBlackAvailableMoves;	
+	}
+	
+	/**
+	 * Extracts all moves from the given map/set into a list
+	 * @param moveMap
+	 * @return
+	 */
+	public List<Move> getMoves(Map<Position, Set<Move>> moveMap)
+	{
+		List<Move> moves = Lists.newArrayList();
+		for(Set<Move> moveSet : moveMap.values())
+		{
+			moves.addAll(moveSet);
+		}
+		return moves;
 	}
 	
 	/**
@@ -776,6 +894,10 @@ public class ChessBoard implements Cloneable
 		{
 			moves = myBlackAvailableMoves.get(position);
 		}
+		if(moves == null)
+		{
+			moves = Collections.emptySet();
+		}
 		return moves;	
 	}
 	
@@ -791,9 +913,9 @@ public class ChessBoard implements Cloneable
 		return getAvailableMoves(position, affinity).iterator().next();	
 	}
 	
-	public Multimap<Position, Move> getNonAvailableMoves(boolean affinity)
+	public Map<Position, Set<Move>> getNonAvailableMoves(boolean affinity)
 	{
-		Multimap<Position, Move> moves = null;
+		Map<Position, Set<Move>> moves = null;
 		if(affinity == WHITE)
 		{
 			moves = myWhiteNonAvailableMoves;
@@ -821,6 +943,10 @@ public class ChessBoard implements Cloneable
 		else
 		{
 			moves = myWhiteNonAvailableMoves.get(position);
+		}
+		if(moves == null)
+		{
+			moves = Collections.emptySet();
 		}
 		return moves;	
 	}
@@ -993,7 +1119,7 @@ public class ChessBoard implements Cloneable
 	 * @param exclusionMap a map of moves that won't need an update
 	 * @return a map of the moves that was updated
 	 */
-	private ImmutableSet<Move> updatePossibiltyForMapOfMoves(Multimap<Position, Move> moves, Position pos, ImmutableSet<Move> exclusionMap)
+	private ImmutableSet<Move> updatePossibiltyForMapOfMoves(Map<Position, Set<Move>> moves, Position pos, ImmutableSet<Move> exclusionMap)
 	{
 		//As the move may be removed during this iteration will need a shallow copy of the move map
 		ImmutableSet<Move> copy = ImmutableSet.copyOf(moves.get(pos));
@@ -1026,12 +1152,10 @@ public class ChessBoard implements Cloneable
 	 */
 	public final void clear()
 	{
+		
 		myWhitePieces.clear();
-		myWhiteAvailableMoves.clear();
-		myWhiteNonAvailableMoves.clear();
 		myBlackPieces.clear();
-		myBlackAvailableMoves.clear();
-		myBlackNonAvailableMoves.clear();
+		createMoveMaps();
 		myMoveLogger.clear();
 		myWhiteKing = null;
 		myBlackKing = null;
@@ -1318,10 +1442,19 @@ public class ChessBoard implements Cloneable
 		
 		return myWhiteTakeOverPiecesCount;
 	}
+	
+	public short getAvailableMovesCount(boolean affinity)
+	{
+		if(affinity == BLACK)
+		{
+			return myBlackAvailableMovesCount;
+		}
+		return myWhiteAvailableMovesCount;
+	}
 
 	public long getMeasuredStatusForPlayer(boolean affinity)
 	{
-		int playerNrOfAvailableMoves = getAvailableMoves(affinity).size();
+		int playerNrOfAvailableMoves = getAvailableMovesCount(affinity);
 		//int playerNrOfNonAvailableMoves = getNonAvailableMoves(affinity).size();
 		long playerProtectiveMoves = getProtectedPiecesCount(affinity);
 		long playerTakeOverCount = getTakeOverPiecesCount(affinity);

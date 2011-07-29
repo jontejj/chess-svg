@@ -3,11 +3,14 @@ package com.jjonsson.chess.evaluators;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
@@ -155,7 +158,7 @@ public final class ChessMoveEvaluator
 		}
 		else
 		{
-			Collection<Move> moves = board.getAvailableMoves(board.getCurrentPlayer()).values();
+			Collection<Move> moves = board.getMoves(board.getAvailableMoves(board.getCurrentPlayer()));
 			ImmutableList<Move> sortedMoves = MoveOrdering.getInstance().immutableSortedCopy(moves);
 			//TODO: instead of doing DFS do BFS and sort the moves before diving (this will also fix concurrency problems)
 			

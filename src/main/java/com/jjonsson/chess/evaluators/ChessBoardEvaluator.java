@@ -118,7 +118,7 @@ public final class ChessBoardEvaluator
 			return ChessState.CHECK;
 		}
 		//Stalemate when the current player doesn't have any legal moves and the king is safe
-		if(board.getAvailableMoves(board.getCurrentPlayer()).size() == 0)
+		if(board.getAvailableMovesCount(board.getCurrentPlayer()) == 0)
 		{
 			return ChessState.STALEMATE;
 		}
