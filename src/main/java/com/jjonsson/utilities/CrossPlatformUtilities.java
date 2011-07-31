@@ -7,7 +7,7 @@ import javax.swing.KeyStroke;
 
 public final class CrossPlatformUtilities
 {
-	private static final int WINDOWS_TITLE_HEIGHT = 46;
+	private static final int WINDOWS_TITLE_HEIGHT = 58;
 	public static final int USUAL_TITLE_HEIGHT = 22;
 	
 	private static boolean isWindows;

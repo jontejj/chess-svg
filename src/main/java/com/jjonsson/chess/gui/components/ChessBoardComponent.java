@@ -574,13 +574,13 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			else
 			{
 				//just for fun
-				try
+				/*try
 				{
 					getBoard().performRandomMove();
 				}
 				catch (NoMovesAvailableException e)
 				{
-				}
+				}*/
 			}
 		}
 	}
