@@ -1,7 +1,7 @@
 package com.jjonsson.chess.gui.components;
 
 import static com.jjonsson.utilities.Logger.LOGGER;
-import static com.jjonsson.utilities.TimeConstants.ONE_SECOND_IN_NANOS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.awt.Color;
 import java.awt.Point;
@@ -154,7 +154,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 			}
 		}
 		long time = (System.nanoTime() - startNanos);
-		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(ONE_SECOND_IN_NANOS));
+		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(SECONDS.toNanos(1)));
 		LOGGER.finest("Seconds: " + bd.toPlainString());
 	}
 	@Override

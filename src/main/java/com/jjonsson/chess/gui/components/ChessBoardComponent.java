@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
@@ -34,12 +35,13 @@ import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
+import com.jjonsson.utilities.Logger;
 import com.jjonsson.utilities.ThreadTracker;
 
 import static com.jjonsson.utilities.Logger.LOGGER;
-import static com.jjonsson.utilities.TimeConstants.ONE_SECOND_IN_NANOS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class ChessBoardComponent extends JComponent implements MouseListener, ChessBoardListener
+public class ChessBoardComponent extends JComponent implements MouseListener, ChessBoardListener, UncaughtExceptionHandler
 {
 	private static final long	serialVersionUID	= -6866444162384406903L;
 
@@ -450,7 +452,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		positionClicked(selectedPosition);
 		
 		long time = (System.nanoTime() - startNanos);
-		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(ONE_SECOND_IN_NANOS));
+		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(SECONDS.toNanos(1)));
 		LOGGER.finest("Seconds: " + bd.toPlainString());
 	}
 	@Override
@@ -566,18 +568,19 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 					}
 				};
 				myTracker.addJob(t);
+				t.setUncaughtExceptionHandler(this);
 				t.start();
 			}
 			else
 			{
 				//just for fun
-				/*try
+				try
 				{
 					getBoard().performRandomMove();
 				}
 				catch (NoMovesAvailableException e)
 				{
-				}*/
+				}
 			}
 		}
 	}
@@ -618,5 +621,12 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	{
 		myPositionScores = positionScores;
 		repaint();
+	}
+
+	@Override
+	public void uncaughtException(Thread t, Throwable e)
+	{
+		LOGGER.warning("Uncaught exception received in 'main' thread: " + e + ", for thread: " + t);
+		LOGGER.info("Exception trace: " + Logger.stackTraceToString(e));
 	}
 }

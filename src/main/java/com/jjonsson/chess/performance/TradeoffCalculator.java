@@ -9,7 +9,6 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.evaluators.ProgressTracker;
 import com.jjonsson.chess.evaluators.SearchLimiter;
-import com.jjonsson.chess.evaluators.SearchResult;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.gui.StatusListener;
 import com.jjonsson.chess.moves.Move;
@@ -32,9 +31,9 @@ public class TradeoffCalculator
 		long i2 = Integer.MAX_VALUE;
 		for(int i = BENCHMARK_AMOUNT; i >0; i--)
 		{
-			//board.clone();
+			board.clone();
 			//for(int y = 0;y<10000;y++)
-				i2 /= 1.00001;
+			//	i2 /= 1.00001;
 		}
 		System.out.println(i2);
 		long nanosPerClone = (System.nanoTime() - startTime) / BENCHMARK_AMOUNT;

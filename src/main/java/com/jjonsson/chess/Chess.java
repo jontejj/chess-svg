@@ -1,9 +1,5 @@
 package com.jjonsson.chess;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
-
-import java.util.logging.Level;
-
 import com.jjonsson.chess.gui.ChessWindow;
 import com.jjonsson.chess.gui.WindowUtilities;
 

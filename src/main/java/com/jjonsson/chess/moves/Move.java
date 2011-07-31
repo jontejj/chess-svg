@@ -128,7 +128,7 @@ public abstract class Move
 		return myPiece;
 	}
 	
-	protected Piece getPieceAtDestination()
+	public Piece getPieceAtDestination()
 	{
 		return myPieceAtDestination;
 	}
@@ -493,12 +493,6 @@ public abstract class Move
 		if(!canBeMade(board))
 		{
 			throw new UnavailableMoveException(this);
-		}
-		Piece currentPieceAtDestination = board.getPiece(myDestination);
-		if(currentPieceAtDestination != myPieceAtDestination)
-		{
-			LOGGER.warning("Move out of sync, Old piece at destination:" + myPieceAtDestination +
-					"Actual piece at destination:" + currentPieceAtDestination);
 		}
 		if(myPieceAtDestination != null)
 		{

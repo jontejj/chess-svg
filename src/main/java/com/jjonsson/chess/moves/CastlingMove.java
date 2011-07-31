@@ -1,5 +1,7 @@
 package com.jjonsson.chess.moves;
 
+import static com.jjonsson.utilities.Logger.LOGGER;
+
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.King;
@@ -119,10 +121,16 @@ public class CastlingMove extends IndependantMove
 		
 		board.movePiece(getPiece(), myKingMove);
 		getCurrentPosition().applyMove(myKingMove);
-		
-		myRock.performMove(myRockMove, board, false);
-		
 		setMovesMade(getMovesMade()+1);
+		try
+		{
+			myRock.performMove(myRockMove, board, false);
+		}
+		catch(UnavailableMoveException e)
+		{
+			LOGGER.warning(e.toString() + ", during castling move");
+			board.undoMove(myKingMove, false);
+		}
 	}
 	
 	@Override

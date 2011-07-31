@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,15 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Shorts;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
@@ -140,6 +135,8 @@ public class ChessBoard implements Cloneable
 	 * The difficulty the user has chosen (Good values are 1-5) defaults to {@link ChessBoard.DEFAULT_DIFFICULTY}
 	 */
 	private int	myDifficulty;
+	
+	private Map<Position, Piece> myPieces;
 
 	/**
 	 * Constructs the chess board 
@@ -157,6 +154,7 @@ public class ChessBoard implements Cloneable
 		
 		myBlackPieces = Maps.newHashMap();
 		myWhitePieces = Maps.newHashMap();
+		myPieces = new HashMap<Position, Piece>(64);
 		
 		myPieceToPositionAvailableMoves = Maps.newHashMap();
 		myPieceToPositionNonAvailableMoves = Maps.newHashMap();
@@ -183,9 +181,14 @@ public class ChessBoard implements Cloneable
 		myBlackNonAvailableMovesCount = 0;
 	}
 	
+	/**
+	 * Expensive initially but having all the sets initialized during the move evaluations is worth it
+	 * @return
+	 */
 	private Map<Position, Set<Move>> createMoveMap()
 	{
-		Map<Position, Set<Move>> map = new HashMap<Position, Set<Move>>();
+		//Allocate enough capacity so that no resizing is needed
+		Map<Position, Set<Move>> map = new HashMap<Position, Set<Move>>(128);
 		try
 		{
 			for(int r = 1; r <= BOARD_SIZE; r++)
@@ -475,7 +478,10 @@ public class ChessBoard implements Cloneable
 				myWhiteKing = k;
 			}
 		}
-		getMapForAffinity(p.getAffinity()).put(p.getCurrentPosition(), p);
+		Position currentPosition = p.getCurrentPosition();
+		//TODO: what if this overwrites an existing piece?
+		myPieces.put(currentPosition, p);
+		getMapForAffinity(p.getAffinity()).put(currentPosition, p);
 		myPieceToPositionAvailableMoves.put(p, new HashMap<Position, Move>());
 		myPieceToPositionNonAvailableMoves.put(p, new HashMap<Position, Move>());
 		if(initializePossibleMoves)
@@ -609,7 +615,9 @@ public class ChessBoard implements Cloneable
 	
 	public void removePiece(Piece p)
 	{
-		getMapForAffinity(p.getAffinity()).remove(p.getCurrentPosition());
+		Position currentPosition = p.getCurrentPosition();
+		myPieces.remove(currentPosition);
+		getMapForAffinity(p.getAffinity()).remove(currentPosition);
 		myMoveLogger.pieceRemoved(p);
 	}
 	
@@ -1045,13 +1053,7 @@ public class ChessBoard implements Cloneable
 	 */
 	public Piece getPiece(Position atPosition)
 	{
-		Piece whitePiece = myWhitePieces.get(atPosition);
-		if(whitePiece != null)
-		{
-			return whitePiece;
-		}
-		
-		return myBlackPieces.get(atPosition);
+		return myPieces.get(atPosition);
 	}
 	
 	/**
@@ -1070,12 +1072,9 @@ public class ChessBoard implements Cloneable
 		throw new UnavailableMoveException(from);
 	}
 	
-	public List<Piece> getPieces()
+	public Collection<Piece> getPieces()
 	{
-		List<Piece> list = Lists.newArrayList();
-		list.addAll(myBlackPieces.values());
-		list.addAll(myWhitePieces.values());
-		return list;
+		return myPieces.values();
 	}
 	
 	/**
@@ -1087,10 +1086,31 @@ public class ChessBoard implements Cloneable
 		return myBlackPieces.size() + myWhitePieces.size();
 	}
 	
-	public void movePiece(Piece pieceToMove, Move moveToPerform)
+	public void movePiece(Piece pieceToMove, Move moveToPerform) throws UnavailableMoveException
 	{
 		Position newPosition = moveToPerform.getDestination();
 		Position oldPosition = pieceToMove.getCurrentPosition();
+		myPieces.remove(oldPosition);
+		Piece oldPiece = myPieces.put(newPosition, pieceToMove);
+		if(oldPiece != null)
+		{
+			LOGGER.warning("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
+					"Actual piece at destination:" + oldPiece);
+			//The move was out of sync, lets fix it 
+			//TODO: this wouldn't be needed if the moves were updated properly
+			moveToPerform.setPieceAtDestination(oldPiece);
+			if(moveToPerform.canBeTakeOverMove())
+			{
+				oldPiece.removeFromBoard(this);
+			}
+			else
+			{
+				//Restore state and throw
+				myPieces.put(newPosition, oldPiece);
+				myPieces.put(oldPosition, pieceToMove);
+				throw new UnavailableMoveException(moveToPerform);
+			}
+		}
 		Map<Position, Piece> map = getMapForAffinity(pieceToMove.getAffinity());
 		map.remove(oldPosition);
 		map.put(newPosition, pieceToMove);
@@ -1152,7 +1172,7 @@ public class ChessBoard implements Cloneable
 	 */
 	public final void clear()
 	{
-		
+		myPieces.clear();
 		myWhitePieces.clear();
 		myBlackPieces.clear();
 		createMoveMaps();

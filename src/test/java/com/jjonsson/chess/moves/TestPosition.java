@@ -2,14 +2,11 @@ package com.jjonsson.chess.moves;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
-import java.util.HashMap;
 import java.util.Set;
 
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;

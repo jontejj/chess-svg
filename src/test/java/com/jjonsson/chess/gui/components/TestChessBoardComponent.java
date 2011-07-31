@@ -1,6 +1,6 @@
 package com.jjonsson.chess.gui.components;
 
-import static com.jjonsson.utilities.TimeConstants.ONE_SECOND_IN_NANOS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -49,7 +49,7 @@ public class TestChessBoardComponent
 		long endNanos = System.nanoTime();
 		
 		benchmarkedPlaytime = (endNanos - startNanos) * BENCHMARKING_FACTOR;
-		benchmarkedPlaytimeInSeconds = benchmarkedPlaytime / ONE_SECOND_IN_NANOS;
+		benchmarkedPlaytimeInSeconds = benchmarkedPlaytime / SECONDS.toNanos(1);
 	}
 	
 	
@@ -102,7 +102,7 @@ public class TestChessBoardComponent
 				//Simulate that the white is a bad player that doesn't know what he's doing
 				board.performRandomMove();
 			}
-			long consumedSeconds = (System.nanoTime() - startNanos) / ONE_SECOND_IN_NANOS;
+			long consumedSeconds = (System.nanoTime() - startNanos) / SECONDS.toNanos(1);
 			window.setTitle("Expecting black to win within " + (benchmarkedPlaytimeInSeconds - consumedSeconds) + " secs");
 		}
 		//If the game ended in time the AI should win (i.e white (random) should lose)
