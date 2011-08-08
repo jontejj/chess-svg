@@ -395,6 +395,14 @@ public abstract class Move
 	}
 	
 	/**
+	 * Called when this move is the last one that was made on the board, i.e when a move has been reverted.
+	 */
+	public void onceAgainLastMoveThatWasMade(ChessBoard board)
+	{
+		
+	}
+	
+	/**
 	 * Returns the cached possibility of this move (Also checks if the move is unavailable due to a check
 	 * @return true if the move is allowed to do
 	 */

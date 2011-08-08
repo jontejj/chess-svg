@@ -38,6 +38,7 @@ import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.utilities.Logger;
 import com.jjonsson.utilities.ThreadTracker;
 
+import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.utilities.Logger.LOGGER;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -415,6 +416,10 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	 */
 	public void setSelectedPiece(Piece p)
 	{
+		//You shouldn't select the AI's players while he's thinking
+		if(!myAIdisabled && getBoard().getCurrentPlayer() == BLACK && p != null)
+			return;
+		
 		Piece oldPiece = myCurrentlySelectedPiece;
 		
 		myCurrentlySelectedPiece = p;

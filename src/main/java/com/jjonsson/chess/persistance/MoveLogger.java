@@ -11,6 +11,7 @@ import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
+import com.jjonsson.chess.moves.PawnTwoStepMove;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.Piece;
@@ -59,12 +60,17 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 			Piece removedPiece = myRemovalHistory.get(myMoveHistory.size() - 1);
 			lastMove.getRevertingMove().setPieceToPlaceAtOldPosition(removedPiece);
 		}
-		return myMoveHistory.peekFirst();
+		return lastMove;
 	}
 
 	@Override
 	public void movePerformed(Move performedMove)
 	{
+		Move lastMove = myMoveHistory.peekFirst();
+		if(lastMove instanceof PawnTwoStepMove)
+		{
+			((PawnTwoStepMove)lastMove).removeEnpassantMoves(performedMove.getPiece().getBoard());
+		}
 		if(!(performedMove instanceof RevertingMove))
 		{
 			addMove(performedMove);

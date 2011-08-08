@@ -15,7 +15,6 @@ public class PawnTakeOverMove extends PawnMove
 	@Override
 	public boolean canBeMadeInternal(ChessBoard board)
 	{
-		//TODO: check for en passant
 		if(getPieceAtDestination() == null || getPieceAtDestination().hasSameAffinityAs(getPiece()))
 		{
 			//The space is either free (this move requires a take over)

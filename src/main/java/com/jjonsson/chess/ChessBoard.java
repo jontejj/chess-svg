@@ -108,8 +108,6 @@ public class ChessBoard implements Cloneable
 	//Manages the possibility of automatic moves (used during move reverting)
 	private boolean myAllowsMoves;
 	
-	private ChessBoard myOriginatingBoard;
-	
 	/**
 	 * This is a counter that keeps track of how many black moves that protects black pieces 
 	 * Note: May be more than the number of black pieces due to pieces being protected by two different moves
@@ -145,7 +143,6 @@ public class ChessBoard implements Cloneable
 	public ChessBoard(boolean placeInitialPieces)
 	{
 		myDifficulty = DEFAULT_DIFFICULTY;
-		myOriginatingBoard = this;
 		myAllowsMoves = true;
 		myMovesThatStopsKingFromBeingChecked = ImmutableSet.of();
 		myBoardListeners = Sets.newHashSet();
@@ -211,11 +208,6 @@ public class ChessBoard implements Cloneable
 		myDifficulty = newDifficulty;
 	}
 	
-	private void setOriginatingBoard(ChessBoard board)
-	{
-		myOriginatingBoard = board;
-	}
-	
 	/**
 	 * Makes a copy of the board without copying the listeners
 	 * @return the new board or null if the copy failed
@@ -224,7 +216,6 @@ public class ChessBoard implements Cloneable
 	public ChessBoard clone() throws CloneNotSupportedException
 	{
 		ChessBoard newBoard = new ChessBoard(false);
-		newBoard.setOriginatingBoard(this);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
 		try
 		{
@@ -283,11 +274,6 @@ public class ChessBoard implements Cloneable
 				m.resetMoveCounter();
 			}
 		}
-	}
-
-	public ChessBoard getOriginatingBoard()
-	{
-		return myOriginatingBoard;
 	}
 	
 	/**
@@ -1320,6 +1306,11 @@ public class ChessBoard implements Cloneable
 				break;
 			}		
 		}
+		Move lastMove = myMoveLogger.getLastMove();
+		if(lastMove != null)
+		{
+			lastMove.onceAgainLastMoveThatWasMade(this);
+		}
 		myAllowsMoves = true;
 		
 		for(ChessBoardListener listener : myBoardListeners)
@@ -1359,6 +1350,11 @@ public class ChessBoard implements Cloneable
 		
 		if(wasUndone && !wasPartOfAnotherMove)
 		{
+			Move lastMove = myMoveLogger.getLastMove();
+			if(lastMove != null)
+			{
+				lastMove.onceAgainLastMoveThatWasMade(this);
+			}
 			for(ChessBoardListener listener : myBoardListeners)
 			{
 				listener.undoDone();
