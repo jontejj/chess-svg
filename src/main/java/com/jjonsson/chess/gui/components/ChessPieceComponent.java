@@ -15,7 +15,6 @@ import org.w3c.dom.svg.SVGDocument;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.PieceImageCache;
-import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
@@ -28,8 +27,8 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	private Piece myPieceToDraw;
 
 	private ChessBoardComponent	myBoardComponent;
-	
-	public ChessPieceComponent(Piece pieceToDraw, ChessBoardComponent boardComponent)
+
+	public ChessPieceComponent(final Piece pieceToDraw, final ChessBoardComponent boardComponent)
 	{
 		super();
 		myBoardComponent = boardComponent;
@@ -38,26 +37,26 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		addSVGLoadEventDispatcherListener(this);
 		addGVTTreeBuilderListener(this);
 		addGVTTreeRendererListener(this);*/
-		
+
 		SVGDocument doc = PieceImageCache.getSVGForPiece(myPieceToDraw);
 		if(doc != null)
 		{
 			updateSize();
 			//Makes sure that the image is displayed without a background
-			setBackgroundColor(); 
-			
+			setBackgroundColor();
+
 			setSVGDocument(doc);
 			addMouseListener(this);
 			myPieceToDraw.addMoveListener(this);
 		}
 	}
-	
+
 	public Piece getPiece()
 	{
 		return myPieceToDraw;
 	}
-	
-	private Point getPointForPiece(Piece piece)
+
+	private Point getPointForPiece(final Piece piece)
 	{
 		Position currentPosition = piece.getCurrentPosition();
 		return new Point(currentPosition.getColumn() * myBoardComponent.getCurrentPieceSize().width + myBoardComponent.getPieceBorderSize() + myBoardComponent.getPieceMargin(), (ChessBoard.BOARD_SIZE - currentPosition.getRow() - 1) * myBoardComponent.getCurrentPieceSize().height + myBoardComponent.getPieceBorderSize() + myBoardComponent.getPieceMargin());
@@ -73,7 +72,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		setSize(myBoardComponent.getCurrentPieceSize().width - myBoardComponent.getPieceBorderSize() * 2 - myBoardComponent.getPieceMargin() * 2, myBoardComponent.getCurrentPieceSize().height - myBoardComponent.getPieceBorderSize() * 2 - myBoardComponent.getPieceMargin() * 2);
 		setLocation(getPointForPiece(myPieceToDraw));
 	}
-	
+
 	private void setBackgroundColor()
 	{
 		//setBackground(null);
@@ -83,37 +82,37 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		}
 		else
 		{
-			setBackground(Color.darkGray); 
+			setBackground(Color.darkGray);
 		}
 	}
 
 	@Override
-	public void movePerformed(Move performedMove)
-	{	
+	public void movePerformed(final Move performedMove)
+	{
 		setBackgroundColor();
 		setLocation(getPointForPiece(myPieceToDraw));
 		repaint();
 	}
 
 	@Override
-	public final void pieceRemoved(Piece removedPiece)
+	public final void pieceRemoved(final Piece removedPiece)
 	{
 		if(removedPiece == myPieceToDraw)
-		{	
+		{
 			this.dispose();
-			
+
 			if(this.getParent() != null)
 			{
 				this.getParent().remove(this);
 			}
-			
+
 			myBoardComponent = null;
 			myPieceToDraw = null;
 		}
 	}
 
 	@Override
-	public void mouseClicked(MouseEvent e)
+	public void mouseClicked(final MouseEvent e)
 	{
 		long startNanos = System.nanoTime();
 		/*System.out.println(myBoardComponent.getBoard().getAvailableMoves(myPieceToDraw.getCurrentPosition(), !myPieceToDraw.getAffinity()));
@@ -144,25 +143,24 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 				}
 			}
 		}
-		if(this.getPiece().hasSameAffinityAs(boardComponent.getBoard().getCurrentPlayer()))
+
+		if(this.getPiece().hasSameAffinityAs(boardComponent.getBoard().getCurrentPlayer())
+				&& this.getPiece().canMakeAMove(boardComponent.getBoard()))
 		{
 			//If no takeover was done it means that this piece should be the selected one (given that it's this players turn)
-			if(this.getPiece().canMakeAMove(boardComponent.getBoard()))
-			{
-				//Only select pieces that can make a move
-				boardComponent.setSelectedPiece(this.getPiece());
-			}
+			//Only select pieces that can make a move
+			boardComponent.setSelectedPiece(this.getPiece());
 		}
 		long time = (System.nanoTime() - startNanos);
 		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(SECONDS.toNanos(1)));
 		LOGGER.finest("Seconds: " + bd.toPlainString());
 	}
 	@Override
-	public void mousePressed(MouseEvent e){}
+	public void mousePressed(final MouseEvent e){}
 	@Override
-	public void mouseReleased(MouseEvent e){}
+	public void mouseReleased(final MouseEvent e){}
 	@Override
-	public void mouseEntered(MouseEvent e){}
+	public void mouseEntered(final MouseEvent e){}
 	@Override
-	public void mouseExited(MouseEvent e){}
+	public void mouseExited(final MouseEvent e){}
 }

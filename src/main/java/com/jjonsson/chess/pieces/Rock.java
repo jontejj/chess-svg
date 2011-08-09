@@ -1,14 +1,19 @@
 package com.jjonsson.chess.pieces;
 
-import com.jjonsson.chess.ChessBoard;
 import static com.jjonsson.chess.ChessBoard.MOVES_IN_ONE_DIRECTION;
-import static com.jjonsson.chess.moves.Move.*;
+import static com.jjonsson.chess.moves.Move.DOWN;
+import static com.jjonsson.chess.moves.Move.LEFT;
+import static com.jjonsson.chess.moves.Move.NO_CHANGE;
+import static com.jjonsson.chess.moves.Move.RIGHT;
+import static com.jjonsson.chess.moves.Move.UP;
+
+import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.Position;
 
 public class Rock extends Piece
 {
 
-	public Rock(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
+	public Rock(final Position startingPosition, final boolean affinity, final ChessBoard boardPieceIsToBePlacedOn)
 	{
 		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
@@ -38,7 +43,9 @@ public class Rock extends Piece
 	protected byte getPersistanceIdentifierType()
 	{
 		if(getMovesMade() > 0)
+		{
 			return Piece.MOVED_ROCK;
+		}
 		return Piece.ROCK;
 	}
 }

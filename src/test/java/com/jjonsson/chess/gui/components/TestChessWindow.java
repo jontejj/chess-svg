@@ -68,7 +68,7 @@ public class TestChessWindow
 	 * @throws InterruptedException 
 	 */
 	@Test
-	public void testUndoMove() throws InvalidPosition, InterruptedException
+	public void testUndoMove() throws InvalidPosition
 	{
 		ChessBoard board = new ChessBoard(true);
 		ChessWindow window = new ChessWindow(board);
@@ -126,7 +126,7 @@ public class TestChessWindow
 	
 	
 	@Test
-	public void testRevertOfPawnReplacementMove() throws InvalidPosition, InterruptedException
+	public void testRevertOfPawnReplacementMove() throws InvalidPosition
 	{
 		ChessBoard board = TestScenarios.loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");
 		ChessWindow window = new ChessWindow(board);
@@ -162,7 +162,7 @@ public class TestChessWindow
 	}
 	
 	@Test
-	public void testNewGame() throws InvalidPosition, InterruptedException
+	public void testNewGame() throws InvalidPosition
 	{
 		ChessBoard board = new ChessBoard(true);
 		ChessWindow window = new ChessWindow(board);

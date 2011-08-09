@@ -26,27 +26,27 @@ import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
  *
  */
 public abstract class Piece
-{	
+{
 	//Used to figure out the take over value of a move
 	public static final int ROCK_VALUE = 500;
 	public static final int KNIGHT_VALUE = 300;
 	public static final int BISHOP_VALUE = 320;
 	public static final int PAWN_VALUE = 100;
 	public static final int QUEEN_VALUE = 900;
-	
+
 	//This is handled by the ChessState's the king can't be taken over and therefore it shouldn't have a value
 	public static final int KING_VALUE = 30;
-	
+
 	/**
 	 * Defines how important is to have many take over alternatives (based on empirical tests)
 	 */
 	protected static final double TAKE_OVER_ACCUMULATOR_IMPORTANCE_FACTOR = 0.6;
-	
+
 	/**
 	 * Defines how important it is to protect your own pieces
 	 */
 	protected static final double PROTECTIVE_MOVE_ACCUMULATOR_IMPORTANCE_FACTOR = 0.01;
-	
+
 	//Used to save/load a piece
 	protected static final byte BISHOP = 0;
 	protected static final byte PAWN = 1;
@@ -56,75 +56,75 @@ public abstract class Piece
 	protected static final byte ROCK = 5;
 	protected static final byte MOVED_KING = 6;
 	protected static final byte MOVED_ROCK = 7;
-	
+
 	//The affinity (color) of a piece
 	public static final boolean WHITE = false;
 	public static final boolean BLACK = true;
-	
+
 	public static final boolean NO_SORT = false;
 	public static final boolean SORT = true;
-	
+
 	private Position myCurrentPosition;
 	private boolean myAffinity;
-	
+
 	private Set<MoveListener> myListeners;
-	
+
 	/**
-	 * List of "in theory" possible moves that this piece can make 
+	 * List of "in theory" possible moves that this piece can make
 	 */
 	private List<Move> myPossibleMoves;
-	
+
 	private Move[][] myMoves;
-	
+
 	private Set<Piece> myPiecesThatTakesMyPieceOver;
 	private Piece myCheapestPieceThatTakesMeOver;
-	
+
 	private boolean myIsRemoved;
-	
+
 	/**
 	 * True if a pawn has been exchanged for this piece
 	 */
 	private boolean myIsPawnReplacementPiece;
-	
+
 	/**
 	 * The board that this piece is placed on
 	 */
 	private ChessBoard myBoard;
-	
+
 	private long myMovesMade;
-	
-	
+
+
 	/**
 	 * 
 	 * @param startingPosition where this piece should be placed
 	 * @param affinity true if this piece belongs to the black player false otherwise
 	 */
-	public Piece(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
+	public Piece(final Position startingPosition, final boolean affinity, final ChessBoard boardPieceIsToBePlacedOn)
 	{
 		myMoves = createMoveTable();
 		myListeners = Sets.newHashSet();
 		myPossibleMoves = Lists.newArrayList();
-		
+
 		myPiecesThatTakesMyPieceOver = Sets.newHashSet();
-		
+
 		myCurrentPosition = startingPosition;
 		myAffinity = affinity;
 		myBoard = boardPieceIsToBePlacedOn;
 		addPossibleMoves();
 	}
-	
+
 	@VisibleForTesting
 	public int getFirstDimensionMaxIndex()
 	{
 		return ChessBoard.BOARD_SIZE - 1;
 	}
-	
+
 	@VisibleForTesting
 	public int getSecondDimensionMaxIndex()
 	{
 		return ChessBoard.BOARD_SIZE - 1;
 	}
-	
+
 	@VisibleForTesting
 	public final Move[][] createMoveTable()
 	{
@@ -135,13 +135,13 @@ public abstract class Piece
 		}
 		return moves;
 	}
-	
+
 	public ChessBoard getBoard()
 	{
 		return myBoard;
 	}
-	
-	public void addPieceThatTakesMeOver(Piece p)
+
+	public void addPieceThatTakesMeOver(final Piece p)
 	{
 		if(myPiecesThatTakesMyPieceOver.add(p))
 		{
@@ -149,15 +149,15 @@ public abstract class Piece
 			myCheapestPieceThatTakesMeOver = new PieceValueOrdering().min(myPiecesThatTakesMyPieceOver);
 		}
 	}
-	
-	public void removePieceThatTakesMeOver(Piece p)
+
+	public void removePieceThatTakesMeOver(final Piece p)
 	{
 		if(myPiecesThatTakesMyPieceOver.remove(p))
 		{
 			if(myPiecesThatTakesMyPieceOver.size() > 0)
 			{
 				//The piece was removed, we need to recalculate the cheapest piece that takes myPiece over
-				myCheapestPieceThatTakesMeOver = new PieceValueOrdering().min(myPiecesThatTakesMyPieceOver);	
+				myCheapestPieceThatTakesMeOver = new PieceValueOrdering().min(myPiecesThatTakesMyPieceOver);
 			}
 			else
 			{
@@ -165,35 +165,36 @@ public abstract class Piece
 			}
 		}
 	}
-	
+
 	public Piece getCheapestPieceThatTakesMeOver()
 	{
 		return myCheapestPieceThatTakesMeOver;
 	}
-	
+
+	@Override
 	public String toString()
 	{
 		return getIdentifier() + " at: " + getCurrentPosition();
 	}
-	
+
 	public String getIdentifier()
 	{
 		return (isBlack() ? "Black_" : "White_") + getPieceName();
 	}
-	
+
 	public String getDisplayName()
 	{
 		return (isBlack() ? "Black " : "White ") + getPieceName();
 	}
-	
+
 	public abstract String getPieceName();
-	
+
 	/**
 	 * 
 	 * @return a PersistanceIdentifier identifying the type of this piece
 	 */
 	protected abstract byte getPersistanceIdentifierType();
-	
+
 	private byte getPersistanceIdentifier()
 	{
 		byte type = getPersistanceIdentifierType();
@@ -204,7 +205,7 @@ public abstract class Piece
 		}
 		return type;
 	}
-	
+
 	/**
 	 * @return a short containing one byte of position data and one byte of affinity and type data
 	 */
@@ -223,15 +224,15 @@ public abstract class Piece
 	 * @return a newly constructed piece
 	 * @throws InvalidPosition
 	 */
-	public static Piece getPieceFromPersistanceData(short persistanceData, ChessBoard board) throws InvalidPosition
+	public static Piece getPieceFromPersistanceData(final short persistanceData, final ChessBoard board) throws InvalidPosition
 	{
 		Piece piece = null;
 		//From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
 		byte row = (byte) (persistanceData >> 12);
 		byte column = (byte) (persistanceData >> Byte.SIZE & 0xF);
-		
+
 		Position position = Position.createPosition(row + 1, column + 1);
-		
+
 		boolean affinity = ((persistanceData & 0x0008) == 0x0008);
 		int type = persistanceData & 0x0007;
 
@@ -271,87 +272,87 @@ public abstract class Piece
 				}
 				break;
 		}
-		
+
 		return piece;
 	}
-	
+
 	/**
 	 * Adds a possible move to this piece
-	 * @param moveToAdd the move to add to 
+	 * @param moveToAdd the move to add to
 	 */
-	protected void addPossibleMove(Move moveToAdd)
+	protected void addPossibleMove(final Move moveToAdd)
 	{
 		myPossibleMoves.add(moveToAdd);
 	}
-	
-	public void addMoveListener(MoveListener listener)
+
+	public void addMoveListener(final MoveListener listener)
 	{
 		myListeners.add(listener);
 	}
-	
-	public void removeMoveListener(MoveListener listener)
+
+	public void removeMoveListener(final MoveListener listener)
 	{
 		myListeners.remove(listener);
 	}
-	
+
 	/**
 	 * Utility function that adds a chain of moves that this piece can do
-	 * @param rowChange the increment(positive)/decrement(negative) for each step 
-	 * @param columnChange the increment(right)/decrement(left) for each step 
+	 * @param rowChange the increment(positive)/decrement(negative) for each step
+	 * @param columnChange the increment(right)/decrement(left) for each step
 	 * @param movesToGenerate number of moves to generate
 	 */
-	protected void addMoveChain(int rowChange, int columnChange, byte movesToGenerate)
+	protected void addMoveChain(final int rowChange, final int columnChange, final byte movesToGenerate)
 	{
 		ChainMove lastMove = null;
 		ChainMove newMove = null;
 		for(int i = 1; i <= movesToGenerate; i++)
 		{
 			newMove = new ChainMove(rowChange * i, columnChange * i, this, null, lastMove);
-			
+
 			//This makes sure the move list is double linked
 			if(lastMove != null)
 			{
 				lastMove.setMoveThatDependsOnMe(newMove);
 			}
-			
+
 			//Only add the link to the first move in the chain to the possible moves as this move will keep track of it's followers
 			if(lastMove == null)
 			{
 				addPossibleMove(newMove);
 			}
-			
+
 			lastMove = newMove;
 		}
 	}
-	
+
 	/**
-	 * Add the theoretically possible moves for this piece to the internal move list for this piece 
+	 * Add the theoretically possible moves for this piece to the internal move list for this piece
 	 * (Automatically called from the constructor)
 	 */
 	public abstract void addPossibleMoves();
-	
+
 	/**
-	 * @return a list of "in theory" possible moves that this piece can make 
+	 * @return a list of "in theory" possible moves that this piece can make
 	 */
 	public List<Move> getPossibleMoves()
 	{
 		return myPossibleMoves;
 	}
-	
+
 	/**
 	 * Returns the cached evaluation of all the possible moves for this piece and excludes the ones that aren't possible at the moment
 	 * Override this method if you want to optimize it for a specific piece
 	 * @param sort true if the returned map should be ordered by the moves take over value
-	 * @param board 
+	 * @param board
 	 * @return the available moves for this piece on the supplied board and within it's bounds ordered by their take over value
 	 * Note: the returned list may be mutable because of performance issues
 	 */
 
-	public List<Move> getAvailableMoves(boolean sort, ChessBoard board) 
+	public List<Move> getAvailableMoves(final boolean sort, final ChessBoard board)
 	{
 		List<Move> availableMoves = Lists.newArrayList();
 		List<Move> possibleMoves = getPossibleMoves();
-		
+
 		for(Move m : possibleMoves)
 		{
 			if(m.canBeMade(board))
@@ -363,19 +364,19 @@ public abstract class Piece
 				availableMoves.addAll(((DependantMove)m).getPossibleMovesThatIsDependantOnMe(board));
 			}
 		}
-		
+
 		if(sort)
 		{
 			return MoveOrdering.getInstance().immutableSortedCopy(availableMoves);
 		}
 		return availableMoves;
 	}
-	
-	public List<Move> getMoves() 
+
+	public List<Move> getMoves()
 	{
 		List<Move> moves = Lists.newArrayList();
 		List<Move> possibleMoves = getPossibleMoves();
-		
+
 		for(Move m : possibleMoves)
 		{
 			moves.add(m);
@@ -386,8 +387,8 @@ public abstract class Piece
 		}
 		return moves;
 	}
-	
-	public boolean canMakeAMove(ChessBoard board)
+
+	public boolean canMakeAMove(final ChessBoard board)
 	{
 		return getAvailableMoves(NO_SORT, board).size() > 0;
 	}
@@ -396,11 +397,11 @@ public abstract class Piece
 	 * @param from
 	 * @return a move that this piece can do that matches the given move or null if no such move exists
 	 */
-	public Move getMove(Move from)
+	public Move getMove(final Move from)
 	{
 		return myMoves[from.getFirstDimensionIndex()][from.getSecondDimensionIndex()];
 	}
-	
+
 	/**
 	 * 
 	 * @return where this Piece is currently located
@@ -409,27 +410,27 @@ public abstract class Piece
 	{
 		return myCurrentPosition;
 	}
-	
+
 	/**
 	 * @return the value for this piece
 	 */
 	public abstract int getValue();
-	
+
 	public int getTakeOverImportanceValue()
 	{
 		return (int) (getValue() * TAKE_OVER_ACCUMULATOR_IMPORTANCE_FACTOR);
 	}
-	
+
 	public int getProtectImportanceValue()
 	{
 		return (int) (getValue() * PROTECTIVE_MOVE_ACCUMULATOR_IMPORTANCE_FACTOR);
 	}
-	
+
 	public long getAccumulatedTakeOverImportanceValue()
 	{
 		return myPiecesThatTakesMyPieceOver.size() * getTakeOverImportanceValue();
 	}
-	
+
 	/**
 	 * 
 	 * @return how many moves this piece has made
@@ -438,7 +439,7 @@ public abstract class Piece
 	{
 		return myMovesMade;
 	}
-	
+
 	/**
 	 * 
 	 * @return true if this piece is black, false if it's white
@@ -447,34 +448,34 @@ public abstract class Piece
 	{
 		return myAffinity;
 	}
-	
+
 	/**
 	 * Moves this Piece with the supplied move.
 	 * @param move the move to apply to this piece
 	 * @throws UnavailableMoveException  if this move isn't available right now
 	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
-	public void performMove(Move move, ChessBoard board) throws UnavailableMoveException
+	public void performMove(final Move move, final ChessBoard board) throws UnavailableMoveException
 	{
 		performMove(move, board, true);
 	}
-	
+
 	/**
 	 * Moves this Piece with the supplied move.
 	 * @param move the move to apply to this piece
 	 * @param printOut true if there should be print outs about the move to the standard out stream
-	 * @throws UnavailableMoveException  if this move isn't available right now 
+	 * @throws UnavailableMoveException  if this move isn't available right now
 	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
-	public void performMove(Move move, ChessBoard board, boolean printOut) throws UnavailableMoveException
-	{			
+	public void performMove(final Move move, final ChessBoard board, final boolean printOut) throws UnavailableMoveException
+	{
 		if(printOut)
 		{
 			LOGGER.finest("Performing: " + move);
 		}
-		
+
 		move.makeMove(board);
-		
+
 		if(move instanceof RevertingMove)
 		{
 			myMovesMade--;
@@ -483,17 +484,14 @@ public abstract class Piece
 		{
 			myMovesMade++;
 		}
-		
-		for(Move m : getPossibleMoves())
-		{
-			m.updateMove(board);
-		}
-		
+
+		updateMoves(board);
+
 		//Update old position
 		board.updatePossibilityOfMovesForPosition(move.getOldPosition());
 		//Update new position
 		board.updatePossibilityOfMovesForPosition(getCurrentPosition());
-		
+
 		for(MoveListener m : myListeners)
 		{
 			m.movePerformed(move);
@@ -503,7 +501,7 @@ public abstract class Piece
 			board.nextPlayer();
 		}
 	}
-	
+
 	/**
 	 * This can be used when loading a saved game in order to remember the possibility of castling moves
 	 */
@@ -511,13 +509,13 @@ public abstract class Piece
 	{
 		myMovesMade++;
 	}
-	
+
 	/**
 	 * TODO(jontejj): convert this into equals together with a good hashCode
 	 * @param p
 	 * @return if the given piece has the same location, affinity and type
 	 */
-	public boolean same(Piece p)
+	public boolean same(final Piece p)
 	{
 		if(p == null)
 		{
@@ -535,16 +533,16 @@ public abstract class Piece
 		{
 			return false;
 		}
-		
+
 		return true;
 	}
-	
-	public boolean hasSameAffinityAs(Piece thePieceToCompareWith) 
+
+	public boolean hasSameAffinityAs(final Piece thePieceToCompareWith)
 	{
 		return myAffinity == thePieceToCompareWith.getAffinity();
 	}
-	
-	public boolean hasSameAffinityAs(boolean otherAffinity) 
+
+	public boolean hasSameAffinityAs(final boolean otherAffinity)
 	{
 		return myAffinity == otherAffinity;
 	}
@@ -552,15 +550,31 @@ public abstract class Piece
 	 * Should be called when all the pieces have been placed on the board
 	 * @param chessBoard
 	 */
-	public void initilizePossibilityOfMoves(ChessBoard chessBoard)
+	public void initilizePossibilityOfMoves(final ChessBoard chessBoard)
 	{
+		updateMoves(chessBoard);
+	}
+
+	/**
+	 * Updates the moves that this piece can make
+	 * @param board
+	 */
+	private void updateMoves(final ChessBoard board)
+	{
+		//This removes the old possibilities
 		for(Move m : myPossibleMoves)
 		{
-			m.updateMove(chessBoard);
+			m.updateDestination(board);
+		}
+		//This adds the new ones
+		for(Move m : myPossibleMoves)
+		{
+			m.updatePossibility(board);
+			m.syncCountersWithBoard(board);
 		}
 	}
 
-	private void removeMovesFromBoard(ChessBoard chessBoard)
+	private void removeMovesFromBoard(final ChessBoard chessBoard)
 	{
 		for(Move m : myPossibleMoves)
 		{
@@ -568,45 +582,45 @@ public abstract class Piece
 			m.syncCountersWithBoard(chessBoard);
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param board
 	 * @return the removed piece
 	 */
-	public Piece removeFromBoard(ChessBoard board)
-	{	
+	public Piece removeFromBoard(final ChessBoard board)
+	{
 		Piece returnPiece = this;
 		board.removePiece(this);
 		this.removeMovesFromBoard(board);
 		myIsRemoved = true;
-	
+
 		Piece currentPieceAtMyPosition = board.getPiece(getCurrentPosition());
 		//This could happen if the previous piece was taken and there is a new piece that could be taken
 		if(currentPieceAtMyPosition != null && currentPieceAtMyPosition != this)
 		{
 			return currentPieceAtMyPosition.removeFromBoard(board);
 		}
-		
+
 		for(MoveListener listener : myListeners)
 		{
 			listener.pieceRemoved(returnPiece);
 		}
 		myListeners.clear();
-		
+
 		return returnPiece;
 	}
-	
+
 	public boolean isRemoved()
 	{
 		return myIsRemoved;
 	}
-	
+
 	public boolean isPawnReplacementPiece()
 	{
 		return myIsPawnReplacementPiece;
 	}
-	
+
 	public void setIsPawnReplacementPiece()
 	{
 		myIsPawnReplacementPiece = true;
@@ -616,7 +630,7 @@ public abstract class Piece
 	{
 		return myAffinity == WHITE;
 	}
-	
+
 	public boolean isBlack()
 	{
 		return myAffinity == BLACK;
@@ -625,7 +639,7 @@ public abstract class Piece
 	/**
 	 * Called when a move that this piece previously made has been reverted
 	 */
-	public void revertedAMove(ChessBoard board, Position oldPosition)
+	public void revertedAMove(final ChessBoard board, final Position oldPosition)
 	{
 	}
 
@@ -643,12 +657,12 @@ public abstract class Piece
 			myIsRemoved = false;
 		}
 	}
-	
+
 	/**
 	 * Use this if the given move wants to be returned by getMove(rowChange, columnChange)
 	 * @param move
 	 */
-	public void addToMoveTable(Move move)
+	public void addToMoveTable(final Move move)
 	{
 		if(move.shouldBeIncludedInMoveTable())
 		{

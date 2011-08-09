@@ -1,5 +1,18 @@
 package com.jjonsson.chess.gui;
 
+import static com.jjonsson.utilities.CrossPlatformUtilities.USUAL_TITLE_HEIGHT;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getExitKeyStroke;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getLoadKeyStroke;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getNewKeyStroke;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getSaveAsKeyStroke;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getSaveKeyStroke;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getShowHintKeyStroke;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getTitleHeightForCurrentPlatform;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getUndoKeyStroke;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getUndoTwiceKeyStroke;
+import static com.jjonsson.utilities.CrossPlatformUtilities.isMac;
+import static com.jjonsson.utilities.Logger.LOGGER;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -28,23 +41,20 @@ import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.chess.persistance.ChessFileFilter;
 import com.jjonsson.utilities.ThreadTracker;
 
-import static com.jjonsson.utilities.CrossPlatformUtilities.*;
-import static com.jjonsson.utilities.Logger.LOGGER;
-
 public class ChessWindow extends JFrame implements ActionListener, StatusListener
-{	
+{
 	public static final String VERSION = "0.2";
 	public static final String NAME = "Chess";
 	public static final String APP_TITLE = NAME + " " + VERSION;
-	
+
 	private static final long	serialVersionUID	= 1L;
-	
+
 	public static final int DEFAULT_WINDOW_WIDTH = 700;
 	public static final int DEFAULT_WINDOW_HEIGHT = 700;
-	
+
 	private static final int STATUS_BAR_HEIGHT = 20;
 	private static final int WINDOW_BORDER_SIZE = 3;
-	
+
 	@VisibleForTesting
 	public static final String NEW_MENU_ITEM = "New";
 	private static final String LOAD_MENU_ITEM = "Load";
@@ -64,67 +74,67 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	public static final String	SHOW_AVAILABLE_CLICKS_MENU_ITEM	= "Show Available Clicks";
 
 	private static final String	HIDE_AVAILABLE_CLICKS_MENU_ITEM	= "Hide Available Clicks";
-	
+
 	private String lastFileChooserLocation;
-	
+
 	private ChessBoard myBoard;
 	private ChessBoardComponent myComponent;
-	
+
 	private String myCurrentBoardFile;
-	
+
 	private JLabel myStatusBar;
-	
+
 	/**
 	 * Tells us the status of the game, who's turn it is, the last move that was made
 	 */
 	private String myGameStatus;
-	
+
 	/**
 	 * The current text within the parentheses in the status bar, loading/saving result, reverting moves result
 	 */
 	private String myInteractionResultText;
-	
+
 	private ThreadTracker myTracker;
-	
-	public ChessWindow(ChessBoard board)
+
+	public ChessWindow(final ChessBoard board)
 	{
 		super(NAME);
 		myBoard = board;
 		myTracker = new ThreadTracker();
-		
-	    this.setBackground(Color.DARK_GRAY);
-	    createMenuBar();
 
-	    this.setSize(ChessWindow.DEFAULT_WINDOW_WIDTH + WINDOW_BORDER_SIZE, ChessWindow.DEFAULT_WINDOW_HEIGHT + WINDOW_BORDER_SIZE + getJMenuBar().getHeight() + STATUS_BAR_HEIGHT);
-	    myComponent = new ChessBoardComponent(myBoard, getBoardComponentSize());
-	    myComponent.setStatusListener(this);
-	    this.setContentPane(myComponent);
-	    
-	    this.addWindowListener(new WindowListener());
-	    this.addComponentListener(new ComponentAdapter(this));
-	    
-	    createStatusBar();
+		this.setBackground(Color.DARK_GRAY);
+		createMenuBar();
+
+		this.setSize(ChessWindow.DEFAULT_WINDOW_WIDTH + WINDOW_BORDER_SIZE, ChessWindow.DEFAULT_WINDOW_HEIGHT + WINDOW_BORDER_SIZE + getJMenuBar().getHeight() + STATUS_BAR_HEIGHT);
+		myComponent = new ChessBoardComponent(myBoard, getBoardComponentSize());
+		myComponent.setStatusListener(this);
+		this.setContentPane(myComponent);
+
+		this.addWindowListener(new WindowListener());
+		this.addComponentListener(new ComponentAdapter(this));
+
+		createStatusBar();
 	}
-	
+
 	@VisibleForTesting
 	public ChessBoardComponent getBoardComponent()
 	{
 		return myComponent;
 	}
-	
+
 	public final Dimension getBoardComponentSize()
 	{
 		return new Dimension(getSize().width + WINDOW_BORDER_SIZE, getSize().height - getJMenuBar().getHeight() - STATUS_BAR_HEIGHT - USUAL_TITLE_HEIGHT);
 	}
-	
-	private void createStatusBar() 
+
+	private void createStatusBar()
 	{
 		myStatusBar = new JLabel();
 		resizeStatusBar();
 		updateStatusBar();
 		myStatusBar.setOpaque(true);
 		myStatusBar.setBackground(Color.white);
-	    add(myStatusBar, java.awt.BorderLayout.SOUTH);
+		add(myStatusBar, java.awt.BorderLayout.SOUTH);
 	}
 
 	private void resizeStatusBar()
@@ -139,13 +149,14 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		myGameStatus = getBoard().getStatusString();
 		myStatusBar.setText(myGameStatus);
 	}
-	
-	public void setTitle(String info)
+
+	@Override
+	public void setTitle(final String info)
 	{
 		super.setTitle(NAME + " - " + info);
 	}
-	
-	
+
+
 	public ChessBoard getBoard()
 	{
 		return myBoard;
@@ -156,7 +167,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		this.setVisible(true);
 		myComponent.repaint();
 	}
-	
+
 	public void resizeWindow()
 	{
 		resizeStatusBar();
@@ -164,126 +175,140 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	}
 	private void createMenuBar()
 	{
-	    JMenuBar menuBar = new JMenuBar();
-	    setJMenuBar(menuBar);
-	    
-	    JMenu fileMenu = new JMenu("File");
-	    
-	    JMenuItem newAction = new JMenuItem(NEW_MENU_ITEM);
-	    newAction.setAccelerator(getNewKeyStroke());
-	    newAction.addActionListener(this);
-	    fileMenu.add(newAction);
-	    
-	    JMenuItem loadAction = new JMenuItem(LOAD_MENU_ITEM);
-	    loadAction.setAccelerator(getLoadKeyStroke());
-	    loadAction.addActionListener(this);
-	    fileMenu.add(loadAction);
-	    
-	    JMenuItem saveAction = new JMenuItem(SAVE_MENU_ITEM);
-	    saveAction.setAccelerator(getSaveKeyStroke());
-	    saveAction.addActionListener(this);
-	    fileMenu.add(saveAction);
-	    
-	    JMenuItem saveAsAction = new JMenuItem(SAVE_AS_MENU_ITEM);
-	    saveAsAction.setAccelerator(getSaveAsKeyStroke());
-	    saveAsAction.addActionListener(this);
-	    fileMenu.add(saveAsAction);
-	    
-	    //Mac's already have a default menu with an exit action
-	    if(!isMac())
-	    {
-		    fileMenu.addSeparator();
-		    
-		    JMenuItem exitAction = new JMenuItem(EXIT_MENU_ITEM);
-		    exitAction.setAccelerator(getExitKeyStroke());
-		    exitAction.addActionListener(this);
-		    fileMenu.add(exitAction);
-	    }
-	    
-	    JMenu actionsMenu = new JMenu("Actions");
-	    
-	    JMenuItem undoBlack = new JMenuItem(UNDO_BLACK_MENU_ITEM);
-	    undoBlack.setAccelerator(getUndoKeyStroke());
-	    undoBlack.addActionListener(this);
-	    actionsMenu.add(undoBlack);
-	    
-	    JMenuItem undoWhite = new JMenuItem(UNDO_WHITE_MENU_ITEM);
-	    undoWhite.setAccelerator(getUndoTwiceKeyStroke());
-	    undoWhite.addActionListener(this);
-	    actionsMenu.add(undoWhite);
-	    
-	    fileMenu.addSeparator();
-	    
-	    JMenuItem showHint = new JMenuItem(SHOW_HINT_MENU_ITEM);
-	    showHint.setAccelerator(getShowHintKeyStroke());
-	    showHint.addActionListener(this);
-	    actionsMenu.add(showHint);
-	    
-	    JMenu settingsMenu = new JMenu("Settings");
-	    
-	    JMenuItem showAvailableClicks = null;
-	    if(Settings.DEBUG)
-	    {
-		    showAvailableClicks = new JMenuItem(HIDE_AVAILABLE_CLICKS_MENU_ITEM);
-	    }
-	    else 
-	    {
-	    	showAvailableClicks = new JMenuItem(SHOW_AVAILABLE_CLICKS_MENU_ITEM);
-	    }
-	    
+		JMenuBar menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+		menuBar.add(createFileMenu());
+		menuBar.add(createActionsMenu());
+		menuBar.add(createSettingsMenu());
+	}
+
+	private JMenu createFileMenu()
+	{
+		JMenu fileMenu = new JMenu("File");
+
+		JMenuItem newAction = new JMenuItem(NEW_MENU_ITEM);
+		newAction.setAccelerator(getNewKeyStroke());
+		newAction.addActionListener(this);
+		fileMenu.add(newAction);
+
+		JMenuItem loadAction = new JMenuItem(LOAD_MENU_ITEM);
+		loadAction.setAccelerator(getLoadKeyStroke());
+		loadAction.addActionListener(this);
+		fileMenu.add(loadAction);
+
+		JMenuItem saveAction = new JMenuItem(SAVE_MENU_ITEM);
+		saveAction.setAccelerator(getSaveKeyStroke());
+		saveAction.addActionListener(this);
+		fileMenu.add(saveAction);
+
+		JMenuItem saveAsAction = new JMenuItem(SAVE_AS_MENU_ITEM);
+		saveAsAction.setAccelerator(getSaveAsKeyStroke());
+		saveAsAction.addActionListener(this);
+		fileMenu.add(saveAsAction);
+
+		//Mac's already have a default menu with an exit action
+		if(!isMac())
+		{
+			fileMenu.addSeparator();
+
+			JMenuItem exitAction = new JMenuItem(EXIT_MENU_ITEM);
+			exitAction.setAccelerator(getExitKeyStroke());
+			exitAction.addActionListener(this);
+			fileMenu.add(exitAction);
+		}
+		fileMenu.addSeparator();
+
+		return fileMenu;
+	}
+
+	private JMenu createActionsMenu()
+	{
+		JMenu actionsMenu = new JMenu("Actions");
+
+		JMenuItem undoBlack = new JMenuItem(UNDO_BLACK_MENU_ITEM);
+		undoBlack.setAccelerator(getUndoKeyStroke());
+		undoBlack.addActionListener(this);
+		actionsMenu.add(undoBlack);
+
+		JMenuItem undoWhite = new JMenuItem(UNDO_WHITE_MENU_ITEM);
+		undoWhite.setAccelerator(getUndoTwiceKeyStroke());
+		undoWhite.addActionListener(this);
+		actionsMenu.add(undoWhite);
+
+		JMenuItem showHint = new JMenuItem(SHOW_HINT_MENU_ITEM);
+		showHint.setAccelerator(getShowHintKeyStroke());
+		showHint.addActionListener(this);
+		actionsMenu.add(showHint);
+
+		return actionsMenu;
+	}
+
+	private JMenu createSettingsMenu()
+	{
+		JMenu settingsMenu = new JMenu("Settings");
+
+		JMenuItem showAvailableClicks = null;
+		if(Settings.DEBUG)
+		{
+			showAvailableClicks = new JMenuItem(HIDE_AVAILABLE_CLICKS_MENU_ITEM);
+		}
+		else
+		{
+			showAvailableClicks = new JMenuItem(SHOW_AVAILABLE_CLICKS_MENU_ITEM);
+		}
+
 		showAvailableClicks.addActionListener(this);
 		settingsMenu.add(showAvailableClicks);
-		
-	    JMenuItem disableAI = new JMenuItem(DISABLE_AI_MENU_ITEM);
-	    disableAI.addActionListener(this);
-	    settingsMenu.add(disableAI);
-	    
-	    //TODO: make it possible to change difficulty
-	    
-	    
-	    menuBar.add(fileMenu);
-	    menuBar.add(actionsMenu);
-	    menuBar.add(settingsMenu);
+
+		JMenuItem disableAI = new JMenuItem(DISABLE_AI_MENU_ITEM);
+		disableAI.addActionListener(this);
+		settingsMenu.add(disableAI);
+
+		//TODO: make it possible to change difficulty
+
+		return settingsMenu;
 	}
-	
-	private void save(boolean forceDialog)
+
+	private void save(final boolean forceDialog)
 	{
 		if(myCurrentBoardFile == null || forceDialog)
 		{
 			selectFile("Save Chess File");
 		}
-		
+
 		if(BoardLoader.saveBoard(getBoard(), myCurrentBoardFile))
 		{
 			setResultOfInteraction("Saved successfully");
 		}
 		else
 		{
-			setResultOfInteraction("Save failed");		
+			setResultOfInteraction("Save failed");
 		}
 	}
-	
+
 	private void newGame()
 	{
 		myComponent.clear();
 		myBoard.reset();
 	}
-	
+
 	/**
 	 * Sets the text within the parentheses of the status bar
 	 * @param msg
 	 */
-	public void setResultOfInteraction(String msg)
+	@Override
+	public void setResultOfInteraction(final String msg)
 	{
 		myInteractionResultText = msg;
 		myStatusBar.setText(myGameStatus + " (" + msg + ")");
 	}
-	
-	public void setProgressInformation(String msg)
+
+	@Override
+	public void setProgressInformation(final String msg)
 	{
 		myStatusBar.setText(myGameStatus + " (" + myInteractionResultText + ") (" + msg + ")");
 	}
-	
+
 	private void load()
 	{
 		File selectedFile = selectFile("Load Chess File");
@@ -296,26 +321,26 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 
 			while(!loadOk && myCurrentBoardFile != null)
 			{
-				try 
+				try
 				{
 					loadOk = BoardLoader.loadStreamIntoBoard(new FileInputStream(selectedFile), getBoard());
-				} 
-				catch (FileNotFoundException e) 
+				}
+				catch (FileNotFoundException e)
 				{
 				}
-				
+
 				if(loadOk)
 				{
 					break;
 				}
-				
+
 				myStatusBar.setText(myGameStatus + " (Invalid board file format, Select new file to load)");
-				
+
 				selectedFile = selectFile("Load Chess File");
-				
+
 			}
 			myComponent.loadingOfBoardDone();
-			
+
 			if(loadOk)
 			{
 				setResultOfInteraction("Load Ok");
@@ -327,8 +352,8 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 			}
 		}
 	}
-	
-	private void undo(int nrOfMoves) 
+
+	private void undo(final int nrOfMoves)
 	{
 		int undoneMoves = getBoard().undoMoves(nrOfMoves);
 		updateStatusBar();
@@ -342,25 +367,25 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		}
 		myComponent.repaint();
 	}
-	
+
 	/**
 	 * Re-translates an exit action into a real window event
 	 */
 	private void exit()
 	{
-		
+
 		WindowEvent we = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
 		for(java.awt.event.WindowListener wl : this.getWindowListeners())
 		{
 			wl.windowClosing(we);
 		}
 	}
-	
-	private void switchAI(boolean enable)
+
+	private void switchAI(final boolean enable)
 	{
 		myComponent.setAIEnabled(enable);
 	}
-	
+
 	private static Map<String, Boolean> noAbortionNecessaryCommands = Maps.newHashMap();
 	static
 	{
@@ -369,7 +394,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e)
+	public void actionPerformed(final ActionEvent e)
 	{
 		LOGGER.finest(e.getActionCommand());
 		if(!noAbortionNecessaryCommands.containsKey(e.getActionCommand()))
@@ -378,7 +403,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 			myComponent.interruptCurrentJobs();
 			myTracker.interruptCurrentJobs();
 		}
-		
+
 		if(e.getActionCommand().equals(NEW_MENU_ITEM))
 		{
 			newGame();
@@ -394,11 +419,11 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		else if(e.getActionCommand().equals(LOAD_MENU_ITEM))
 		{
 			load();
-		}	
+		}
 		else if(e.getActionCommand().equals(UNDO_BLACK_MENU_ITEM))
 		{
 			undo(1);
-		}	
+		}
 		else if(e.getActionCommand().equals(UNDO_WHITE_MENU_ITEM))
 		{
 			undo(2);
@@ -447,10 +472,10 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		};
 		myTracker.addJob(t);
 		t.start();
-		
+
 	}
 
-	private File selectFile(String buttonText)
+	private File selectFile(final String buttonText)
 	{
 		myCurrentBoardFile = null;
 		JFileChooser jfc = new JFileChooser(getFileChooserPath());
@@ -468,13 +493,13 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 			{
 				myCurrentBoardFile = selectedFile.getAbsolutePath();
 			}
-			
+
 			saveFileChooserPath(selectedFile.getParent());
 			setTitle(selectedFile.getName());
 		}
 		return selectedFile;
 	}
-	
+
 	private String getFileChooserPath()
 	{
 		if(lastFileChooserLocation == null)
@@ -489,8 +514,8 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		}
 		return lastFileChooserLocation;
 	}
-	
-	private void saveFileChooserPath(String path)
+
+	private void saveFileChooserPath(final String path)
 	{
 		if(path != null)
 		{

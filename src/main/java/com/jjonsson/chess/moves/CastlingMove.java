@@ -9,26 +9,26 @@ import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Rock;
 
 public class CastlingMove extends IndependantMove
-{	
+{
 	/**
 	 * The rock that this castling move also moves
 	 */
 	private Piece myRock;
-	
+
 	private CastlingMovePart myKingMove;
 	private CastlingMovePart myRockMove;
 	/**
 	 * The position that the king needs to traverse over in a QueenSideCastling
 	 */
 	private Position myQueenSideCastlingKingStepPosition;
-	
+
 	/**
 	 * 
 	 * @param rowChange
 	 * @param columnChange
 	 * @param pieceThatTheMoveWillBeMadeWith the king for the player that want's to do the move
 	 */
-	public CastlingMove(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith)
+	public CastlingMove(final int rowChange, final int columnChange, final Piece pieceThatTheMoveWillBeMadeWith)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
 		myKingMove = new KingCastlingMovePart(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
@@ -37,23 +37,23 @@ public class CastlingMove extends IndependantMove
 			myQueenSideCastlingKingStepPosition = new Position(getCurrentPosition().getRow(), (byte) (getCurrentPosition().getColumn() - 3));
 		}
 	}
-	
+
 	private boolean isQueenSideCastlingMove()
 	{
 		return getColumnChange() < 0;
 	}
-	
+
 	/**
 	 * This also sanity checks the input so that's a{@link Rock}
 	 * @param aRock The rock that this castling move also moves
 	 */
-	public void setRock(Piece aRock)
+	public void setRock(final Piece aRock)
 	{
 		if(aRock == null)
 		{
 			return;
 		}
-		
+
 		if(aRock instanceof Rock)
 		{
 			myRock = aRock;
@@ -67,9 +67,9 @@ public class CastlingMove extends IndependantMove
 			}
 		}
 	}
-	
+
 	@Override
-	public void updateMove(ChessBoard board)
+	public void updateMove(final ChessBoard board)
 	{
 		myKingMove.updateMove(board);
 		if(myRockMove != null)
@@ -80,7 +80,29 @@ public class CastlingMove extends IndependantMove
 	}
 
 	@Override
-	protected boolean canBeMadeInternal(ChessBoard board)
+	public void updateDestination(final ChessBoard board)
+	{
+		myKingMove.updateDestination(board);
+		if(myRockMove != null)
+		{
+			myRockMove.updateDestination(board);
+		}
+		super.updateDestination(board);
+	}
+
+	@Override
+	public void updatePossibility(final ChessBoard board)
+	{
+		myKingMove.updatePossibility(board);
+		if(myRockMove != null)
+		{
+			myRockMove.updatePossibility(board);
+		}
+		super.updatePossibility(board);
+	}
+
+	@Override
+	protected boolean canBeMadeInternal(final ChessBoard board)
 	{
 		if(myRock == null)
 		{
@@ -91,34 +113,34 @@ public class CastlingMove extends IndependantMove
 		{
 			return false;
 		}
-		
+
 		if(!myKingMove.canBeMadeInternal(board))
 		{
 			return false;
 		}
-		
+
 		if(!myRockMove.canBeMadeInternal(board))
 		{
 			return false;
 		}
-		
+
 		if(isQueenSideCastlingMove() && board.getPiece(myQueenSideCastlingKingStepPosition) != null)
 		{
 			//For Queen Side castling moves there should be a free square over as there are three squares between the Rock and the King
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	@Override
-	public void makeMove(ChessBoard board) throws UnavailableMoveException
+	public void makeMove(final ChessBoard board) throws UnavailableMoveException
 	{
 		if(!canBeMade(board))
 		{
 			throw new UnavailableMoveException(this);
 		}
-		
+
 		board.movePiece(getPiece(), myKingMove);
 		getCurrentPosition().applyMove(myKingMove);
 		setMovesMade(getMovesMade()+1);
@@ -132,34 +154,34 @@ public class CastlingMove extends IndependantMove
 			board.undoMove(myKingMove, false);
 		}
 	}
-	
+
 	@Override
 	public boolean isTakeOverMove()
 	{
 		return false;
 	}
-	
+
 	@Override
 	public int getTakeOverValue()
 	{
 		return 0;
 	}
-	
+
 	/**
 	 * Overridden to not accumulate takeover/protecting values as this move can't either protect nor take over a piece
 	 */
-	@Override 
-	public void syncCountersWithBoard(ChessBoard board)
+	@Override
+	public void syncCountersWithBoard(final ChessBoard board)
 	{
-		
+
 	}
-	
+
 	@Override
 	public boolean canBeTakeOverMove()
 	{
 		return false;
 	}
-	
+
 	/**
 	 * Overridden to trigger a chain of moves that reverts both the Rock's move and the King's move
 	 */
@@ -168,13 +190,13 @@ public class CastlingMove extends IndependantMove
 	{
 		return myRockMove.getRevertingMove();
 	}
-	
+
 	@Override
 	protected int getFirstDimensionIndexInternal()
 	{
 		return 0;
 	}
-	
+
 	/**
 	 * Part of the King's moves
 	 */

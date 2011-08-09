@@ -90,7 +90,7 @@ public class RevertingMove extends IndependantMove {
 		Position curPos = getCurrentPosition();
 		try
 		{
-			//TODO(jontejj): this could be cached
+			//This is not cached because it's not used that often
 			return Position.createPosition(curPos.getRow() + getRowChange() + 1, curPos.getColumn() + getColumnChange() + 1);
 		}
 		catch (InvalidPosition e)

@@ -1,7 +1,5 @@
 package com.jjonsson.chess.moves;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
-
 import java.util.Collection;
 
 import com.jjonsson.chess.ChessBoard;
@@ -15,7 +13,7 @@ public abstract class Move
 	public static final int LEFT = -1;
 	public static final int RIGHT = 1;
 	public static final int	NO_CHANGE = 0;
-	
+
 	/**
 	 * A positive change means that the piece is moving upwards the board
 	 */
@@ -32,11 +30,11 @@ public abstract class Move
 	 * The piece that would be defeated if this move was performed
 	 */
 	private Piece myPieceAtDestination;
-	
+
 	private Piece myOldPieceAtDestination;
-	
+
 	/**
-	 * The cached position of this move's destination 
+	 * The cached position of this move's destination
 	 */
 	private Position myDestination;
 
@@ -44,30 +42,30 @@ public abstract class Move
 	 * Cached decision of whether or not this move can be made
 	 */
 	protected boolean myCanBeMadeCache;
-	
+
 	/**
 	 * True if the syncCountersWithBoard function changed the counters on the board
 	 */
 	private boolean myChangedCountersDuringLastSync;
-	
+
 	protected RevertingMove myRevertingMove;
-	
+
 	private boolean myIsRemoved;
-	
+
 	/**
 	 * Holds the number of moves made with this move
 	 */
 	private long myMovesMade;
-	
+
 	private int myFirstDimensionIndex;
 	private int mySecondDimensionIndex;
-	
+
 	/**
 	 * 
 	 * @param rowChange the row change for this move, valid numbers are (-7) to (+7)
 	 * @param columnChange the column change for this move, valid numbers are (-7) to (+7)
 	 */
-	public Move(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith)
+	public Move(final int rowChange, final int columnChange, final Piece pieceThatTheMoveWillBeMadeWith)
 	{
 		myRowChange = (byte)rowChange;
 		myColumnChange = (byte)columnChange;
@@ -77,12 +75,12 @@ public abstract class Move
 		mySecondDimensionIndex = getSecondDimensionIndexInternal();
 		pieceThatTheMoveWillBeMadeWith.addToMoveTable(this);
 	}
-	
+
 	protected void setRevertingMove()
 	{
 		myRevertingMove = new RevertingMove(this);
 	}
-	
+
 	/**
 	 * 
 	 * @return a move that will revert this move
@@ -91,27 +89,27 @@ public abstract class Move
 	{
 		return myRevertingMove;
 	}
-	
+
 	/**
 	 * 
 	 * @param p the piece that is at the destination of this move
 	 */
-	public void setPieceAtDestination(Piece p)
+	public void setPieceAtDestination(final Piece p)
 	{
 		myPieceAtDestination = p;
 	}
-	
+
 	protected boolean canBeMadeDefault()
 	{
 		if(this.getDestination() == null)
 		{
 			//The move was out of bounds
-			return false; 
+			return false;
 		}
-		
+
 		return canBeMadeEnding();
 	}
-	
+
 	protected boolean canBeMadeEnding()
 	{
 		if(getPieceAtDestination() != null && getPieceAtDestination().hasSameAffinityAs(myPiece))
@@ -122,17 +120,17 @@ public abstract class Move
 		//The space is either free or a take over is available
 		return true;
 	}
-	
+
 	public Piece getPiece()
 	{
 		return myPiece;
 	}
-	
+
 	public Piece getPieceAtDestination()
 	{
 		return myPieceAtDestination;
 	}
-	
+
 	/**
 	 * Override this for moves depending on other pieces not standing in the way
 	 * @param ignoreIfPositionIsBlocked this position should not be considered when checking for blocking pieces (i.e simulating a pass-through piece)
@@ -140,7 +138,7 @@ public abstract class Move
 	 * @return true if this move isn't possible to do because of piece standing in the way
 	 */
 	public abstract boolean isPieceBlockingMe(Position ignoreIfPositionIsBlocked, Position ignoreIfPositionIsBlocked2);
-	
+
 	/**
 	 * 
 	 * @return true if this move would take over one of the opponents pieces
@@ -151,10 +149,10 @@ public abstract class Move
 		{
 			return !myPiece.hasSameAffinityAs(myPieceAtDestination);
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * 
 	 * @return true if this move can take over another piece when it's standing at this move's destination
@@ -163,16 +161,16 @@ public abstract class Move
 	{
 		return true;
 	}
-	
+
 	/**
 	 * 
 	 * @param newMovesMadeCount the new value for how many times this move has been made
 	 */
-	public void setMovesMade(long newMovesMadeCount)
+	public void setMovesMade(final long newMovesMadeCount)
 	{
 		myMovesMade = newMovesMadeCount;
 	}
-	
+
 	/**
 	 * 
 	 * @return how many times this move has been made
@@ -181,16 +179,16 @@ public abstract class Move
 	{
 		return myMovesMade;
 	}
-	
+
 	/**
 	 * Copies the move counter from the given move
 	 * @param moveToCopyFrom
 	 */
-	public void copyMoveCounter(Move moveToCopyFrom)
+	public void copyMoveCounter(final Move moveToCopyFrom)
 	{
 		myMovesMade = moveToCopyFrom.getMovesMade();
 	}
-	
+
 	/**
 	 * Could be called periodically to reset the repetitiveness protection
 	 */
@@ -198,7 +196,7 @@ public abstract class Move
 	{
 		myMovesMade = 0;
 	}
-	
+
 	/**
 	 * 
 	 * @return the affinity of the piece making this move
@@ -207,7 +205,7 @@ public abstract class Move
 	{
 		return getPiece().getAffinity();
 	}
-	
+
 	/**
 	 * 
 	 * @return the current position of the piece that this move belongs to
@@ -216,7 +214,7 @@ public abstract class Move
 	{
 		return getPiece().getCurrentPosition();
 	}
-	
+
 	/**
 	 * 
 	 * @return the value of the piece at this move's destination
@@ -229,7 +227,7 @@ public abstract class Move
 		}
 		return 0;
 	}
-	
+
 	/**
 	 * 
 	 * @return how progressive this move is (e.g a pawn move is very progressive as it leads to pawn replacements)
@@ -253,25 +251,25 @@ public abstract class Move
 	{
 		return myColumnChange;
 	}
-	
-	/**	 
+
+	/**
 	 * @return the new position or null if the move isn't valid
 	 */
 	public Position getDestination()
 	{
 		return myDestination;
 	}
-	
-	public void setDestination(Position newDestination)
+
+	public void setDestination(final Position newDestination)
 	{
 		myDestination = newDestination;
 	}
-	
+
 	/**
 	 * Updates the destination of this move due to another move by this piece
 	 * @param board the board where the move took place
 	 */
-	public void updateDestination(ChessBoard board)
+	public void updateDestination(final ChessBoard board)
 	{
 		myOldPieceAtDestination = myPieceAtDestination;
 		if(myDestination != null)
@@ -285,37 +283,37 @@ public abstract class Move
 			{
 				board.removeNonAvailableMove(myDestination, myPiece, this);
 			}
-				
+
 		}
-		
+
 		Position currentPosition = myPiece.getCurrentPosition();
 		byte newRow = (byte)(currentPosition.getRow()+myRowChange);
 		byte newColumn = (byte)(currentPosition.getColumn()+myColumnChange);
-		
+
 		if(Position.isInvalidPosition(newRow, newColumn))
 		{
 			myDestination =  null;
+			setPieceAtDestination(null);
 		}
 		else
 		{
 			myDestination = new Position(newRow, newColumn);
+			setPieceAtDestination(board.getPiece(myDestination));
 		}
-		
-		setPieceAtDestination(board.getPiece(myDestination));
 	}
-	
+
 	/**
 	 * Performs a full update for this move
 	 * @param board
 	 */
-	public void updateMove(ChessBoard board)
+	public void updateMove(final ChessBoard board)
 	{
 		this.updateDestination(board);
 		this.updatePossibility(board);
 		this.syncCountersWithBoard(board);
 	}
-	
-	public void syncCountersWithBoard(ChessBoard board)
+
+	public void syncCountersWithBoard(final ChessBoard board)
 	{
 		//Only update the counters if there has been a change
 		if(myOldPieceAtDestination != myPieceAtDestination || myChangedCountersDuringLastSync)
@@ -344,7 +342,7 @@ public abstract class Move
 						myPieceAtDestination.addPieceThatTakesMeOver(myPiece);
 						board.increaseTakeOverPiecesCounter(getAffinity(), myPieceAtDestination.getTakeOverImportanceValue());
 						myChangedCountersDuringLastSync = true;
-					}	
+					}
 				}
 				else
 				{
@@ -364,8 +362,8 @@ public abstract class Move
 	 * @param board
 	 */
 	public abstract void updatePossibility(ChessBoard board);
-	
-	public void removeFromBoard(ChessBoard chessBoard)
+
+	public void removeFromBoard(final ChessBoard chessBoard)
 	{
 		myIsRemoved = true;
 		if(myCanBeMadeCache)
@@ -380,12 +378,12 @@ public abstract class Move
 		myOldPieceAtDestination = myPieceAtDestination;
 		myPieceAtDestination = null;
 	}
-	
+
 	public boolean isRemoved()
 	{
 		return myIsRemoved;
 	}
-	
+
 	/**
 	 * Re-enables this move so that it can be made again
 	 */
@@ -393,36 +391,36 @@ public abstract class Move
 	{
 		myIsRemoved = false;
 	}
-	
+
 	/**
 	 * Called when this move is the last one that was made on the board, i.e when a move has been reverted.
 	 */
-	public void onceAgainLastMoveThatWasMade(ChessBoard board)
+	public void onceAgainLastMoveThatWasMade(final ChessBoard board)
 	{
-		
+
 	}
-	
+
 	/**
 	 * Returns the cached possibility of this move (Also checks if the move is unavailable due to a check
 	 * @return true if the move is allowed to do
 	 */
-	public boolean canBeMade(ChessBoard board)
+	public boolean canBeMade(final ChessBoard board)
 	{
 		if(isRemoved())
 		{
 			return false;
 		}
-		
+
 		if(myCanBeMadeCache && !isPartOfAnotherMove())
-		{			
+		{
 			if(board.isMoveUnavailableDueToCheck(this))
 			{
 				return false;
 			}
-			
+
 			//TODO(jontejj): could this be cached?
-			return !isMoveUnavailableDueToCheckMate(board) && myCanBeMadeCache;
-			
+			return !isMoveUnavailableDueToCheckMate(board);
+
 			//Checks if this piece is protecting the king from being taken
 			/*Move kingThreateningMove = board.moveThreateningPosition(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity(), myPiece);
 			if(kingThreateningMove != null)
@@ -437,56 +435,53 @@ public abstract class Move
 	 * @return true if the move is allowed to do
 	 */
 	protected abstract boolean canBeMadeInternal(ChessBoard board);
-	
+
 	/**
-	 * This checks if the move would end in check mate, because no other piece stands in the path a check-mating move that this piece stops right now
+	 * This checks if the move would end in check mate, because no other piece stands in the path of a check-mating move that this piece stops right now
 	 */
-	public boolean isMoveUnavailableDueToCheckMate(ChessBoard board)
+	public boolean isMoveUnavailableDueToCheckMate(final ChessBoard board)
 	{
 		Collection<Move> kingThreateningMoves = board.getNonAvailableMoves(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity());
-		if(kingThreateningMoves.size() > 0)
+		for(Move threateningMove : kingThreateningMoves)
 		{
-			for(Move threateningMove : kingThreateningMoves)
+			if(this.getDestination().equals(threateningMove.getCurrentPosition()))
 			{
-				if(this.getDestination().equals(threateningMove.getCurrentPosition()))
+				//This is a take over move that would remove the threatening piece
+				continue;
+			}
+			if(threateningMove instanceof DependantMove)
+			{
+				DependantMove move = ((DependantMove) threateningMove).getMoveThatIDependUpon();
+				boolean myPieceIsStoppingCheckMate = false;
+				boolean anotherPieceIsStoppingCheckMate = false;
+				Position destinationForMove = null;
+				while(move != null)
 				{
-					//This is a take over move that would remove the threatening piece
-					continue;
+					destinationForMove = move.getDestination();
+					if(destinationForMove == null)
+					{
+						break;
+					}
+					else if(destinationForMove.equals(myPiece.getCurrentPosition()))
+					{
+						myPieceIsStoppingCheckMate = true;
+					}
+					else if(move.getPieceAtDestination() != null)
+					{
+						anotherPieceIsStoppingCheckMate = true;
+					}
+					else if(destinationForMove.equals(this.getDestination()))
+					{
+						//this(move) is on the path for the checking move even if this move is performed (i.e still stopping check mate)
+						anotherPieceIsStoppingCheckMate = true;
+					}
+
+					move = move.getMoveThatIDependUpon();
 				}
-				if(threateningMove instanceof DependantMove)
+				if(myPieceIsStoppingCheckMate && !anotherPieceIsStoppingCheckMate)
 				{
-					DependantMove move = ((DependantMove) threateningMove).getMoveThatIDependUpon();
-					boolean myPieceIsStoppingCheckMate = false;
-					boolean anotherPieceIsStoppingCheckMate = false;
-					Position destinationForMove = null;
-					while(move != null)
-					{
-						destinationForMove = move.getDestination();
-						if(destinationForMove == null)
-						{
-							break;
-						}
-						else if(destinationForMove.equals(myPiece.getCurrentPosition()))
-						{
-							myPieceIsStoppingCheckMate = true;
-						}
-						else if(board.getPiece(destinationForMove) != null)
-						{
-							anotherPieceIsStoppingCheckMate = true;
-						}
-						else if(destinationForMove.equals(this.getDestination()))
-						{
-							//this(move) is on the path for the checking move even if this move is performed (i.e still stopping check mate)
-							anotherPieceIsStoppingCheckMate = true;
-						}
-						
-						move = move.getMoveThatIDependUpon();
-					}
-					if(myPieceIsStoppingCheckMate && !anotherPieceIsStoppingCheckMate)
-					{
-						////This move would end in check mate, because no other piece stands in the path of the check-mating move
-						return true; 
-					}
+					//This move would end in check mate, because no other piece stands in the path of the check-mating move
+					return true;
 				}
 			}
 		}
@@ -496,7 +491,7 @@ public abstract class Move
 	 * Makes this move and updates all the moves of all the pieces that will need to be updated on the given board
 	 * @throws UnavailableMoveException if this move isn't available right now
 	 */
-	public void makeMove(ChessBoard board) throws UnavailableMoveException
+	public void makeMove(final ChessBoard board) throws UnavailableMoveException
 	{
 		if(!canBeMade(board))
 		{
@@ -507,18 +502,18 @@ public abstract class Move
 			//Take over is happening
 			myPieceAtDestination = myPieceAtDestination.removeFromBoard(board);
 		}
-		
+
 		board.movePiece(myPiece, this);
 		myPiece.getCurrentPosition().applyMove(this);
 		myMovesMade++;
 	}
-	
+
 	@Override
 	public String toString()
 	{
 		return myPiece + ": " + myPiece.getCurrentPosition() + " -> " + getDestination();
 	}
-	
+
 	/**
 	 * Used to know how many moves to undo during an undo moves action
 	 * @return true if this move is part of another move (such as a {@link CastlingMove})
@@ -527,7 +522,7 @@ public abstract class Move
 	{
 		return false;
 	}
-	
+
 	/**
 	 * Used when initializing the move table
 	 * @return true if this move should be returned by the getMove(rowChange, columnChange) function
@@ -541,7 +536,7 @@ public abstract class Move
 	 * 
 	 * @return a message explaining what this move did
 	 */
-	public String logMessageForLastMove() 
+	public String logMessageForLastMove()
 	{
 		String log = myPiece.getDisplayName() + ": " + getRevertingMove().getDestination() + " -> " + myPiece.getCurrentPosition();
 		Piece removedPiece = getPiece().getBoard().getMoveLogger().getRemovedPieceForLastMove();
@@ -565,54 +560,70 @@ public abstract class Move
 	}
 
 	/**
-	 * @return if this move was the last one to be made this will 
+	 * @return if this move was the last one to be made this will
 	 * return the position where the piece previously was at, if it wasn't the returned position will be erroronous
 	 */
 	public Position getOldPosition()
 	{
 		return getRevertingMove().getDestination();
 	}
-	
+
 	/**
 	 * 
 	 * @return a value between 0-7 (inclusive) that binds the row/column change of this move to a particular row index in a two
-	 * dimensional array. -1 is returned if columnChange and rowChange are zero but that should never happen. 
+	 * dimensional array. -1 is returned if columnChange and rowChange are zero but that should never happen.
 	 */
 	protected int getFirstDimensionIndexInternal()
 	{
 		if(myRowChange > 0)
 		{
-			 if(myColumnChange == 0)
-				 return 0;
-			 else if(myColumnChange > 0)
-				 return 1;
-			 else if(myColumnChange < 0)
-				 return 2;
+			if(myColumnChange == 0)
+			{
+				return 0;
+			}
+			else if(myColumnChange > 0)
+			{
+				return 1;
+			}
+			else if(myColumnChange < 0)
+			{
+				return 2;
+			}
 		}
 		else if(myRowChange == 0)
 		{
-			 if(myColumnChange > 0)
-				 return 3;
-			 else if(myColumnChange < 0)
-				 return 4;
+			if(myColumnChange > 0)
+			{
+				return 3;
+			}
+			else if(myColumnChange < 0)
+			{
+				return 4;
+			}
 		}
 		else
 		{
-			 if(myColumnChange == 0)
-				 return 5;
-			 else if(myColumnChange > 0)
-				 return 6;
-			 else
-				 return 7;
+			if(myColumnChange == 0)
+			{
+				return 5;
+			}
+			else if(myColumnChange > 0)
+			{
+				return 6;
+			}
+			else
+			{
+				return 7;
+			}
 		}
 		//Detect faulty moves early
 		return -1;
 	}
-	
+
 	/**
 	 * 
 	 * @return a value between 0-7 (inclusive) that binds the row/column change of this move to a particular row index in a two
-	 * dimensional array. -1 is returned if columnChange and rowChange is zero but that should never happen. 
+	 * dimensional array. -1 is returned if columnChange and rowChange is zero but that should never happen.
 	 */
 	public int getFirstDimensionIndex()
 	{
@@ -621,17 +632,17 @@ public abstract class Move
 	/**
 	 * 
 	 * @return a value between 0-7 (inclusive) that binds the row/column change of this move to a particular column index in a two
-	 * dimensional array. 
+	 * dimensional array.
 	 */
 	protected int getSecondDimensionIndexInternal()
 	{
 		return Math.max(Math.abs(myColumnChange), Math.abs(myRowChange));
 	}
-	
+
 	/**
 	 * 
 	 * @return a value between 0-7 (inclusive) that binds the row/column change of this move to a particular column index in a two
-	 * dimensional array. 
+	 * dimensional array.
 	 */
 	public int getSecondDimensionIndex()
 	{

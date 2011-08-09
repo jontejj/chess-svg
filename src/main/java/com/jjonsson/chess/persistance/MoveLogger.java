@@ -5,14 +5,12 @@ import java.util.Deque;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.PawnTwoStepMove;
-import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.Piece;
 
@@ -20,7 +18,7 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 {
 	private Deque<Move> myMoveHistory;
 	private Map<Integer, Piece> myRemovalHistory;
-	
+
 	/**
 	 * Defines how many moves that are remembered so that the game doesn't get stuck in a repetitive loop
 	 */
@@ -31,23 +29,23 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 		myMoveHistory = new ArrayDeque<Move>();
 		myRemovalHistory = Maps.newHashMap();
 	}
-	
+
 	public void clear()
 	{
 		myMoveHistory.clear();
 		myRemovalHistory.clear();
 	}
-	
-	public void addMove(Move move)
+
+	public void addMove(final Move move)
 	{
 		myMoveHistory.push(move);
 	}
-	
+
 	public Move popMove()
 	{
 		return myMoveHistory.pop();
 	}
-	
+
 	/**
 	 * This also sets the correct piece to restore if this move took over a piece for the returned move's RevertingMove
 	 * @return the last move that was made on the connected board or null if no moves has been made
@@ -64,7 +62,7 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 	}
 
 	@Override
-	public void movePerformed(Move performedMove)
+	public void movePerformed(final Move performedMove)
 	{
 		Move lastMove = myMoveHistory.peekFirst();
 		if(lastMove instanceof PawnTwoStepMove)
@@ -81,14 +79,14 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 			}
 		}
 	}
-	
+
 	public Piece getRemovedPieceForLastMove()
 	{
 		return myRemovalHistory.get(myMoveHistory.size() - 1);
 	}
 
 	@Override
-	public void pieceRemoved(Piece removedPiece)
+	public void pieceRemoved(final Piece removedPiece)
 	{
 		if(!removedPiece.isPawnReplacementPiece())
 		{
@@ -97,19 +95,19 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 	}
 
 	@Override
-	public void piecePlaced(Piece p)
-	{
-	}
-	
-	
-
-	@Override
-	public void gameStateChanged(ChessState newState)
+	public void piecePlaced(final Piece p)
 	{
 	}
 
+
+
 	@Override
-	public void piecePlacedLoadingInProgress(Piece p)
+	public void gameStateChanged(final ChessState newState)
+	{
+	}
+
+	@Override
+	public void piecePlacedLoadingInProgress(final Piece p)
 	{
 	}
 
@@ -124,24 +122,19 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 	}
 
 	@Override
-	public boolean supportsPawnReplacementDialog() 
+	public boolean supportsPawnReplacementDialog()
 	{
 		return false;
 	}
 
 	@Override
-	public Piece getPawnReplacementFromDialog() 
+	public Piece getPawnReplacementFromDialog()
 	{
 		return null;
 	}
 
 	@Override
 	public void undoDone()
-	{
-	}
-
-	@Override
-	public void squareScores(ImmutableMap<Position, String> positionScores)
 	{
 	}
 }

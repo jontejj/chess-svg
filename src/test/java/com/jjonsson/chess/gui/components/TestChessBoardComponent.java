@@ -1,5 +1,6 @@
 package com.jjonsson.chess.gui.components;
 
+import static com.jjonsson.chess.gui.Settings.DEBUG;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -9,12 +10,12 @@ import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
-import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.gui.ChessWindow;
+import com.jjonsson.chess.gui.Settings;
 import com.jjonsson.chess.gui.WindowUtilities;
-import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.pieces.Piece;
 
 public class TestChessBoardComponent
@@ -23,20 +24,20 @@ public class TestChessBoardComponent
 	{
 		WindowUtilities.setNativeLookAndFeel();
 	}
-	
+
 	private static final int SLEEP_TIME = 2000;
-	
+
 	private static long benchmarkedPlaytime;
 	private static long benchmarkedPlaytimeInSeconds;
-	
+
 	//We can turn this down as the AI gets more efficient
 	private static final long BENCHMARKING_FACTOR = 1200;
-	
+
 	@BeforeClass
 	public static void bencmarkComputer()
 	{
 		long startNanos = System.nanoTime();
-		
+
 		//Just do some random computations and measure the time it takes to perform them
 		long junkValue = 0;
 		long junkValue2 = 132;
@@ -45,22 +46,22 @@ public class TestChessBoardComponent
 			junkValue += junkValue2 * 3.4;
 			junkValue2 = junkValue + 673232;
 		}
-		
+
 		long endNanos = System.nanoTime();
-		
+
 		benchmarkedPlaytime = (endNanos - startNanos) * BENCHMARKING_FACTOR;
 		benchmarkedPlaytimeInSeconds = benchmarkedPlaytime / SECONDS.toNanos(1);
 	}
-	
-	
+
+
 	@Test
-	public void testPerformHintedMove() throws InterruptedException
+	public void testPerformHintedMove()
 	{
 		ChessBoard board = new ChessBoard(true);
 		ChessWindow window = new ChessWindow(board);
 		window.setTitle("Testing and performing a hinted move");
 		window.displayGame();
-		
+
 		ChessBoardComponent component = window.getBoardComponent();
 		component.showHint();
 		//Show hint should select a piece to move
@@ -70,7 +71,7 @@ public class TestChessBoardComponent
 		component.positionClicked(component.getHintMove().getDestination());
 		sleep();
 	}
-	
+
 	/**
 	 * Simulating a match between a white random player and a black AI player
 	 * Note that on a MacBook Pro with a core i7 the AI usually wins within 60 seconds
@@ -79,17 +80,17 @@ public class TestChessBoardComponent
 	 * @throws InterruptedException
 	 */
 	@Test
-	public void testSimulateMatchBetweenRandomAndAI() throws NoMovesAvailableException, InterruptedException
+	public void testSimulateMatchBetweenRandomAndAI() throws NoMovesAvailableException
 	{
 		ChessBoard board = new ChessBoard(true);
 		ChessWindow window = new ChessWindow(board);
-		
+
 		window.displayGame();
 		window.setTitle("Expecting black to win within " + benchmarkedPlaytimeInSeconds + " secs");
-		
+
 		ChessBoardComponent component = window.getBoardComponent();
 		component.setAIEnabled(false);
-		
+
 		long startNanos = System.nanoTime();
 		while(ChessBoardEvaluator.inPlay(board) && System.nanoTime() < startNanos + benchmarkedPlaytime)
 		{
@@ -112,9 +113,22 @@ public class TestChessBoardComponent
 		//assertTrue(board.getMeasuredStatusForPlayer(Piece.BLACK) >= board.getMeasuredStatusForPlayer(Piece.WHITE));
 		sleep();
 	}
-	
-	public static void sleep() throws InterruptedException
+
+	/**
+	 * Sleeps some time to show the user what the test cases are doing, sleeps only if {@link Settings#DEBUG} is true
+	 */
+	public static void sleep()
 	{
-		Thread.sleep(SLEEP_TIME);
+		try
+		{
+			if(DEBUG)
+			{
+				Thread.sleep(SLEEP_TIME);
+			}
+		}
+		catch(InterruptedException ie)
+		{
+			throw new RuntimeException("Got interrupted during my sleep", ie);
+		}
 	}
 }

@@ -28,5 +28,9 @@ public class DuplicatePieceException extends Exception
 	{
 		return myDuplicatePiece;
 	}
-
+	
+	public String toString()
+	{
+		return "Duplicate Piece: " + myDuplicatePiece + " tried to replace exisiting piece: " + myExistingPiece;
+	}
 }

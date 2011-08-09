@@ -77,7 +77,7 @@ public abstract class Pawn extends Piece
 	@Override
 	public void revertedAMove(ChessBoard board, Position oldPosition)
 	{
-		if(isAtStartingRow() && myTwoStepMove.isRemoved())
+		if(myTwoStepMove.isRemoved() && isAtStartingRow())
 		{
 			//The two step move can now be re-enabled
 			myTwoStepMove.reEnable();
