@@ -7,6 +7,7 @@ import java.util.concurrent.CountDownLatch;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.Move;
+import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.utilities.Logger;
 
 public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
@@ -112,11 +113,15 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 			ChessBoard board = myBoard.clone();
 			if(board == null)
 			{
+				LOGGER.warning("Failed to clone board");
+				BoardLoader.saveBoard(board, "temp_clone_failed_board");
 				return false;
 			}
-			Move move = myBoard.getMove(myMoveToEvaluate);
+			Move move = board.getMove(myMoveToEvaluate);
 			if(move == null)
 			{
+				LOGGER.warning("Failed get move from: " + myMoveToEvaluate);
+				BoardLoader.saveBoard(board, "temp_move_copy_failed_board");
 				return false;
 			}
 			myLimiter = myLimiter.copy();

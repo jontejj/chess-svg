@@ -591,8 +591,8 @@ public abstract class Piece
 	public Piece removeFromBoard(final ChessBoard board)
 	{
 		Piece returnPiece = this;
-		board.removePiece(this);
 		this.removeMovesFromBoard(board);
+		board.removePiece(this);
 		myIsRemoved = true;
 
 		Piece currentPieceAtMyPosition = board.getPiece(getCurrentPosition());
