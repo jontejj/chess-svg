@@ -110,6 +110,10 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 		try
 		{
 			myBoard = myBoard.clone();
+			if(myBoard == null)
+			{
+				return false;
+			}
 			myLimiter = myLimiter.copy();
 			myMoveToEvaluate = myBoard.getMove(myMoveToEvaluate);
 		}
@@ -117,7 +121,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 		{
 			throw new UnsupportedOperationException("Cloning of chessboard not possible", e);
 		}
-		return myMoveToEvaluate != null && myBoard != null;
+		return myMoveToEvaluate != null;
 	}
 
 	boolean isRunningInSeperateThread()

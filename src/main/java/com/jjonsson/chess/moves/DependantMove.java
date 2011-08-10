@@ -1,5 +1,7 @@
 package com.jjonsson.chess.moves;
 
+import static com.jjonsson.utilities.Logger.LOGGER;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -7,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.pieces.Piece;
-import static com.jjonsson.utilities.Logger.LOGGER;
 
 /**
  * A move that either cares about the possibility of another move or is a move that someone else cares about
@@ -18,36 +19,36 @@ public abstract class DependantMove extends Move
 {
 	private DependantMove myMoveDependingOnMe;
 	private DependantMove myMoveThatIDependUpon;
-	
-	public DependantMove(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith, DependantMove moveDependingOnMe, DependantMove moveThatIDependUpon)
+
+	public DependantMove(final int rowChange, final int columnChange, final Piece pieceThatTheMoveWillBeMadeWith, final DependantMove moveDependingOnMe, final DependantMove moveThatIDependUpon)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
 		myMoveDependingOnMe = moveDependingOnMe;
 		myMoveThatIDependUpon = moveThatIDependUpon;
 	}
-	
+
 	/**
 	 * Checks if it's necessary to look further down the move chain for possible moves
 	 * @param board
 	 * @return true if moves depending on this move may be made
 	 */
-	public boolean furtherMovesInChainMayBePossible(ChessBoard board)
+	public boolean furtherMovesInChainMayBePossible(final ChessBoard board)
 	{
 		if(getDestination() == null)
 		{
 			//Check if we have gone out of the board
 			return false;
 		}
-		
+
 		//This move relies on the possibility of the previous move in the chain
 		if(myMoveThatIDependUpon != null)
 		{
 			if(isAMoveThatIDependOnBlocked())
 			{
-				//Some previous move may have been either a take over or if a piece standing in the way, this means this move won't be possible 
+				//Some previous move may have been either a take over or if a piece standing in the way, this means this move won't be possible
 				return false;
 			}
-			
+
 			if(board.getCurrentState() != ChessState.CHECK && !myMoveThatIDependUpon.canBeMade(board))
 			{
 				return false;
@@ -67,67 +68,68 @@ public abstract class DependantMove extends Move
 			{
 				return true;
 			}
-			
-			move = move.getMoveThatIDependUpon();
-		}
-		return false;
-	}
-	
-	public boolean isPieceBlockingMe(Position ignoreIfPositionIsBlocked, Position ignoreIfPositionIsBlocked2)
-	{
-		DependantMove move = this;
-		while(move != null)
-		{
-			//No jumping over pieces
-			if(move.getPieceAtDestination() != null 
-					&& !move.getPieceAtDestination().getCurrentPosition().equals(ignoreIfPositionIsBlocked)
-					 && !move.getPieceAtDestination().getCurrentPosition().equals(ignoreIfPositionIsBlocked2))
-			{
-				return true;
-			}
-			
+
 			move = move.getMoveThatIDependUpon();
 		}
 		return false;
 	}
 
-	private boolean canBeMadeDependantInternal(ChessBoard board)
+	@Override
+	public boolean isPieceBlockingMe(final Position ignoreIfPositionIsBlocked, final Position ignoreIfPositionIsBlocked2)
+	{
+		DependantMove move = this;
+		while(move != null)
+		{
+			//No jumping over pieces
+			if(move.getPieceAtDestination() != null
+					&& !move.getPieceAtDestination().getCurrentPosition().equals(ignoreIfPositionIsBlocked)
+					&& !move.getPieceAtDestination().getCurrentPosition().equals(ignoreIfPositionIsBlocked2))
+			{
+				return true;
+			}
+
+			move = move.getMoveThatIDependUpon();
+		}
+		return false;
+	}
+
+	private boolean canBeMadeDependantInternal(final ChessBoard board)
 	{
 		if(furtherMovesInChainMayBePossible(board))
 		{
 			return canBeMadeInternal(board);
 		}
-		
-		return false;	
+
+		return false;
 	}
-	
+
 	@Override
-	public void updateDestination(ChessBoard board)
+	public void updateDestination(final ChessBoard board)
 	{
 		//First update destination of moves that this move is dependent on
 		//TODO: is this really necessary?
-		updateDestinationUpwards(board);
+		//updateDestinationUpwards(board);
 		//Update myself
 		updateDestinationInternal(board);
 		//Update destination of moves that is dependent on this move
 		updateDestinationDownwards(board);
 	}
-	
-	protected void updateDestinationInternal(ChessBoard board)
+
+	protected void updateDestinationInternal(final ChessBoard board)
 	{
 		super.updateDestination(board);
 	}
-	
-	private void updateDestinationUpwards(ChessBoard board)
+
+	private void updateDestinationUpwards(final ChessBoard board)
 	{
 		if(myMoveThatIDependUpon != null)
-		{	
+		{
 			myMoveThatIDependUpon.updateDestinationUpwards(board);
 			myMoveThatIDependUpon.updateDestinationInternal(board);
 		}
 	}
-	
-	private void updateDestinationDownwards(ChessBoard board)
+
+	private void updateDestinationDownwards(final ChessBoard board)
 	{
 		if(myMoveDependingOnMe != null)
 		{
@@ -137,7 +139,7 @@ public abstract class DependantMove extends Move
 	}
 
 	@Override
-	public void updatePossibility(ChessBoard board)
+	public void updatePossibility(final ChessBoard board)
 	{
 		//First update moves that this move is dependent on
 		updatePossibilityUpwards(board);
@@ -146,17 +148,17 @@ public abstract class DependantMove extends Move
 		//Update moves that is dependent on this move
 		updatePossibilityDownwards(board);
 	}
-	
-	private void updatePossibilityUpwards(ChessBoard board)
+
+	private void updatePossibilityUpwards(final ChessBoard board)
 	{
 		if(myMoveThatIDependUpon != null)
-		{	
+		{
 			myMoveThatIDependUpon.updatePossibilityUpwards(board);
 			myMoveThatIDependUpon.updatePossiblityInternal(board);
 		}
 	}
-	
-	private void updatePossiblityInternal(ChessBoard board)
+
+	private void updatePossiblityInternal(final ChessBoard board)
 	{
 		myCanBeMadeCache = canBeMadeDependantInternal(board);
 		if(myCanBeMadeCache)
@@ -170,7 +172,7 @@ public abstract class DependantMove extends Move
 		}
 	}
 
-	private void updatePossibilityDownwards(ChessBoard board)
+	private void updatePossibilityDownwards(final ChessBoard board)
 	{
 		if(myMoveDependingOnMe != null)
 		{
@@ -178,9 +180,9 @@ public abstract class DependantMove extends Move
 			myMoveDependingOnMe.updatePossibilityDownwards(board);
 		}
 	}
-	
+
 	@Override
-	public void syncCountersWithBoard(ChessBoard board)
+	public void syncCountersWithBoard(final ChessBoard board)
 	{
 		//First sync moves that this move is dependent on
 		syncCountersWithBoardUpwards(board);
@@ -189,22 +191,22 @@ public abstract class DependantMove extends Move
 		//Sync moves that is dependent on this move
 		syncCountersWithBoardDownwards(board);
 	}
-	
-	private void syncCountersWithBoardUpwards(ChessBoard board)
+
+	private void syncCountersWithBoardUpwards(final ChessBoard board)
 	{
 		if(myMoveThatIDependUpon != null)
-		{	
+		{
 			myMoveThatIDependUpon.syncCountersWithBoardUpwards(board);
 			myMoveThatIDependUpon.syncCountersWithBoardInternal(board);
 		}
 	}
 
-	private void syncCountersWithBoardInternal(ChessBoard board)
+	private void syncCountersWithBoardInternal(final ChessBoard board)
 	{
 		super.syncCountersWithBoard(board);
 	}
 
-	private void syncCountersWithBoardDownwards(ChessBoard board)
+	private void syncCountersWithBoardDownwards(final ChessBoard board)
 	{
 		if(myMoveDependingOnMe != null)
 		{
@@ -216,7 +218,7 @@ public abstract class DependantMove extends Move
 	 * Copies the counters recursively
 	 */
 	@Override
-	public void copyMoveCounter(Move moveToCopyFrom)
+	public void copyMoveCounter(final Move moveToCopyFrom)
 	{
 		super.copyMoveCounter(moveToCopyFrom);
 		DependantMove moveDependingOnMe = getMoveDependingOnMe();
@@ -236,10 +238,11 @@ public abstract class DependantMove extends Move
 			moveDependingOnMe.copyMoveCounter(fromMove);
 		}
 	}
-	
+
 	/**
 	 * Resets the counters recursively
 	 */
+	@Override
 	public void resetMoveCounter()
 	{
 		super.resetMoveCounter();
@@ -248,8 +251,8 @@ public abstract class DependantMove extends Move
 			getMoveDependingOnMe().resetMoveCounter();
 		}
 	}
-	
-	public List<Move> getPossibleMovesThatIsDependantOnMe(ChessBoard board)
+
+	public List<Move> getPossibleMovesThatIsDependantOnMe(final ChessBoard board)
 	{
 		List<Move> dependantMoves = null;
 		//Check if we have gone out of the board
@@ -265,14 +268,14 @@ public abstract class DependantMove extends Move
 					{
 						dependantMoves = Lists.newArrayList();
 					}
-					
+
 					dependantMoves.add(move);
 				}
 				if(!move.furtherMovesInChainMayBePossible(board))
 				{
 					break;
 				}
-				
+
 				move = move.getMoveDependingOnMe();
 			}
 		}
@@ -280,19 +283,19 @@ public abstract class DependantMove extends Move
 		{
 			return Collections.emptyList();
 		}
-		
+
 		return dependantMoves;
 	}
-	
 
-	public List<Move> getNonPossibleMovesThatIsDependantOnMe(ChessBoard board)
+
+	public List<Move> getNonPossibleMovesThatIsDependantOnMe(final ChessBoard board)
 	{
 		DependantMove move = myMoveDependingOnMe;
 		if(move == null)
 		{
 			return Collections.emptyList();
 		}
-		
+
 		List<Move> dependantMoves = Lists.newArrayList();
 		while(move != null)
 		{
@@ -304,7 +307,7 @@ public abstract class DependantMove extends Move
 		}
 		return dependantMoves;
 	}
-	
+
 	/**
 	 * 
 	 * @return regardless if the moves can be made or not
@@ -321,33 +324,33 @@ public abstract class DependantMove extends Move
 		}
 		return dependantMoves;
 	}
-	
+
 	public DependantMove getMoveDependingOnMe()
 	{
 		return myMoveDependingOnMe;
 	}
-	
+
 	public DependantMove getMoveThatIDependUpon()
 	{
 		return myMoveThatIDependUpon;
 	}
-	
-	public void setMoveThatIDependUpon(DependantMove move)
+
+	public void setMoveThatIDependUpon(final DependantMove move)
 	{
 		myMoveThatIDependUpon = move;
 	}
-	
-	public void setMoveThatDependsOnMe(DependantMove move)
+
+	public void setMoveThatDependsOnMe(final DependantMove move)
 	{
 		myMoveDependingOnMe = move;
 	}
-	
-	
+
+
 	/**
 	 * Moves depending on this one will need to be removed as well
 	 */
 	@Override
-	public void removeFromBoard(ChessBoard chessBoard)
+	public void removeFromBoard(final ChessBoard chessBoard)
 	{
 		super.removeFromBoard(chessBoard);
 		if(myMoveDependingOnMe != null)
@@ -355,7 +358,7 @@ public abstract class DependantMove extends Move
 			myMoveDependingOnMe.removeFromBoard(chessBoard);
 		}
 	}
-	
+
 	@Override
 	public void reEnable()
 	{

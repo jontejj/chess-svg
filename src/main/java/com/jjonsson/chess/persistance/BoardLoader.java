@@ -7,23 +7,25 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.DuplicatePieceException;
+import com.jjonsson.chess.exceptions.InvalidBoardException;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 
 public final class BoardLoader
 {
 	private BoardLoader()
 	{
-		
+
 	}
-	
+
 	/**
 	 * @param input the stream to load the board from
 	 * @param boardToLoadInto the board to load the board into
 	 * @return true if the board was loaded successfully
 	 */
-	public static boolean loadStreamIntoBoard(InputStream input, ChessBoard boardToLoadInto)
+	public static boolean loadStreamIntoBoard(final InputStream input, final ChessBoard boardToLoadInto)
 	{
 		BufferedInputStream bis = new BufferedInputStream(input);
 		try
@@ -42,25 +44,29 @@ public final class BoardLoader
 		{
 			return false;
 		}
+		catch (InvalidBoardException e)
+		{
+			return false;
+		}
 		boardToLoadInto.setPossibleMoves();
 		boardToLoadInto.updateGameState();
 
 		return true;
 	}
-	
+
 	/**
 	 * 
 	 * @param board the board to save
 	 * @param pathToFile a path to the file to save the board to
 	 * @return true if the board was successfully written to the given file
 	 */
-	public static boolean saveBoard(ChessBoard board, String pathToFile)
+	public static boolean saveBoard(final ChessBoard board, final String pathToFile)
 	{
 		if(pathToFile == null)
 		{
 			return false;
 		}
-		
+
 		File toFile = new File(pathToFile);
 		if(!toFile.exists())
 		{

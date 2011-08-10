@@ -134,4 +134,10 @@ public class TestPersistance
 		}
 
 	}
+
+	@Test
+	public void testHandlingOfBoardWithoutWhiteKing()
+	{
+		loadBoard("board_without_white_king", false);
+	}
 }

@@ -12,7 +12,6 @@ import static com.jjonsson.chess.moves.Position.createPosition;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import junit.framework.Assert;
 
@@ -38,10 +37,15 @@ public class TestScenarios
 
 	public static ChessBoard loadBoard(final String testName)
 	{
+		return loadBoard(testName, true);
+	}
+
+	public static ChessBoard loadBoard(final String testName, final boolean expectValidBoard)
+	{
 		String scenarioFile = "/scenarios/" + testName + ChessFileFilter.FILE_ENDING;
 		ChessBoard board = new ChessBoard(false);
 
-		assertTrue("Could not load:" + scenarioFile, BoardLoader.loadStreamIntoBoard(BoardLoader.class.getResourceAsStream(scenarioFile), board));
+		assertEquals("Could not load:" + scenarioFile, expectValidBoard, BoardLoader.loadStreamIntoBoard(BoardLoader.class.getResourceAsStream(scenarioFile), board));
 		return board;
 	}
 
@@ -264,5 +268,24 @@ public class TestScenarios
 		board.move(createPosition(8, H), createPosition(8, G));
 		board.move(createPosition(4, D), createPosition(5, D));
 		assertEquals(ChessState.CHECK, board.getCurrentState());
+	}
+
+	@Test
+	public void test() throws InvalidPosition
+	{
+		ChessBoard board = loadBoard("king_should_not_able_to_take_bishop_at_2E");
+		Piece king = board.getPiece(createPosition(1, D));
+		Move notAvailableMove = board.getNonAvailableMove(king, createPosition(2, E));
+		assertFalse(notAvailableMove.canBeMade(board));
+	}
+
+	@Test
+	public void testThatAKingCantMoveIntoThreatenedPosition() throws UnavailableMoveException, InvalidPosition
+	{
+		ChessBoard board = loadBoard("white_king_should_not_be_able_to_take_over_bishop_after_take_over");
+		board.move(createPosition(3, F), createPosition(2, E));
+		Piece king = board.getPiece(createPosition(1, D));
+		Move takeOverMove = board.getAvailableMove(king, createPosition(2, E));
+		assertNull(takeOverMove);
 	}
 }
