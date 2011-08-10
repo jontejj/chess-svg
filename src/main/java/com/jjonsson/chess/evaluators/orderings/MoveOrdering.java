@@ -14,15 +14,15 @@ public final class MoveOrdering
 {
 	private MoveOrdering()
 	{
-		
+
 	}
-	
+
 	private static final Ordering<Move> INSTANCE = Ordering.compound(ImmutableList.of(
-																	new TakeOverValueOrdering(), 
-																	new EvadeOrdering(), 
-																	new ProgressivenessOrdering(),
-																	new CenterStageOrdering()));
-	
+			new TakeOverValueOrdering(),
+			new EvadeOrdering(),
+			new ProgressivenessOrdering(),
+			new CenterStageOrdering()));
+
 	public static Ordering<Move> getInstance()
 	{
 		return INSTANCE;

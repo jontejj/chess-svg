@@ -295,6 +295,8 @@ public final class ChessMoveEvaluator
 			return false;
 		}
 
+		//boolean randomElement = (new Random(System.currentTimeMillis()).nextInt() % 50 == 0);
+
 		boolean finalDepthNotReached = (limiter.getDepth() >= 0 && limiter.getMovesLeft() > 0);
 		//If we take over a piece we continue that path to not give too positive results
 		boolean iTookOverAPiece = (move.isTakeOverMove() && limiter.getScoreFactor() == 1 && limiter.getDepth() <= 0);
