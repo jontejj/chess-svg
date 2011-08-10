@@ -2,13 +2,12 @@ package com.jjonsson.chess.evaluators;
 
 import com.jjonsson.chess.moves.Move;
 
-public class SearchResult
+public class SearchResult implements Comparable<SearchResult>
 {
-	private volatile Move myBestMove = null;
-	private volatile long myBestMoveValue = Long.MIN_VALUE;
+	private Move myBestMove = null;
+	private Long myBestMoveValue = Long.MIN_VALUE;
 
-	//TODO: sync the results of all threads after all threads have finished
-	synchronized void setBestMoveIfBetter(Move newBestMove, long newMoveValue)
+	void setBestMoveIfBetter(final Move newBestMove, final long newMoveValue)
 	{
 		if(newMoveValue > myBestMoveValue || myBestMove == null)
 		{
@@ -16,19 +15,25 @@ public class SearchResult
 			myBestMoveValue = newMoveValue;
 		}
 	}
-	
-	synchronized long getBestMoveValue()
+
+	long getBestMoveValue()
 	{
 		return myBestMoveValue;
 	}
-	
-	synchronized Move getBestMove()
+
+	Move getBestMove()
 	{
 		return myBestMove;
 	}
-	
-	synchronized void applyPlayerAffinityFactor(long factor)
+
+	void applyPlayerAffinityFactor(final long factor)
 	{
 		myBestMoveValue *= factor;
+	}
+
+	@Override
+	public int compareTo(final SearchResult o)
+	{
+		return myBestMoveValue.compareTo(o.myBestMoveValue);
 	}
 }

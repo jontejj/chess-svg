@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
@@ -161,6 +162,7 @@ public final class ChessMoveEvaluator
 			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.getDepth() * ChessBoard.BOARD_SIZE, 0) + 2;
 			CountDownLatch workersDoneSignal = new CountDownLatch(moves.size());
 			ThreadTracker threadTracker = new ThreadTracker();
+			List<SearchResult> results = Lists.newArrayListWithCapacity(moves.size());
 			for(Move move : moves)
 			{
 				//TODO(jontejj): how to search deeper when time allows us to
@@ -170,7 +172,9 @@ public final class ChessMoveEvaluator
 					limiter.resetMovesLeft();
 				}
 				movesLeftToEvaluateOnThisBranch--;
-				MoveEvaluatingThread moveEvaluator = new MoveEvaluatingThread(board, move, limiter, result, movesLeftToEvaluateOnThisBranch, workersDoneSignal);
+				SearchResult r = new SearchResult();
+				results.add(r);
+				MoveEvaluatingThread moveEvaluator = new MoveEvaluatingThread(board, move, limiter, r, movesLeftToEvaluateOnThisBranch, workersDoneSignal);
 				if(moveEvaluator.isRunningInSeperateThread())
 				{
 					threadTracker.addJob(moveEvaluator.getThread());
@@ -185,6 +189,11 @@ public final class ChessMoveEvaluator
 			{
 				threadTracker.interruptCurrentJobs();
 				throw new SearchInterruptedError(e);
+			}
+			Collections.sort(results);
+			if(!results.isEmpty())
+			{
+				result = results.get(results.size() - 1);
 			}
 		}
 		//Inverses the factor making it possible to evaluate a good move for the other player
