@@ -642,6 +642,8 @@ public final class ChessBoard implements Cloneable
 		myPieces.remove(currentPosition);
 		getMapForAffinity(p.getAffinity()).remove(currentPosition);
 		myMoveLogger.pieceRemoved(p);
+		myPieceToPositionAvailableMoves.remove(p);
+		myPieceToPositionNonAvailableMoves.remove(p);
 	}
 
 	/**
