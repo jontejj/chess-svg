@@ -166,6 +166,10 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	{
 		this.setVisible(true);
 		myComponent.repaint();
+		if(Settings.DEMO)
+		{
+			myComponent.nextPlayer();
+		}
 	}
 
 	public void resizeWindow()
@@ -248,7 +252,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		JMenu settingsMenu = new JMenu("Settings");
 
 		JMenuItem showAvailableClicks = null;
-		if(Settings.DEBUG)
+		if(Settings.DEBUG || Settings.DEMO)
 		{
 			showAvailableClicks = new JMenuItem(HIDE_AVAILABLE_CLICKS_MENU_ITEM);
 		}

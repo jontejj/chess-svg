@@ -1,5 +1,6 @@
 package com.jjonsson.chess.gui.components;
 
+import static com.jjonsson.chess.gui.Settings.DEMO;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.utilities.Logger.LOGGER;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -80,7 +81,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public ChessBoardComponent(final ChessBoard board, final Dimension size)
 	{
 		super();
-		if(Settings.DEBUG)
+		if(Settings.DEBUG || Settings.DEMO)
 		{
 			myShowAvailableClicks = true;
 		}
@@ -538,14 +539,17 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			}
 			else
 			{
-				//just for fun
-				/*try
+				if(DEMO)
 				{
-					getBoard().performRandomMove();
+					//just for fun
+					try
+					{
+						getBoard().performRandomMove();
+					}
+					catch (NoMovesAvailableException e)
+					{
+					}
 				}
-				catch (NoMovesAvailableException e)
-				{
-				}*/
 			}
 		}
 	}

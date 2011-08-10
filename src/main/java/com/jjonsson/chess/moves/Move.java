@@ -422,9 +422,9 @@ public abstract class Move
 			return !isMoveUnavailableDueToCheckMate(board);
 
 			//Checks if this piece is protecting the king from being taken
-			/*Move kingThreateningMove = board.moveThreateningPosition(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity(), myPiece);
-			if(kingThreateningMove != null)
-				return false;*/
+			//Move kingThreateningMove = board.moveThreateningPosition(board.getKing(myPiece.getAffinity()).getCurrentPosition(), !myPiece.getAffinity(), myPiece);
+			//if(kingThreateningMove != null)
+			//	return false;
 		}
 		return myCanBeMadeCache;
 	}
