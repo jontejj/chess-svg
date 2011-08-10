@@ -1,0 +1,111 @@
+<project name="chess-svg" default="all">
+	<description>
+		Build file used to generate a runnable jar file and java docs.
+	</description>
+	<property name="project_name" value="Chess-Svg" />
+	<property name="project_link" value="https://code.google.com/p/chess-svg/" />
+	<property name="main_class" value="com.jjonsson.chess.Chess" />
+	<property name="project_owner_email" value="jontejj@gmail.com" />
+
+	<property name="src" location="src" />
+	<property name="test" location="test" />
+	<property name="build" location="build" />
+	<property name="dist" location="deliverables" />
+	<property name="javadoc" location="${dist}/javadoc" />
+	<property name="lib" location="libs" />
+
+	<path id="project.class.path">
+		<pathelement path="." />
+			<fileset dir="${lib}">
+        		<include name="**/*.jar"/>
+				<exclude name="**/*-src.jar"/>
+      		</fileset>
+		<pathelement path="images" />
+	</path>
+	<path id="project.class.path.jar">
+		<pathelement path="images" />
+	</path>
+
+	
+	<target name="eclipse" description="Sets up this project for development in eclipse">
+		<copy file=".project.sample" tofile=".project" preservelastmodified="true" overwrite="true"/>
+		<copy file=".classpath.sample" tofile=".classpath" preservelastmodified="true" overwrite="true"/>
+	</target>
+
+	<target name="all" description="A target that will execute all targets in this file" depends="clean, compile, jar, javadoc"/>
+
+	<target name="compile" description="Compiles file in the src and test folders and outputs the .class files to the build directory" depends="check-exists, init" if="check-successful">
+		<javac srcdir="${src}" destdir="${build}" debug="true" debuglevel="lines,vars,source">
+			<classpath refid="project.class.path"/>
+		</javac>
+	</target>
+	
+	<target name="jar" description="Produces a jar file from the .class files in the build directory and puts it in the dist directory" depends="compile, prepare-dist">
+		<unzip dest="${build}">
+		    <patternset>
+		        <include name="**/*.class"/>
+		    	<include name="**/*.properties"/>
+		        <exclude name="**/Test*.class"/>
+		    </patternset>
+		    <fileset dir="${lib}">
+		        <include name="**/*.jar"/>
+		    	<exclude name="**/*-src.jar"/>
+		    </fileset>
+		</unzip>
+		<manifestclasspath property="lib.list" jarfile="${dist}/${project_name}.jar">
+    			<classpath refid="project.class.path.jar"/>
+		</manifestclasspath>
+		
+		<jar jarfile="${dist}/${project_name}.jar" basedir="${build}">
+			<fileset dir="${build}">
+        			<include name="**/*.java"/>
+  			</fileset>
+			<fileset dir=".">
+    			<include name="images/**/*.svg"/>
+  			</fileset>
+	      	<manifest>
+			<attribute name="Built-By" value="${project_name} Ant Build File"/>
+			<attribute name="Project-Location" value="${project_link}"/>
+			<attribute name="Project-Owner-Email" value="${project_owner_email}"/>
+			<attribute name="Main-Class" value="${main_class}" />
+			<attribute name="Class-Path" value="${lib.list}"/>
+	      	</manifest>
+		</jar>
+		<chmod file="${dist}/${project_name}.jar" perm="u+x" />
+		<echo message="Execute: ${dist}/${project_name}.jar to run the program" />
+	</target>
+
+	<target name="javadoc" description="Generates java docs for the classes in the src directory and puts the documentation in the javadocs directory" depends="check-exists, prepare-dist" if="check-successful">
+		<delete dir="${javadoc}"/>
+		<mkdir dir="${javadoc}"/>
+		<javadoc sourcepath="{src}" destdir="${javadoc}" Windowtitle="Chess-Svg java documentation" Footer="Source Code Location: &lt;a href='${project_link}'>Chess-Svg @ Google Code &lt;/a>">
+			<arg value="-notimestamp"/>
+			<classpath refid="project.class.path"/>
+			<fileset dir="${src}">
+        			<include name="**/*.java"/>
+					<exclude name="**/*-src.jar"/>
+      			</fileset>
+		</javadoc>
+	</target>
+
+	<target name="init" description="Create the build directory">
+		<mkdir dir="${build}"/>
+	</target>
+
+	<target name="prepare-dist" description="Prepares the dist directory">
+		<mkdir dir="${dist}"/>
+	</target>
+
+	<target name="clean" description="Removes the build and dist directories">
+		<delete dir="${build}"/>
+		<delete dir="${dist}"/>
+	</target>
+	<target name="check-exists">
+	    <condition property="check-successful">
+		<and>
+		    <available file="src" type="dir"/>
+		    <available file="test" type="dir"/>
+		</and>
+	    </condition>
+	</target>
+</project>

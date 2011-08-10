@@ -1,0 +1,17 @@
+
+syntax: regexp
+settings.xml
+.classpath
+.project
+^chess.settings
+bin/*
+build/*
+.metadata/*
+.settings/*
+target/*/*.class
+target/?(?!site)/*.*
+save_games/*
+temp_save_test
+design/*
+syntax: glob
+.DS_Store
