@@ -7,6 +7,7 @@ import java.util.concurrent.CountDownLatch;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.Move;
+import com.jjonsson.chess.persistance.BoardLoader;
 import com.jjonsson.utilities.Logger;
 
 public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
@@ -109,19 +110,28 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	{
 		try
 		{
-			myBoard = myBoard.clone();
-			if(myBoard == null)
+			ChessBoard board = myBoard.clone();
+			if(board == null)
 			{
+				LOGGER.warning("Failed to clone board.");
+				BoardLoader.saveBoard(myBoard, "temp_board_causing_clone_failure");
+				return false;
+			}
+			Move move = board.getMove(myMoveToEvaluate);
+			if(move == null)
+			{
+				LOGGER.warning("Failed to find move for: " + myMoveToEvaluate);
 				return false;
 			}
 			myLimiter = myLimiter.copy();
-			myMoveToEvaluate = myBoard.getMove(myMoveToEvaluate);
+			myBoard = board;
+			myMoveToEvaluate = move;
 		}
 		catch (CloneNotSupportedException e)
 		{
 			throw new UnsupportedOperationException("Cloning of chessboard not possible", e);
 		}
-		return myMoveToEvaluate != null;
+		return true;
 	}
 
 	boolean isRunningInSeperateThread()

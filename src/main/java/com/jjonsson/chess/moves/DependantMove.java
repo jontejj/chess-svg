@@ -142,7 +142,7 @@ public abstract class DependantMove extends Move
 	public void updatePossibility(final ChessBoard board)
 	{
 		//First update moves that this move is dependent on
-		updatePossibilityUpwards(board);
+		//updatePossibilityUpwards(board);
 		//Update myself
 		updatePossiblityInternal(board);
 		//Update moves that is dependent on this move
