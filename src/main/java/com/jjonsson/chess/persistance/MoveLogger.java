@@ -14,6 +14,7 @@ import com.jjonsson.chess.moves.PawnTwoStepMove;
 import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.Piece;
 
+//TODO: make it possible to save the made moves to disk
 public class MoveLogger implements MoveListener, ChessBoardListener
 {
 	private Deque<Move> myMoveHistory;
@@ -67,7 +68,7 @@ public class MoveLogger implements MoveListener, ChessBoardListener
 		Move lastMove = myMoveHistory.peekFirst();
 		if(lastMove instanceof PawnTwoStepMove)
 		{
-			((PawnTwoStepMove)lastMove).removeEnpassantMoves(performedMove.getPiece().getBoard());
+			((PawnTwoStepMove)lastMove).removeEnpassantMoves(lastMove.getPiece().getBoard());
 		}
 		if(!(performedMove instanceof RevertingMove))
 		{

@@ -13,14 +13,14 @@ public final class ProgressTracker
 	private static long myLastSync;
 	private static StatusListener myStatusTracker;
 	private static long startTime;
-	
+
 	private ProgressTracker()
 	{
-		
+
 	}
-	
+
 	@VisibleForTesting
-	public static synchronized void setStatusListener(StatusListener listener)
+	public static synchronized void setStatusListener(final StatusListener listener)
 	{
 		myStatusTracker = listener;
 		movesMade = 0;
@@ -29,7 +29,7 @@ public final class ProgressTracker
 		myLastSync = System.nanoTime();
 		MoveEvaluatingThread.threadsCreated = 0;
 	}
-	
+
 	static synchronized void moveHasBeenMade()
 	{
 		movesMade++;
@@ -49,11 +49,15 @@ public final class ProgressTracker
 			double passedSeconds = ((double)(System.nanoTime() - startTime) / SECONDS.toNanos(1));
 			long movesPerSecond;
 			if(passedSeconds == 0.0)
+			{
 				movesPerSecond = movesMade;
+			}
 			else
+			{
 				movesPerSecond = (long) (movesMade / passedSeconds);
-			LOGGER.info("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
-			LOGGER.info("Threads Created: " + MoveEvaluatingThread.threadsCreated);
+			}
+			LOGGER.finest("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
+			LOGGER.finest("Threads Created: " + MoveEvaluatingThread.threadsCreated);
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package com.jjonsson.chess.gui;
 
+import static com.jjonsson.utilities.Logger.LOGGER;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
@@ -13,19 +15,17 @@ import com.google.common.collect.Maps;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.utilities.Logger;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
-
 public final class PieceImageCache
 {
 	private PieceImageCache()
 	{
-		
+
 	}
 
 	private static SAXSVGDocumentFactory svgFactory = new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());
-	
+
 	private static Map<String, SVGDocument> pieceCache = Maps.newHashMap();
-	public static SVGDocument getSVGForPiece(Piece p)
+	public static SVGDocument getSVGForPiece(final Piece p)
 	{
 		SVGDocument cachedDocument = pieceCache.get(p.getIdentifier());
 		if(cachedDocument == null)
@@ -39,7 +39,7 @@ public final class PieceImageCache
 	/**
 	 * Note: This function requires that the "images" directory is added to the class path
 	 */
-	private static SVGDocument imageForPiece(Piece p)
+	private static SVGDocument imageForPiece(final Piece p)
 	{
 		SVGDocument document = null;
 		String image = "/images/svg/Piece_" + p.getIdentifier() + ".svg";
@@ -50,13 +50,13 @@ public final class PieceImageCache
 		}
 		catch (FileNotFoundException fnfe)
 		{
-			LOGGER.info("PieceImageCache: Couldn't find resource for image at: " + image);
+			LOGGER.severe("PieceImageCache: Couldn't find resource for image at: " + image);
 			return null;
 		}
 		catch (IOException e)
 		{
-			LOGGER.info("Failed to load image for piece: " + p);
-			LOGGER.info(Logger.stackTraceToString(e));
+			LOGGER.severe("Failed to load image for piece: " + p);
+			LOGGER.severe(Logger.stackTraceToString(e));
 		}
 		return document;
 	}

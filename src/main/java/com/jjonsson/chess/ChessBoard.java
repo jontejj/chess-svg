@@ -244,12 +244,12 @@ public final class ChessBoard implements Cloneable
 		}
 		catch (DuplicatePieceException e)
 		{
-			LOGGER.warning("Got a duplicate piece: " + e.getDuplicatePiece() + ", conflicted with: " + e.getExistingPiece());
+			LOGGER.severe("Got a duplicate piece: " + e.getDuplicatePiece() + ", conflicted with: " + e.getExistingPiece());
 			newBoard = null;
 		}
 		catch (InvalidBoardException e)
 		{
-			LOGGER.warning("Detected that only one king exists during clone operation. The possiblillity of moves needs to be fixed.");
+			LOGGER.severe("Detected that only one king exists during clone operation. The possiblillity of moves needs to be fixed.");
 			newBoard = null;
 		}
 		/*catch(NullPointerException npe)
@@ -603,14 +603,6 @@ public final class ChessBoard implements Cloneable
 				myBlackKing.getQueenSideCastlingMove().setRock(blackLeftRock);
 				myBlackKing.getKingSideCastlingMove().setRock(blackRightRock);
 			}
-			if(myWhiteKing == null)
-			{
-				LOGGER.warning("No White king found");
-				LOGGER.warning(myBlackKing.toString());
-				LOGGER.warning("State before update: " + getCurrentState());
-				updateGameState();
-				LOGGER.warning("State after update: " + getCurrentState());
-			}
 			if(myWhiteKing.isAtStartingPosition())
 			{
 				Piece whiteLeftRock = getPiece(createPosition(WHITE_STARTING_ROW, A));
@@ -621,7 +613,7 @@ public final class ChessBoard implements Cloneable
 		}
 		catch (InvalidPosition e)
 		{
-			LOGGER.warning("Something wrong with board setup, got " + e);
+			LOGGER.severe("Something wrong with board setup, got " + e);
 		}
 	}
 
@@ -1102,7 +1094,7 @@ public final class ChessBoard implements Cloneable
 		Piece oldPiece = myPieces.put(newPosition, pieceToMove);
 		if(oldPiece != null && oldPiece != pieceToMove)
 		{
-			LOGGER.warning("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
+			LOGGER.info("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
 					"Actual piece at destination:" + oldPiece);
 			//The move was out of sync, lets fix it
 			//TODO: this wouldn't be needed if the moves were updated properly
@@ -1177,8 +1169,8 @@ public final class ChessBoard implements Cloneable
 		Set<Move> mo = moves.get(pos);
 		if(mo == null)
 		{
-			LOGGER.warning("Invalid position: " + pos);
-			LOGGER.warning("Last move: " + getLastMove());
+			LOGGER.severe("Invalid position: " + pos);
+			LOGGER.severe("Last move: " + getLastMove());
 		}
 		ImmutableSet<Move> copy = ImmutableSet.copyOf(moves.get(pos));
 		/*for(Move m : copy)

@@ -1,5 +1,7 @@
 package com.jjonsson.chess.moves;
 
+import java.util.Collection;
+
 import com.google.common.collect.ImmutableSet;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
@@ -26,12 +28,27 @@ public class PawnTwoStepMove extends PawnMove
 	public void makeMove(final ChessBoard board) throws UnavailableMoveException
 	{
 		super.makeMove(board);
-		performEnpassantPossibilitySync(board, getPiece());
+		performEnpassantPossibilitySync(board, getPiece(), false);
 	}
 
-	private void performEnpassantPossibilitySync(final ChessBoard board, final Piece pieceAtEnPassantDestination)
+	/**
+	 * 
+	 * @param board
+	 * @param pieceAtEnPassantDestination
+	 * @param remove true if this sync is supposed to remove possible en-passant moves, false if they should be added
+	 */
+	private void performEnpassantPossibilitySync(final ChessBoard board, final Piece pieceAtEnPassantDestination, final boolean remove)
 	{
-		ImmutableSet<Move> otherTakeOverMoves = ImmutableSet.copyOf(board.getNonAvailableMoves(getEnpassantPosition(), !getAffinity()));
+		Collection<Move> moves = null;
+		if(remove)
+		{
+			moves = board.getAvailableMoves(getEnpassantPosition(), !getAffinity());
+		}
+		else
+		{
+			moves = board.getNonAvailableMoves(getEnpassantPosition(), !getAffinity());
+		}
+		ImmutableSet<Move> otherTakeOverMoves = ImmutableSet.copyOf(moves);
 		for(Move possiblePawnTakeOverMove : otherTakeOverMoves)
 		{
 			if(possiblePawnTakeOverMove instanceof PawnTakeOverMove)
@@ -68,13 +85,13 @@ public class PawnTwoStepMove extends PawnMove
 	 */
 	public void removeEnpassantMoves(final ChessBoard board)
 	{
-		performEnpassantPossibilitySync(board, board.getPiece(getEnpassantPosition()));
+		performEnpassantPossibilitySync(board, board.getPiece(getEnpassantPosition()), true);
 	}
 
 	@Override
 	public void onceAgainLastMoveThatWasMade(final ChessBoard board)
 	{
-		performEnpassantPossibilitySync(board, getPiece());
+		performEnpassantPossibilitySync(board, getPiece(), false);
 	}
 
 	@Override

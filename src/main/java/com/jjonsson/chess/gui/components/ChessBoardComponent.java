@@ -257,7 +257,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		}
 		catch(SearchInterruptedError sie)
 		{
-			LOGGER.info("Aborted the search for a hint move");
+			LOGGER.finest("Aborted the search for a hint move");
 		}
 	}
 
@@ -478,7 +478,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void gameStateChanged(final ChessState newState)
 	{
-		LOGGER.finer("" + newState);
+		LOGGER.finest("" + newState);
 		statusChange();
 	}
 
@@ -525,7 +525,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 						}
 						catch(SearchInterruptedError interrupted)
 						{
-							LOGGER.info("Aborted searching for a move");
+							LOGGER.finest("Aborted searching for a move");
 							return;
 						}
 						statusChange();
@@ -588,7 +588,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void uncaughtException(final Thread t, final Throwable e)
 	{
-		LOGGER.warning("Uncaught exception received in 'main' thread: " + e + ", for thread: " + t);
+		LOGGER.severe("Uncaught exception received in 'main' thread: " + e + ", for thread: " + t);
 		LOGGER.info("Exception trace: " + Logger.stackTraceToString(e));
+		LOGGER.info("AI move will not be made");
 	}
 }

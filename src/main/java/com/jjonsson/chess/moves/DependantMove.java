@@ -106,9 +106,6 @@ public abstract class DependantMove extends Move
 	@Override
 	public void updateDestination(final ChessBoard board)
 	{
-		//First update destination of moves that this move is dependent on
-		//TODO: is this really necessary?
-		//updateDestinationUpwards(board);
 		//Update myself
 		updateDestinationInternal(board);
 		//Update destination of moves that is dependent on this move
@@ -118,15 +115,6 @@ public abstract class DependantMove extends Move
 	protected void updateDestinationInternal(final ChessBoard board)
 	{
 		super.updateDestination(board);
-	}
-
-	private void updateDestinationUpwards(final ChessBoard board)
-	{
-		if(myMoveThatIDependUpon != null)
-		{
-			myMoveThatIDependUpon.updateDestinationUpwards(board);
-			myMoveThatIDependUpon.updateDestinationInternal(board);
-		}
 	}
 
 	private void updateDestinationDownwards(final ChessBoard board)
@@ -141,21 +129,10 @@ public abstract class DependantMove extends Move
 	@Override
 	public void updatePossibility(final ChessBoard board, final boolean updatePieceAtDestination)
 	{
-		//First update moves that this move is dependent on
-		//updatePossibilityUpwards(board);
 		//Update myself
 		updatePossiblityInternal(board, updatePieceAtDestination);
 		//Update moves that is dependent on this move
 		updatePossibilityDownwards(board, updatePieceAtDestination);
-	}
-
-	private void updatePossibilityUpwards(final ChessBoard board, final boolean updatePieceAtDestination)
-	{
-		if(myMoveThatIDependUpon != null)
-		{
-			myMoveThatIDependUpon.updatePossibilityUpwards(board, updatePieceAtDestination);
-			myMoveThatIDependUpon.updatePossiblityInternal(board, updatePieceAtDestination);
-		}
 	}
 
 	private void updatePossiblityInternal(final ChessBoard board, final boolean updatePieceAtDestination)
@@ -205,21 +182,10 @@ public abstract class DependantMove extends Move
 	@Override
 	public void syncCountersWithBoard(final ChessBoard board)
 	{
-		//First sync moves that this move is dependent on
-		syncCountersWithBoardUpwards(board);
 		//Sync myself
 		syncCountersWithBoardInternal(board);
 		//Sync moves that is dependent on this move
 		syncCountersWithBoardDownwards(board);
-	}
-
-	private void syncCountersWithBoardUpwards(final ChessBoard board)
-	{
-		if(myMoveThatIDependUpon != null)
-		{
-			myMoveThatIDependUpon.syncCountersWithBoardUpwards(board);
-			myMoveThatIDependUpon.syncCountersWithBoardInternal(board);
-		}
 	}
 
 	private void syncCountersWithBoardInternal(final ChessBoard board)
