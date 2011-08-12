@@ -13,10 +13,12 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.listeners.MoveListener;
 import com.jjonsson.chess.moves.ChainMove;
 import com.jjonsson.chess.moves.DependantMove;
+import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
-import com.jjonsson.chess.moves.MoveListener;
+import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
@@ -64,7 +66,10 @@ public abstract class Piece
 	public static final boolean NO_SORT = false;
 	public static final boolean SORT = true;
 
-	private Position myCurrentPosition;
+	public static final int BYTES_PER_PIECE = 2;
+
+	private ImmutablePosition myCurrentPosition;
+	private MutablePosition myPosition;
 	private boolean myAffinity;
 
 	private Set<MoveListener> myListeners;
@@ -99,7 +104,7 @@ public abstract class Piece
 	 * @param startingPosition where this piece should be placed
 	 * @param affinity true if this piece belongs to the black player false otherwise
 	 */
-	public Piece(final Position startingPosition, final boolean affinity, final ChessBoard boardPieceIsToBePlacedOn)
+	public Piece(final MutablePosition startingPosition, final boolean affinity, final ChessBoard boardPieceIsToBePlacedOn)
 	{
 		myMoves = createMoveTable();
 		myListeners = Sets.newHashSet();
@@ -107,7 +112,8 @@ public abstract class Piece
 
 		myPiecesThatTakesMyPieceOver = Sets.newHashSet();
 
-		myCurrentPosition = startingPosition;
+		myPosition = startingPosition;
+		myCurrentPosition = ImmutablePosition.getPosition(startingPosition);
 		myAffinity = affinity;
 		myBoard = boardPieceIsToBePlacedOn;
 		addPossibleMoves();
@@ -191,13 +197,13 @@ public abstract class Piece
 
 	/**
 	 * 
-	 * @return a PersistanceIdentifier identifying the type of this piece
+	 * @return a PersistenceIdentifier identifying the type of this piece
 	 */
-	protected abstract byte getPersistanceIdentifierType();
+	protected abstract byte getPersistenceIdentifierType();
 
-	private byte getPersistanceIdentifier()
+	private byte getPersistenceIdentifier()
 	{
-		byte type = getPersistanceIdentifierType();
+		byte type = getPersistenceIdentifierType();
 		if(isBlack())
 		{
 			//The fourth bit is the color identifier
@@ -209,32 +215,25 @@ public abstract class Piece
 	/**
 	 * @return a short containing one byte of position data and one byte of affinity and type data
 	 */
-	public short getPersistanceData()
+	public short getPersistenceData()
 	{
-		//From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
-		byte positionData = (byte) (getCurrentPosition().getRow() << 4);
-		positionData |= getCurrentPosition().getColumn();
-		return Shorts.fromBytes(positionData, getPersistanceIdentifier());
+		return Shorts.fromBytes(myCurrentPosition.getPersistence(), getPersistenceIdentifier());
 	}
 	/**
 	 * 
-	 * @param persistanceData the bits to read piece information from
+	 * @param persistenceData the bits to read piece information from
 	 * <br>From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
 	 * @param board the board the piece is going to be placed on
 	 * @return a newly constructed piece
 	 * @throws InvalidPosition
 	 */
-	public static Piece getPieceFromPersistanceData(final short persistanceData, final ChessBoard board) throws InvalidPosition
+	public static Piece getPieceFromPersistenceData(final short persistenceData, final ChessBoard board)
 	{
 		Piece piece = null;
 		//From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
-		byte row = (byte) (persistanceData >> 12);
-		byte column = (byte) (persistanceData >> Byte.SIZE & 0xF);
-
-		Position position = Position.createPosition(row + 1, column + 1);
-
-		boolean affinity = ((persistanceData & 0x0008) == 0x0008);
-		int type = persistanceData & 0x0007;
+		MutablePosition position = Position.createPosition(persistenceData);
+		boolean affinity = ((persistenceData & 0x0008) == 0x0008);
+		int type = persistenceData & 0x0007;
 
 		switch(type)
 		{
@@ -406,9 +405,20 @@ public abstract class Piece
 	 * 
 	 * @return where this Piece is currently located
 	 */
-	public Position getCurrentPosition()
+	public ImmutablePosition getCurrentPosition()
 	{
 		return myCurrentPosition;
+	}
+
+	public MutablePosition getPosition()
+	{
+		return myPosition;
+	}
+
+	public void updateCurrentPosition(final Move moveToPerform)
+	{
+		myPosition.applyMove(moveToPerform);
+		myCurrentPosition = ImmutablePosition.getPosition(myPosition);
 	}
 
 	/**
@@ -529,7 +539,7 @@ public abstract class Piece
 		{
 			return false;
 		}
-		if(this.getPersistanceIdentifierType() != p.getPersistanceIdentifierType())
+		if(this.getPersistenceIdentifierType() != p.getPersistenceIdentifierType())
 		{
 			return false;
 		}

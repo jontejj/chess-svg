@@ -24,8 +24,8 @@ import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.persistance.BoardLoader;
-import com.jjonsson.chess.persistance.ChessFileFilter;
+import com.jjonsson.chess.persistence.BoardLoader;
+import com.jjonsson.chess.persistence.ChessFileFilter;
 import com.jjonsson.chess.pieces.BlackPawn;
 import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
@@ -43,8 +43,7 @@ public class TestScenarios
 	public static ChessBoard loadBoard(final String testName, final boolean expectValidBoard)
 	{
 		String scenarioFile = "/scenarios/" + testName + ChessFileFilter.FILE_ENDING;
-		ChessBoard board = new ChessBoard(false);
-
+		ChessBoard board = new ChessBoard(false, true);
 		assertEquals("Could not load:" + scenarioFile, expectValidBoard, BoardLoader.loadStreamIntoBoard(BoardLoader.class.getResourceAsStream(scenarioFile), board));
 		return board;
 	}

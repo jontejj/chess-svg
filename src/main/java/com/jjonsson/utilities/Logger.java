@@ -2,9 +2,9 @@ package com.jjonsson.utilities;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 
-import com.jjonsson.utilities.logging.ConsoleHandler;
 import com.jjonsson.utilities.logging.LoggingFormatter;
 
 public final class Logger
@@ -24,14 +24,9 @@ public final class Logger
 	{
 		try
 		{
-			//Log unimportant events to stdout and important events to stderr
-			ConsoleHandler stdout = new ConsoleHandler(Level.INFO, System.out);
-			stdout.setFormatter(new LoggingFormatter());
-			stdout.setLevel(Level.ALL);
-
-			ConsoleHandler stderr = new ConsoleHandler(Level.SEVERE, System.err);
+			ConsoleHandler stderr = new ConsoleHandler();
 			stderr.setFormatter(new LoggingFormatter());
-			stderr.setLevel(Level.WARNING);
+			stderr.setLevel(Level.ALL);
 
 			// create a 'file' handler (default level = ALL)
 			/*FileHandler fh = new FileHandler("myAppLogFile%g.log", 50000, 10, false);
@@ -39,7 +34,6 @@ public final class Logger
 			fh.setLevel(Level.ALL);*/
 
 			LOGGER.setUseParentHandlers(false); // turn off the default handler
-			LOGGER.addHandler(stdout);
 			LOGGER.addHandler(stderr);
 			LOGGER.setLevel(Level.ALL);
 		}

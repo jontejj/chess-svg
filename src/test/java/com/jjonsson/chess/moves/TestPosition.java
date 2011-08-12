@@ -1,8 +1,11 @@
 package com.jjonsson.chess.moves;
 
+import static com.jjonsson.chess.moves.Position.D;
+import static com.jjonsson.chess.moves.Position.createPosition;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
+
 import java.util.Set;
 
 import org.junit.Test;
@@ -14,7 +17,7 @@ import com.jjonsson.chess.exceptions.InvalidPosition;
 
 public class TestPosition
 {
-	
+
 	/**
 	 * Make sure that two different positions gives us different hashCodes (and that we avoid hash collisions)
 	 */
@@ -26,7 +29,7 @@ public class TestPosition
 		{
 			for(byte c = 1;c<=ChessBoard.BOARD_SIZE + 1; c++)
 			{
-				
+
 				Position p;
 				try
 				{
@@ -41,12 +44,21 @@ public class TestPosition
 			}
 		}
 	}
-	
+
 	@Test
 	public void testPositionTraversal() throws InvalidPosition
 	{
 		Position whiteRightTower = Position.createPosition(1, Position.A);
 		Position whiteRightKnight = Position.createPosition(1, Position.B);
 		assertEquals(whiteRightKnight, whiteRightTower.up().right().right().down().left());
+	}
+
+	@Test
+	public void testPersistence() throws InvalidPosition
+	{
+		byte persistenceByte = (byte) 0x33;
+		ImmutablePosition position = ImmutablePosition.fromByte(persistenceByte);
+		assertEquals(persistenceByte, position.getPersistence());
+		assertTrue(position.equals(createPosition(4, D)));
 	}
 }

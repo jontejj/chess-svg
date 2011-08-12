@@ -7,7 +7,7 @@ import java.util.concurrent.CountDownLatch;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.Move;
-import com.jjonsson.chess.persistance.BoardLoader;
+import com.jjonsson.chess.persistence.BoardLoader;
 import com.jjonsson.utilities.Logger;
 
 public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
@@ -108,29 +108,22 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	 */
 	private boolean makeThreadSafe()
 	{
-		try
+		ChessBoard copy = myBoard.copy();
+		if(copy == null)
 		{
-			ChessBoard board = myBoard.clone();
-			if(board == null)
-			{
-				LOGGER.severe("Failed to clone board.");
-				BoardLoader.saveBoard(myBoard, "temp_board_causing_clone_failure");
-				return false;
-			}
-			Move move = board.getMove(myMoveToEvaluate);
-			if(move == null)
-			{
-				LOGGER.severe("Failed to find move for: " + myMoveToEvaluate);
-				return false;
-			}
-			myLimiter = myLimiter.copy();
-			myBoard = board;
-			myMoveToEvaluate = move;
+			LOGGER.severe("Failed to clone board.");
+			BoardLoader.saveBoard(myBoard, "temp_board_causing_clone_failure");
+			return false;
 		}
-		catch (CloneNotSupportedException e)
+		Move move = copy.getMove(myMoveToEvaluate);
+		if(move == null)
 		{
-			throw new UnsupportedOperationException("Cloning of chessboard not possible", e);
+			LOGGER.severe("Failed to find move for: " + myMoveToEvaluate);
+			return false;
 		}
+		myLimiter = myLimiter.copy();
+		myBoard = copy;
+		myMoveToEvaluate = move;
 		return true;
 	}
 

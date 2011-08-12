@@ -20,7 +20,8 @@ public class CastlingMove extends IndependantMove
 	/**
 	 * The position that the king needs to traverse over in a QueenSideCastling
 	 */
-	private Position myQueenSideCastlingKingStepPosition;
+	private ImmutablePosition myQueenSideCastlingKingStepPosition;
+	private ImmutablePosition myPreviousPosition;
 
 	/**
 	 * 
@@ -34,7 +35,7 @@ public class CastlingMove extends IndependantMove
 		myKingMove = new KingCastlingMovePart(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
 		if(isQueenSideCastlingMove())
 		{
-			myQueenSideCastlingKingStepPosition = new Position(getCurrentPosition().getRow(), (byte) (getCurrentPosition().getColumn() - 3));
+			myQueenSideCastlingKingStepPosition = ImmutablePosition.getPosition(getCurrentPosition().getRow(), getCurrentPosition().getColumn() - 3);
 		}
 	}
 
@@ -142,7 +143,9 @@ public class CastlingMove extends IndependantMove
 		}
 
 		board.movePiece(getPiece(), myKingMove);
-		getCurrentPosition().applyMove(myKingMove);
+		myPreviousPosition = getCurrentPosition();
+		getPiece().updateCurrentPosition(myKingMove);
+
 		setMovesMade(getMovesMade()+1);
 		try
 		{
@@ -153,6 +156,16 @@ public class CastlingMove extends IndependantMove
 			LOGGER.warning(e.toString() + ", during castling move");
 			board.undoMove(myKingMove, false);
 		}
+	}
+
+	/**
+	 * Overridden because castling moves makes two moves in one and thus
+	 * would the oldPosition be faulty if it weren't handled here
+	 */
+	@Override
+	public ImmutablePosition getOldPosition()
+	{
+		return myPreviousPosition;
 	}
 
 	@Override

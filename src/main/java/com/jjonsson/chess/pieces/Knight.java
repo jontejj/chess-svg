@@ -1,20 +1,24 @@
 package com.jjonsson.chess.pieces;
 
+import static com.jjonsson.chess.moves.Move.DOWN;
+import static com.jjonsson.chess.moves.Move.LEFT;
+import static com.jjonsson.chess.moves.Move.RIGHT;
+import static com.jjonsson.chess.moves.Move.UP;
+
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.KnightMove;
-import static com.jjonsson.chess.moves.Move.*;
-import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.MutablePosition;
 
-public class Knight extends Piece 
+public class Knight extends Piece
 {
 
-	public Knight(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn) 
+	public Knight(final MutablePosition startingPosition, final boolean affinity, final ChessBoard boardPieceIsToBePlacedOn)
 	{
 		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
 
 	@Override
-	public int getValue() 
+	public int getValue()
 	{
 		return Piece.KNIGHT_VALUE;
 	}
@@ -37,13 +41,13 @@ public class Knight extends Piece
 	{
 		return "Knight";
 	}
-	
+
 	@Override
-	protected byte getPersistanceIdentifierType()
+	protected byte getPersistenceIdentifierType()
 	{
 		return Piece.KNIGHT;
 	}
-	
+
 	@Override
 	public int getFirstDimensionMaxIndex()
 	{

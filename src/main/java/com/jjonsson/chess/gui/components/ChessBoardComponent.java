@@ -30,9 +30,9 @@ import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.SearchInterruptedError;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.Settings;
-import com.jjonsson.chess.gui.StatusListener;
 import com.jjonsson.chess.gui.WindowUtilities;
 import com.jjonsson.chess.listeners.ChessBoardListener;
+import com.jjonsson.chess.listeners.StatusListener;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
@@ -93,7 +93,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		setCurrentPieceSize();
 		setSize(size);
 		addMouseListener(this);
-		getBoard().addChessBoardListener(this);
+		myBoard.addChessBoardListener(this);
+
 		for(Piece p : myBoard.getPieces())
 		{
 			ChessPieceComponent comp = new ChessPieceComponent(p, this);

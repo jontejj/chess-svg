@@ -4,7 +4,7 @@ import static com.jjonsson.utilities.Logger.LOGGER;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.jjonsson.chess.gui.StatusListener;
+import com.jjonsson.chess.listeners.StatusListener;
 
 public final class ProgressTracker
 {
@@ -30,7 +30,7 @@ public final class ProgressTracker
 		MoveEvaluatingThread.threadsCreated = 0;
 	}
 
-	static synchronized void moveHasBeenMade()
+	public static synchronized void moveHasBeenMade()
 	{
 		movesMade++;
 		if(myStatusTracker != null && System.nanoTime() > myLastSync + SECONDS.toNanos(1))

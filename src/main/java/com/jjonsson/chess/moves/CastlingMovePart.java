@@ -22,7 +22,7 @@ public abstract class CastlingMovePart extends IndependantMove
 		Position currentPosition = getCurrentPosition();
 		byte newRow = (byte)(currentPosition.getRow()+rowChange);
 		byte newColumn = (byte)(currentPosition.getColumn()+columnChange);
-		setDestination(new Position(newRow, newColumn));
+		setDestination(ImmutablePosition.getPosition(newRow, newColumn));
 		setPieceAtDestination(getPiece().getBoard().getPiece(getDestination()));
 	}
 

@@ -13,7 +13,7 @@ import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.SearchInterruptedError;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
-import com.jjonsson.chess.gui.StatusListener;
+import com.jjonsson.chess.listeners.StatusListener;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.utilities.Logger;
 import com.jjonsson.utilities.ThreadTracker;
@@ -48,15 +48,8 @@ public final class ChessMoveEvaluator
 		long startTime = System.nanoTime();
 		Move result = null;
 		deepestSearch = 0;
-		ChessBoard copyOfBoard;
-		try
-		{
-			copyOfBoard = board.clone();
-		}
-		catch (CloneNotSupportedException e)
-		{
-			throw new UnsupportedOperationException("Cloning of chessboard not possible", e);
-		}
+		ChessBoard copyOfBoard = board.copy();
+
 		ProgressTracker.setStatusListener(listener);
 		SearchLimiter limiter = new SearchLimiter(board.getDifficulty());
 		SearchResult searchResult = deepSearch(copyOfBoard, limiter);

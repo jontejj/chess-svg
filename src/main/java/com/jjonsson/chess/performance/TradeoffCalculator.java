@@ -10,13 +10,13 @@ import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.evaluators.ProgressTracker;
 import com.jjonsson.chess.evaluators.SearchLimiter;
 import com.jjonsson.chess.exceptions.InvalidPosition;
-import com.jjonsson.chess.gui.StatusListener;
+import com.jjonsson.chess.listeners.StatusListener;
 import com.jjonsson.chess.moves.Move;
 
 public final class TradeoffCalculator
 {
 	private static final int BENCHMARK_AMOUNT = 100000;
-	public static void main(final String[] args) throws CloneNotSupportedException, InvalidPosition
+	public static void main(final String[] args) throws InvalidPosition
 	{
 		StatusListener listener = new StatusListener(){
 			@Override public void statusHasBeenUpdated(){}
@@ -30,7 +30,7 @@ public final class TradeoffCalculator
 		long startTime = System.nanoTime();
 		for(int i = BENCHMARK_AMOUNT; i >0; i--)
 		{
-			board.clone();
+			board.copy();
 		}
 		long nanosPerClone = (System.nanoTime() - startTime) / BENCHMARK_AMOUNT;
 		double duration = (double)(nanosPerClone * BENCHMARK_AMOUNT) / 1000000000;
@@ -44,6 +44,7 @@ public final class TradeoffCalculator
 		{
 			ChessMoveEvaluator.performMoveWithMeasurements(move, board, limiter);
 			board.undoMove(move, false);
+			ProgressTracker.moveHasBeenMade();
 			//ChessMoveEvaluator.evaluateMove(move, board, limiter, new SearchResult(), 0);
 		}
 		ProgressTracker.done();

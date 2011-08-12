@@ -15,9 +15,10 @@ import org.w3c.dom.svg.SVGDocument;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.PieceImageCache;
+import com.jjonsson.chess.listeners.MoveListener;
 import com.jjonsson.chess.moves.Move;
-import com.jjonsson.chess.moves.MoveListener;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.Piece;
 
 public class ChessPieceComponent extends JSVGComponent implements MoveListener, MouseListener//, SVGLoadEventDispatcherListener, SVGDocumentLoaderListener, GVTTreeBuilderListener, GVTTreeRendererListener
@@ -86,12 +87,28 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		}
 	}
 
-	@Override
-	public void movePerformed(final Move performedMove)
+	private void refresh()
 	{
 		setBackgroundColor();
 		setLocation(getPointForPiece(myPieceToDraw));
 		repaint();
+	}
+
+	@Override
+	public void movePerformed(final Move performedMove)
+	{
+		refresh();
+	}
+
+	@Override
+	public void moveReverted(final RevertingMove move)
+	{
+		refresh();
+	}
+
+	@Override
+	public void reset()
+	{
 	}
 
 	@Override

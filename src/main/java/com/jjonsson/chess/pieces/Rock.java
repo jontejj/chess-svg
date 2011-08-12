@@ -8,12 +8,12 @@ import static com.jjonsson.chess.moves.Move.RIGHT;
 import static com.jjonsson.chess.moves.Move.UP;
 
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.MutablePosition;
 
 public class Rock extends Piece
 {
 
-	public Rock(final Position startingPosition, final boolean affinity, final ChessBoard boardPieceIsToBePlacedOn)
+	public Rock(final MutablePosition startingPosition, final boolean affinity, final ChessBoard boardPieceIsToBePlacedOn)
 	{
 		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
@@ -40,7 +40,7 @@ public class Rock extends Piece
 	}
 
 	@Override
-	protected byte getPersistanceIdentifierType()
+	protected byte getPersistenceIdentifierType()
 	{
 		if(getMovesMade() > 0)
 		{

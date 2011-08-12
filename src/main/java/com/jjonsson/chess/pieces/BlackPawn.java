@@ -5,18 +5,18 @@ import static com.jjonsson.chess.moves.Move.LEFT;
 import static com.jjonsson.chess.moves.Move.RIGHT;
 
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.PawnMove;
 import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
 import com.jjonsson.chess.moves.PawnTwoStepMove;
-import com.jjonsson.chess.moves.Position;
 
 public class BlackPawn extends Pawn
 {
 
 	private static final byte	BLACK_PAWN_STARTING_ROW	= 6;
 
-	public BlackPawn(Position startingPosition, ChessBoard boardPieceIsToBePlacedOn)
+	public BlackPawn(final MutablePosition startingPosition, final ChessBoard boardPieceIsToBePlacedOn)
 	{
 		super(startingPosition, Piece.BLACK, boardPieceIsToBePlacedOn);
 	}
@@ -31,12 +31,12 @@ public class BlackPawn extends Pawn
 		{
 			step1.setMoveThatDependsOnMe(step2);
 		}
-		
+
 		addPossibleMove(step1);
 		addPossibleMove(new PawnTakeOverMove(1 * DOWN, 1 * LEFT, this, null, null));
 		addPossibleMove(new PawnTakeOverMove(1 * DOWN, 1 * RIGHT, this, null, null));
 	}
-	
+
 	@Override
 	protected boolean isAtStartingRow()
 	{

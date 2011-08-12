@@ -36,9 +36,9 @@ public abstract class Move
 	/**
 	 * The cached position of this move's destination
 	 */
-	private Position myDestination;
+	private ImmutablePosition myDestination;
 
-	private Position myPreviousDestination;
+	private ImmutablePosition myPreviousDestination;
 
 	/**
 	 * Cached decision of whether or not this move can be made
@@ -217,7 +217,7 @@ public abstract class Move
 	 * 
 	 * @return the current position of the piece that this move belongs to
 	 */
-	public Position getCurrentPosition()
+	public ImmutablePosition getCurrentPosition()
 	{
 		return getPiece().getCurrentPosition();
 	}
@@ -262,7 +262,7 @@ public abstract class Move
 	/**
 	 * @return the new position or null if the move isn't valid
 	 */
-	public Position getDestination()
+	public ImmutablePosition getDestination()
 	{
 		return myDestination;
 	}
@@ -272,7 +272,7 @@ public abstract class Move
 		return myPreviousDestination;
 	}
 
-	public void setDestination(final Position newDestination)
+	public void setDestination(final ImmutablePosition newDestination)
 	{
 		myPreviousDestination = myDestination;
 		myDestination = newDestination;
@@ -294,7 +294,7 @@ public abstract class Move
 		}
 		else
 		{
-			setDestination(new Position(newRow, newColumn));
+			setDestination(ImmutablePosition.getPosition(newRow, newColumn));
 		}
 	}
 
@@ -500,7 +500,7 @@ public abstract class Move
 		}
 
 		board.movePiece(myPiece, this);
-		myPiece.getCurrentPosition().applyMove(this);
+		myPiece.updateCurrentPosition(this);
 		myMovesMade++;
 	}
 
@@ -559,7 +559,7 @@ public abstract class Move
 	 * @return if this move was the last one to be made this will
 	 * return the position where the piece previously was at, if it wasn't the returned position will be erroronous
 	 */
-	public Position getOldPosition()
+	public ImmutablePosition getOldPosition()
 	{
 		return getRevertingMove().getDestination();
 	}

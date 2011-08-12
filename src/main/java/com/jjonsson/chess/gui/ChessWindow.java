@@ -19,8 +19,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -37,8 +35,9 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
-import com.jjonsson.chess.persistance.BoardLoader;
-import com.jjonsson.chess.persistance.ChessFileFilter;
+import com.jjonsson.chess.listeners.StatusListener;
+import com.jjonsson.chess.persistence.BoardLoader;
+import com.jjonsson.chess.persistence.ChessFileFilter;
 import com.jjonsson.utilities.ThreadTracker;
 
 public class ChessWindow extends JFrame implements ActionListener, StatusListener
@@ -107,6 +106,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 
 		this.setSize(ChessWindow.DEFAULT_WINDOW_WIDTH + WINDOW_BORDER_SIZE, ChessWindow.DEFAULT_WINDOW_HEIGHT + WINDOW_BORDER_SIZE + getJMenuBar().getHeight() + STATUS_BAR_HEIGHT);
 		myComponent = new ChessBoardComponent(myBoard, getBoardComponentSize());
+
 		myComponent.setStatusListener(this);
 		this.setContentPane(myComponent);
 
@@ -325,14 +325,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 
 			while(!loadOk && myCurrentBoardFile != null)
 			{
-				try
-				{
-					loadOk = BoardLoader.loadStreamIntoBoard(new FileInputStream(selectedFile), getBoard());
-				}
-				catch (FileNotFoundException e)
-				{
-				}
-
+				loadOk = BoardLoader.loadFileIntoBoard(selectedFile, getBoard());
 				if(loadOk)
 				{
 					break;

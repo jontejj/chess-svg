@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.DependantMove;
+import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.Bishop;
 import com.jjonsson.chess.pieces.King;
@@ -19,9 +20,9 @@ public final class ChessBoardEvaluator
 	private static final long VALUE_OF_STALEMATE = -10000;
 	private ChessBoardEvaluator()
 	{
-		
+
 	}
-	
+
 	public enum ChessState
 	{
 		CHECKMATE,
@@ -29,8 +30,8 @@ public final class ChessBoardEvaluator
 		STALEMATE,
 		PLAYING
 	}
-	
-	public static long valueOfState(ChessState state)
+
+	public static long valueOfState(final ChessState state)
 	{
 		long result = 0;
 		switch(state)
@@ -51,18 +52,18 @@ public final class ChessBoardEvaluator
 		}
 		return result;
 	}
-	
+
 	/**
 	 * 
 	 * @param board
 	 * @return true if the given board still is in play
 	 */
-	public static boolean inPlay(ChessBoard board)
+	public static boolean inPlay(final ChessBoard board)
 	{
 		return ChessState.PLAYING == board.getCurrentState() || ChessState.CHECK == board.getCurrentState();
 	}
 
-	public static ChessState getState(ChessBoard board)
+	public static ChessState getState(final ChessBoard board)
 	{
 		King currentKing = board.getCurrentKing();
 		Collection<Move> movesThreateningKing = board.getAvailableMoves(currentKing.getCurrentPosition(), !currentKing.getAffinity());
@@ -80,8 +81,8 @@ public final class ChessBoardEvaluator
 		}
 		return ChessState.PLAYING;
 	}
-	
-	private static boolean isCheckMate(ChessBoard board, Collection<Move> movesThreateningKing, King currentKing)
+
+	private static boolean isCheckMate(final ChessBoard board, final Collection<Move> movesThreateningKing, final King currentKing)
 	{
 		List<Move> kingMoves = currentKing.getAvailableMoves(Piece.NO_SORT, board);
 		Set<Move> movesStoppingCheck = Sets.newHashSet();
@@ -97,16 +98,20 @@ public final class ChessBoardEvaluator
 				while(moveThatThisMoveDependUpon != null)
 				{
 					Collection<Move> movesStoppingMove = board.getAvailableMoves(moveThatThisMoveDependUpon.getDestination(), !threateningMove.getAffinity());
-					if(movesStoppingMove.size() > 0)
+					for(Move stoppingMove : movesStoppingMove)
 					{
-						movesStoppingCheck.addAll(movesStoppingMove);
-						moveIsStoppable = true;
+						//Clear kings because they can't put themselves in harms way
+						if(!(stoppingMove instanceof KingMove))
+						{
+							moveIsStoppable = true;
+							movesStoppingCheck.add(stoppingMove);
+						}
 					}
 					moveThatThisMoveDependUpon = moveThatThisMoveDependUpon.getMoveThatIDependUpon();
 				}
-				
+
 			}
-			
+
 			//If the threatening piece can be taken in one move then the king can be saved
 			Collection<Move> defendingMoves = board.getAvailableMoves(threateningMove.getCurrentPosition(), currentKing.getAffinity());
 			if(defendingMoves.size() > 0)
@@ -114,25 +119,25 @@ public final class ChessBoardEvaluator
 				movesStoppingCheck.addAll(defendingMoves);
 				moveIsStoppable = true;
 			}
-			
+
 			if(moveIsStoppable)
 			{
 				stoppableMoves++;
 			}
 		}
-		
+
 		movesStoppingCheck.addAll(kingMoves);
 		//Caches the moves available for the current player (I.e invalidating all moves that during a non-check would be available)
 		board.setMovesThatStopsKingFromBeingChecked(movesStoppingCheck);
-		
+
 		if(stoppableMoves != movesThreateningKing.size() && kingMoves.size() == 0)
 		{
 			return true;
 		}
 		return false;
 	}
-	
-	private static boolean isStalemate(ChessBoard board)
+
+	private static boolean isStalemate(final ChessBoard board)
 	{
 		//Stalemate when the current player doesn't have any legal moves and the king is safe
 		if(board.getAvailableMovesCount(board.getCurrentPlayer()) == 0)
@@ -146,10 +151,10 @@ public final class ChessBoardEvaluator
 		}
 		else if(board.getTotalPieceCount() == 3)
 		{
-		    /**
-		     * king against king and bishop;
-		     * king against king and knight;
-		     */
+			/**
+			 * king against king and bishop;
+			 * king against king and knight;
+			 */
 			for(Piece piece : board.getPieces())
 			{
 				if((piece instanceof Bishop) || (piece instanceof Knight))
@@ -161,9 +166,9 @@ public final class ChessBoardEvaluator
 		else if(board.getTotalPieceCount() == 4)
 		{
 			Set<Boolean> sameDiagonals = Sets.newHashSet();
-		    /**
-		     * king and bishop against king and bishop, with both bishops on diagonals of the same colour.
-		     */
+			/**
+			 * king and bishop against king and bishop, with both bishops on diagonals of the same colour.
+			 */
 			for(Piece piece : board.getPieces())
 			{
 				if(piece instanceof Bishop)

@@ -1,35 +1,42 @@
 package com.jjonsson.chess.pieces;
 
+import static com.jjonsson.chess.moves.Move.DOWN;
+import static com.jjonsson.chess.moves.Move.LEFT;
+import static com.jjonsson.chess.moves.Move.NO_CHANGE;
+import static com.jjonsson.chess.moves.Move.RIGHT;
+import static com.jjonsson.chess.moves.Move.UP;
+
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.CastlingMove;
+import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.KingMove;
-import com.jjonsson.chess.moves.Position;
-import static com.jjonsson.chess.moves.Move.*;
+import com.jjonsson.chess.moves.MutablePosition;
 
-public class King extends Piece 
+public class King extends Piece
 {
-	private static final Position WHITE_KING_START_POSITION = new Position((byte)0, (byte)4);
-	private static final Position BLACK_KING_START_POSITION = new Position((byte)7, (byte)4);
-	
+	private static final ImmutablePosition WHITE_KING_START_POSITION = ImmutablePosition.getPosition(0, 4);
+	private static final ImmutablePosition BLACK_KING_START_POSITION = ImmutablePosition.getPosition(ChessBoard.BOARD_SIZE - 1, 4);
+
 	private CastlingMove myKingSideCastlingMove;
 	private CastlingMove myQueenSideCastlingMove;
-	
+
 	/**
 	 * 
 	 * @param startingPosition where this king should be placed
 	 * @param affinity true if this piece belongs to the black player false otherwise
 	 */
-	public King(Position startingPosition, boolean affinity, ChessBoard boardPieceIsToBePlacedOn)
+	public King(final MutablePosition startingPosition, final boolean affinity, final ChessBoard boardPieceIsToBePlacedOn)
 	{
 		super(startingPosition, affinity, boardPieceIsToBePlacedOn);
 	}
 
 	@Override
-	public int getValue() 
+	public int getValue()
 	{
 		return Piece.KING_VALUE;
 	}
 
+	@Override
 	public void addPossibleMoves()
 	{
 		addPossibleMove(new KingMove(UP, LEFT, this));
@@ -48,15 +55,15 @@ public class King extends Piece
 			addPossibleMove(myQueenSideCastlingMove);
 		}
 	}
-	
+
 	public boolean isAtStartingPosition()
 	{
 		if(isBlack())
 		{
 			return BLACK_KING_START_POSITION.equals(getCurrentPosition());
 		}
-		
-		return WHITE_KING_START_POSITION.equals(getCurrentPosition());	
+
+		return WHITE_KING_START_POSITION.equals(getCurrentPosition());
 	}
 
 	@Override
@@ -64,18 +71,18 @@ public class King extends Piece
 	{
 		return "King";
 	}
-	
+
 	@Override
-	protected byte getPersistanceIdentifierType()
+	protected byte getPersistenceIdentifierType()
 	{
 		if(getMovesMade() > 0)
 		{
 			return Piece.MOVED_KING;
 		}
-		
+
 		return Piece.KING;
 	}
-	
+
 	/**
 	 * 
 	 * @return the move that takes the king two steps to the right
@@ -84,7 +91,7 @@ public class King extends Piece
 	{
 		return myKingSideCastlingMove;
 	}
-	
+
 	/**
 	 * 
 	 * @return the move that takes the king three steps to the left
@@ -93,13 +100,13 @@ public class King extends Piece
 	{
 		return myQueenSideCastlingMove;
 	}
-	
+
 	@Override
 	public int getFirstDimensionMaxIndex()
 	{
 		return 0;
 	}
-	
+
 	@Override
 	public int getSecondDimensionMaxIndex()
 	{

@@ -13,16 +13,14 @@ import static com.jjonsson.chess.moves.Position.H;
 import static com.jjonsson.chess.moves.Position.WHITE_PAWN_ROW;
 import static com.jjonsson.chess.moves.Position.WHITE_STARTING_ROW;
 import static com.jjonsson.chess.moves.Position.createPosition;
+import static com.jjonsson.chess.moves.Position.fromString;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.chess.pieces.Piece.NO_SORT;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,7 +33,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.primitives.Shorts;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.DuplicatePieceException;
@@ -44,13 +41,17 @@ import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.listeners.ChessBoardListener;
+import com.jjonsson.chess.listeners.MoveListener;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.RevertingMove;
-import com.jjonsson.chess.persistance.MoveLogger;
+import com.jjonsson.chess.persistence.BoardLoader;
+import com.jjonsson.chess.persistence.MoveLogger;
+import com.jjonsson.chess.persistence.MoveLoggerFactory;
+import com.jjonsson.chess.persistence.PersistenceLogger;
 import com.jjonsson.chess.pieces.Bishop;
 import com.jjonsson.chess.pieces.BlackPawn;
 import com.jjonsson.chess.pieces.King;
@@ -60,7 +61,7 @@ import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.Rock;
 import com.jjonsson.chess.pieces.WhitePawn;
 
-public final class ChessBoard implements Cloneable
+public final class ChessBoard
 {
 	public static final byte BOARD_SIZE = 8;
 	public static final byte MOVES_IN_ONE_DIRECTION = BOARD_SIZE - 1;
@@ -107,7 +108,9 @@ public final class ChessBoard implements Cloneable
 	private boolean myCurrentPlayer;
 
 	private Set<ChessBoardListener> myBoardListeners;
+	private Set<MoveListener> myMoveListeners;
 	private MoveLogger myMoveLogger;
+	private PersistenceLogger myPersistenceLogger;
 
 	private King	myBlackKing;
 
@@ -157,8 +160,9 @@ public final class ChessBoard implements Cloneable
 		myAllowsMoves = true;
 		myMovesThatStopsKingFromBeingChecked = ImmutableSet.of();
 		myBoardListeners = Sets.newHashSet();
-		myMoveLogger = new MoveLogger();
-		addChessBoardListener(myMoveLogger);
+		myMoveListeners = Sets.newHashSet();
+		myMoveLogger = MoveLoggerFactory.createMoveLogger();
+		addMoveListener(myMoveLogger);
 
 		myBlackPieces = Maps.newHashMap();
 		myWhitePieces = Maps.newHashMap();
@@ -175,6 +179,35 @@ public final class ChessBoard implements Cloneable
 		{
 			createMoveMaps();
 		}
+	}
+
+	public ChessBoard(final boolean placeInitialPiece, final boolean activatePersistenceLogging)
+	{
+		this(placeInitialPiece);
+		if(activatePersistenceLogging)
+		{
+			addPersistenceLogger(MoveLoggerFactory.createPersistenceLogger());
+			if(placeInitialPiece)
+			{
+				//This means that we now have a board for the persistence logger to start from
+				updatePersistenceLogger();
+			}
+		}
+	}
+	/**
+	 * 
+	 * @param moveListener
+	 * @return true if the listener was added
+	 */
+	public boolean addMoveListener(final MoveListener moveListener)
+	{
+		return myMoveListeners.add(moveListener);
+	}
+
+	public void addPersistenceLogger(final PersistenceLogger persistenceMoveLogger)
+	{
+		myPersistenceLogger = persistenceMoveLogger;
+		addMoveListener(persistenceMoveLogger);
 	}
 
 	private void createMoveMaps()
@@ -219,37 +252,29 @@ public final class ChessBoard implements Cloneable
 
 	/**
 	 * Makes a copy of the board without copying the listeners
+	 * <br><b>Note</b>: this does not copy the made moves on the board, so an undo operation on the returned board would always fail
 	 * @return the new board or null if the copy failed
 	 */
-	@Override
-	public ChessBoard clone() throws CloneNotSupportedException
+	public ChessBoard copy()
 	{
 		ChessBoard newBoard = new ChessBoard(false);
-		ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
+		ByteBuffer buffer = ByteBuffer.allocate(getPersistenceSize(false));
 		try
 		{
-			writePersistanceData(baos);
-			newBoard.readPersistanceData(new ByteArrayInputStream(baos.toByteArray()));
-			newBoard.setPossibleMoves();
-			newBoard.updateGameState();
-			newBoard.copyMoveCounters(this);
+			writePersistenceData(buffer, false);
+			buffer.flip();
+			if(BoardLoader.loadBufferIntoBoard(buffer, newBoard))
+			{
+				newBoard.copyMoveCounters(this);
+				newBoard.myMoveLogger.setMovesMadeOffset(myMoveLogger.getMovesMade());
+			}
+			else
+			{
+				newBoard = null;
+			}
 		}
 		catch (IOException e)
 		{
-			newBoard = null;
-		}
-		catch (InvalidPosition e)
-		{
-			newBoard = null;
-		}
-		catch (DuplicatePieceException e)
-		{
-			LOGGER.severe("Got a duplicate piece: " + e.getDuplicatePiece() + ", conflicted with: " + e.getExistingPiece());
-			newBoard = null;
-		}
-		catch (InvalidBoardException e)
-		{
-			LOGGER.severe("Detected that only one king exists during clone operation. The possiblillity of moves needs to be fixed.");
 			newBoard = null;
 		}
 		/*catch(NullPointerException npe)
@@ -634,7 +659,10 @@ public final class ChessBoard implements Cloneable
 		Position currentPosition = p.getCurrentPosition();
 		myPieces.remove(currentPosition);
 		getMapForAffinity(p.getAffinity()).remove(currentPosition);
-		myMoveLogger.pieceRemoved(p);
+		for(MoveListener ml : myMoveListeners)
+		{
+			ml.pieceRemoved(p);
+		}
 	}
 
 	/**
@@ -662,7 +690,7 @@ public final class ChessBoard implements Cloneable
 		if(newPiece == null)
 		{
 			//Replace him with a Queen
-			newPiece = new Queen(pawn.getCurrentPosition(), pawn.getAffinity(), this);
+			newPiece = new Queen(pawn.getPosition().copy(), pawn.getAffinity(), this);
 		}
 		newPiece.setIsPawnReplacementPiece();
 
@@ -1094,17 +1122,19 @@ public final class ChessBoard implements Cloneable
 		Piece oldPiece = myPieces.put(newPosition, pieceToMove);
 		if(oldPiece != null && oldPiece != pieceToMove)
 		{
-			LOGGER.info("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
-					"Actual piece at destination:" + oldPiece);
+			//LOGGER.info("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
+			//		"Actual piece at destination:" + oldPiece);
 			//The move was out of sync, lets fix it
 			//TODO: this wouldn't be needed if the moves were updated properly
 			moveToPerform.setPieceAtDestination(oldPiece);
-			if(moveToPerform.canBeTakeOverMove())
+			if(moveToPerform.canBeMade(this))
 			{
 				oldPiece.removeFromBoard(this);
 			}
 			else
 			{
+				LOGGER.info("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
+						"Actual piece at destination:" + oldPiece + ", after update this move couldn't be done.");
 				//Restore state and throw
 				myPieces.put(newPosition, oldPiece);
 				myPieces.put(oldPosition, pieceToMove);
@@ -1115,13 +1145,47 @@ public final class ChessBoard implements Cloneable
 		map.remove(oldPosition);
 		map.put(newPosition, pieceToMove);
 
-		myMoveLogger.movePerformed(moveToPerform);
+		if(moveToPerform instanceof RevertingMove)
+		{
+			for(MoveListener ml : myMoveListeners)
+			{
+				ml.moveReverted((RevertingMove) moveToPerform);
+			}
+		}
+		else
+		{
+			for(MoveListener ml : myMoveListeners)
+			{
+				ml.movePerformed(moveToPerform);
+			}
+		}
 	}
 
 	public void move(final Position from, final Position to) throws UnavailableMoveException
 	{
 		Piece piece = getPiece(from);
+		if(piece == null)
+		{
+			throw new UnavailableMoveException(null);
+		}
 		Move move = getAvailableMove(piece, to);
+		if(move == null)
+		{
+			throw new UnavailableMoveException(null);
+		}
+		piece.performMove(move, this);
+	}
+
+	public void move(final String from, final String to) throws UnavailableMoveException, InvalidPosition
+	{
+		Position fromPos = fromString(from);
+		Position toPos = fromString(to);
+		Piece piece = getPiece(fromPos);
+		if(piece == null)
+		{
+			throw new UnavailableMoveException(null);
+		}
+		Move move = getAvailableMove(piece, toPos);
 		if(move == null)
 		{
 			throw new UnavailableMoveException(null);
@@ -1225,9 +1289,39 @@ public final class ChessBoard implements Cloneable
 		myWhitePieces.clear();
 		myBlackPieces.clear();
 		createMoveMaps();
-		myMoveLogger.clear();
+		for(MoveListener ml :  myMoveListeners)
+		{
+			ml.reset();
+		}
 		myWhiteKing = null;
 		myBlackKing = null;
+	}
+
+	/**
+	 * 
+	 * @return true if this board can save moves if not this will throw an IllegalStateException
+	 */
+	private boolean checkPersistencePossibility() throws IllegalStateException
+	{
+		if(myPersistenceLogger == null)
+		{
+			throw new IllegalStateException("ChessBoard without perstistance activated tried to read board with persistence activated. Programming error.");
+		}
+		return true;
+	}
+
+	/**
+	 * 
+	 * @param includeMoves true if moves is to be saved as well
+	 * @return the number of bytes needed to save this board
+	 */
+	public int getPersistenceSize(final boolean includeMoves)
+	{
+		if(includeMoves && checkPersistencePossibility())
+		{
+			return myPersistenceLogger.getPersistenceSize();
+		}
+		return 1 + myPieces.size() * Piece.BYTES_PER_PIECE; //Settings byte + Pieces
 	}
 
 	/**
@@ -1236,39 +1330,64 @@ public final class ChessBoard implements Cloneable
 	 * @param stream the stream to write to
 	 * @throws IOException
 	 */
-	public void writePersistanceData(final OutputStream stream) throws IOException
+	public void writePersistenceData(final ByteBuffer buffer, final boolean writeMoveHistory) throws IOException
 	{
-		stream.write(getGameStatePersistanceData());
-		for(Piece p : getPieces())
+		if(writeMoveHistory && checkPersistencePossibility())
 		{
-			stream.write(Shorts.toByteArray(p.getPersistanceData()));
+			myPersistenceLogger.writeMoveHistory(buffer);
+		}
+		else
+		{
+			buffer.put(getGameStateSettingsByte(writeMoveHistory));
+			writePieces(buffer);
 		}
 	}
 
-	public void readPersistanceData(final InputStream stream) throws IOException, InvalidPosition, DuplicatePieceException, InvalidBoardException
+	public void writePieces(final ByteBuffer buffer)
+	{
+		for(Piece p : getPieces())
+		{
+			buffer.putShort(p.getPersistenceData());
+		}
+	}
+
+	public byte getGameStateSettingsByte(final boolean writeMoveHistory)
+	{
+		byte settings = 0;
+
+		//Left most bit tell us the current player
+		if(myCurrentPlayer == BLACK)
+		{
+			settings |= (byte) (1 << 7);
+		}
+		//Second bit decides if moves is to be saved
+		if(writeMoveHistory)
+		{
+			settings |= (byte) (1 << 6);
+		}
+
+		return settings;
+	}
+
+	public void readPersistenceData(final ByteBuffer buffer) throws DuplicatePieceException, InvalidBoardException
 	{
 		//Read the state of the game
-		readGameStatePersistanceData(stream);
-		//Read each piece from the file
-		byte[] pieceBytes = new byte[2];
-		int readBytes = 0;
-		while(readBytes != -1)
+		readGameStatePersistenceData(buffer);
+
+		//Read each piece from the buffer
+		while(buffer.remaining() > 0)
 		{
-			readBytes = stream.read(pieceBytes);
-			if(readBytes == 2)
+			short persistenceData = buffer.getShort();
+			Piece piece = Piece.getPieceFromPersistenceData(persistenceData, this);
+			if(piece != null)
 			{
-				short persistanceData = Shorts.fromByteArray(pieceBytes);
-				Piece piece = Piece.getPieceFromPersistanceData(persistanceData, this);
-				if(piece != null)
+				Piece existingPiece = this.getPiece(piece.getCurrentPosition());
+				if(existingPiece != null && existingPiece.getPersistenceData() != persistenceData)
 				{
-					Piece existingPiece = this.getPiece(piece.getCurrentPosition());
-					if(existingPiece != null && existingPiece.getPersistanceData() != persistanceData)
-					{
-						//Don't place a piece where one is already placed
-						throw new DuplicatePieceException(existingPiece, piece);
-					}
-					addPiece(piece, false, true);
+					//Don't place a piece where one is already placed
+					throw new DuplicatePieceException(existingPiece, piece);
 				}
+				addPiece(piece, false, true);
 			}
 		}
 		if(myWhiteKing == null || myBlackKing == null)
@@ -1278,34 +1397,22 @@ public final class ChessBoard implements Cloneable
 		setupCastlingMoves();
 	}
 
-	private byte[] getGameStatePersistanceData()
+	private void readGameStatePersistenceData(final ByteBuffer buffer)
 	{
-		byte[] settings = new byte[1];
-
+		byte settings = buffer.get();
 		//Left most bit tell us the current player
-		if(myCurrentPlayer == BLACK)
+		if((settings & 0x80) == 0x80)
 		{
-			settings[0] = (byte) (1 << 7);
+			myCurrentPlayer = BLACK;
 		}
-
-		return settings;
-	}
-
-	private void readGameStatePersistanceData(final InputStream stream) throws IOException
-	{
-		byte[] settings = new byte[1];
-		int readBytes = stream.read(settings);
-		if(readBytes == 1)
+		else
 		{
-			//Left most bit tell us the current player
-			if((settings[0] & 0x80) == 0x80)
-			{
-				myCurrentPlayer = BLACK;
-			}
-			else
-			{
-				myCurrentPlayer = WHITE;
-			}
+			myCurrentPlayer = WHITE;
+		}
+		//Second left bit tells us if moves is to be read
+		if((settings & 0x40) == 0x40 && checkPersistencePossibility())
+		{
+			myPersistenceLogger.readMoveHistory(buffer);
 		}
 	}
 
@@ -1546,5 +1653,29 @@ public final class ChessBoard implements Cloneable
 	public int getDifficulty()
 	{
 		return myDifficulty;
+	}
+
+	public void applyMoveHistory() throws UnavailableMoveException
+	{
+		myAllowsMoves = false;
+		if(myPersistenceLogger == null)
+		{
+			myAllowsMoves = true;
+			return;
+		}
+		myPersistenceLogger.applyMoveHistory(this);
+		myAllowsMoves = true;
+	}
+
+	/**
+	 * Called when pieces have been placed in order for the persistence logger to know from what to start it's logging from
+	 */
+	public void updatePersistenceLogger()
+	{
+		if(myPersistenceLogger == null)
+		{
+			return;
+		}
+		myPersistenceLogger.setStartBoard(this);
 	}
 }

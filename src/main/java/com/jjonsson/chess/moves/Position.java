@@ -3,11 +3,11 @@ package com.jjonsson.chess.moves;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 
-public class Position implements Cloneable
+public abstract class Position
 {
 
-	private byte myRow;
-	private byte myColumn;
+	protected byte myRow;
+	protected byte myColumn;
 
 	public static final int A = 1;
 	public static final int B = 2;
@@ -32,7 +32,7 @@ public class Position implements Cloneable
 	 * @param row the row for this position, valid numbers are 0-7
 	 * @param column the column for this position, valid numbers are 0-7
 	 */
-	public Position(final byte row, final byte column)
+	protected Position(final byte row, final byte column)
 	{
 		myRow = row;
 		myColumn = column;
@@ -56,26 +56,36 @@ public class Position implements Cloneable
 		return myColumn;
 	}
 
-	void applyMove(final Move move)
-	{
-		myRow += move.getRowChange();
-		myColumn += move.getColumnChange();
-	}
-
 	/**
 	 * 
 	 * @param row the row for this position, valid numbers are 1-8
 	 * @param column the column for this position, valid numbers are 1-8 (A-H)
 	 * @throws InvalidPosition if one or both of the given parameters are out of range
 	 */
-	public static Position createPosition(final int row, final int column) throws InvalidPosition
+	public static MutablePosition createPosition(final int row, final int column) throws InvalidPosition
 	{
 		if(isInvalidPosition(row-1, column-1))
 		{
 			throw new InvalidPosition(row, column);
 		}
 
-		return new Position((byte)(row - 1), (byte)(column - 1));
+		return new MutablePosition((byte)(row - 1), (byte)(column - 1));
+	}
+
+	public static MutablePosition createPosition(final short persistenceData)
+	{
+		byte row = (byte) (persistenceData >> 12);
+		byte column = (byte) (persistenceData >> Byte.SIZE & 0xF);
+		return new MutablePosition(row, column);
+	}
+
+	public static MutablePosition fromString(final String position) throws InvalidPosition
+	{
+		if(position.length() != 2)
+		{
+			throw new IllegalArgumentException("Invalid position string: " + position);
+		}
+		return createPosition(Integer.parseInt(position.substring(0, 1)), position.charAt(1) - 'A' + 1);
 	}
 
 	/**
@@ -100,7 +110,7 @@ public class Position implements Cloneable
 	 * @param column
 	 * @return
 	 */
-	private static boolean isInvalidPosition(final int row, final int column)
+	public static boolean isInvalidPosition(final int row, final int column)
 	{
 		return row < 0 || column < 0 || row >= ChessBoard.BOARD_SIZE || column >= ChessBoard.BOARD_SIZE;
 	}
@@ -163,24 +173,5 @@ public class Position implements Cloneable
 	 * Same as clone() but without the CloneNotSupportedException
 	 * @return
 	 */
-	public Position copy()
-	{
-		Position p = null;
-		try
-		{
-			p = clone();
-		}
-		catch (CloneNotSupportedException e)
-		{
-			throw new UnsupportedOperationException("Position should be clonable but it was not", e);
-		}
-		return p;
-	}
-
-	@Override
-	public Position clone() throws CloneNotSupportedException
-	{
-		return (Position) super.clone();
-
-	}
+	public abstract Position copy();
 }

@@ -1,12 +1,18 @@
 package com.jjonsson.chess.evaluators;
 
-import static org.junit.Assert.*;
+import static com.jjonsson.chess.moves.Position.A;
+import static com.jjonsson.chess.moves.Position.B;
+import static com.jjonsson.chess.moves.Position.E;
+import static com.jjonsson.chess.moves.Position.createPosition;
+import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
-import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
+import com.jjonsson.chess.exceptions.InvalidPosition;
+import com.jjonsson.chess.exceptions.UnavailableMoveException;
 
 public class TestChessBoardEvaluator
 {
@@ -19,7 +25,7 @@ public class TestChessBoardEvaluator
 		ChessState currentState = board.getCurrentState();
 		assertEquals(GAME_STATE, ChessState.CHECK, currentState);
 	}
-	
+
 	@Test
 	public void testCheckMate()
 	{
@@ -35,12 +41,48 @@ public class TestChessBoardEvaluator
 		ChessState currentState = board.getCurrentState();
 		assertEquals(GAME_STATE, ChessState.PLAYING, currentState);
 	}
-	
+
 	@Test
 	public void testStaleMate()
 	{
 		ChessBoard board = loadBoard("should_be_stalemate");
 		ChessState currentState = board.getCurrentState();
 		assertEquals(GAME_STATE, ChessState.STALEMATE, currentState);
+	}
+
+	@Test
+	public void testShouldBeCheckMate() throws UnavailableMoveException, InvalidPosition
+	{
+		ChessBoard board = loadBoard("should_be_checkmate_4");
+		board.move(createPosition(6, B), createPosition(6, A));
+		board.move(createPosition(8, E), createPosition(4, A));
+		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
+	}
+
+	@Test
+	public void testShouldBeCheckMate2() throws UnavailableMoveException, InvalidPosition
+	{
+		ChessBoard board = loadBoard("move_order_which_created_check_when_it_should_be_checkmate");
+		board.move("7G", "6G");
+		board.move("3H", "4H");
+		board.move("7D", "6D");
+		board.move("3G", "4G");
+		board.move("6E", "5E");
+		board.move("1D", "1E");
+
+		board.move("8C", "4G");
+		board.move("2E", "3G");
+		board.move("5E", "4F");
+		board.move("1E", "1A");
+		board.move("6A", "6B");
+		board.move("2D", "4D");
+
+		board.move("6B", "4D");
+		board.move("2F", "1E");
+		board.move("4D", "1G");
+		board.move("1E", "2D");
+		board.move("1G", "3E");
+
+		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
 	}
 }
