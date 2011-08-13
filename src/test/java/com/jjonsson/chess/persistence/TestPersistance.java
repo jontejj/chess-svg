@@ -79,7 +79,7 @@ public class TestPersistance
 		Move kingRightMove = board.getAvailableMove(whiteKing, kingTempPos);
 		whiteKing.performMove(kingRightMove, board);
 
-		//This removes the possiblity to castle
+		//This removes the possibility to castle
 		Move kingLeftMove = board.getAvailableMove(whiteKing, kingOriginalPos);
 		whiteKing.performMove(kingLeftMove, board);
 

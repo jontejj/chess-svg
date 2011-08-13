@@ -91,4 +91,11 @@ public class TestCastlingMove
 		board.move(createPosition(1, H), createPosition(1, E));
 	}
 
+	@Test
+	public void testThatIntermediatePositionTriggerCastlingMoveUpdate() throws UnavailableMoveException, InvalidPosition
+	{
+		ChessBoard board = loadBoard("intermediate_position_should_trigger_castling_move_update");
+		board.move("1E", "1G");
+	}
+
 }

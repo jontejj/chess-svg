@@ -14,12 +14,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import javax.swing.JComponent;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
@@ -290,7 +290,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		if(ChessBoardEvaluator.inPlay(getBoard()))
 		{
 			//Mark pieces with available moves
-			Collection<Piece> currentPlayerPieces = getBoard().getPiecesForAffinity(getBoard().getCurrentPlayer());
+			ImmutableList<Piece> currentPlayerPieces = ImmutableList.copyOf(getBoard().getPiecesForAffinity(getBoard().getCurrentPlayer()));
 			for(Piece p : currentPlayerPieces)
 			{
 				if(p.canMakeAMove(getBoard()))
@@ -322,7 +322,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		if(ChessBoardEvaluator.inPlay(getBoard()) && myCurrentlySelectedPiece != null)
 		{
 			//Mark available moves for the selected piece
-			List<Move> moves = myCurrentlySelectedPiece.getAvailableMoves(Piece.NO_SORT, getBoard());
+			List<Move> moves = ImmutableList.copyOf(myCurrentlySelectedPiece.getAvailableMoves(Piece.NO_SORT, getBoard()));
 			for(Move m : moves)
 			{
 				markSquare(m.getDestination(),Color.GREEN, graphics);

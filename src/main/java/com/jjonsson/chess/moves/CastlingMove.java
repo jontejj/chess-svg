@@ -168,6 +168,30 @@ public class CastlingMove extends IndependantMove
 		return myPreviousPosition;
 	}
 
+	/**
+	 * @return the position that neither the rock nor the king is to be moved to during queen side castling move,
+	 * returns null if this isn't a queen side castling move
+	 */
+	public ImmutablePosition getIntermediatePosition()
+	{
+		return myQueenSideCastlingKingStepPosition;
+	}
+
+	public boolean hasConnectedWithRock()
+	{
+		return myRock != null;
+	}
+
+	/**
+	 * 
+	 * @return the destination for the rock move that this castling does.
+	 * @throws NullPointerException when setRock hasn't been called, use hasConnectedWithRock to determine this
+	 */
+	public ImmutablePosition getRockDestination() throws NullPointerException
+	{
+		return myRockMove.getDestination();
+	}
+
 	@Override
 	public boolean isTakeOverMove()
 	{

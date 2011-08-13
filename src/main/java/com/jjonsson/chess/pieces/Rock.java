@@ -48,4 +48,10 @@ public class Rock extends Piece
 		}
 		return Piece.ROCK;
 	}
+
+	@Override
+	public int expectedNumberOfPossibleMoves()
+	{
+		return 4;
+	}
 }

@@ -43,4 +43,10 @@ public class Bishop extends Piece
 	{
 		return Piece.BISHOP;
 	}
+
+	@Override
+	public int expectedNumberOfPossibleMoves()
+	{
+		return 4;
+	}
 }

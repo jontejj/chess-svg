@@ -48,7 +48,7 @@ public abstract class Pawn extends Piece
 		if(!myTwoStepMove.isRemoved())
 		{
 			myOneStepMove.setMoveThatDependsOnMe(null);
-			myTwoStepMove.removeFromBoard(board);
+			myTwoStepMove.disable(board);
 		}
 	}
 
@@ -104,5 +104,11 @@ public abstract class Pawn extends Piece
 	public int getSecondDimensionMaxIndex()
 	{
 		return 3; //Two steps forward, two take over moves
+	}
+
+	@Override
+	public int expectedNumberOfPossibleMoves()
+	{
+		return 3;
 	}
 }

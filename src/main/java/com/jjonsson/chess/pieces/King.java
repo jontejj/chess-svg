@@ -7,10 +7,13 @@ import static com.jjonsson.chess.moves.Move.RIGHT;
 import static com.jjonsson.chess.moves.Move.UP;
 
 import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.CastlingMove;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.KingMove;
+import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MutablePosition;
+import com.jjonsson.chess.moves.Position;
 
 public class King extends Piece
 {
@@ -83,6 +86,36 @@ public class King extends Piece
 		return Piece.KING;
 	}
 
+	@Override
+	public void performMove(final Move move, final ChessBoard board, final boolean printOut) throws UnavailableMoveException
+	{
+		//TODO: during makeMove remove castling moves from the possibility maps on the chessboard, beware: this may be to late to remove
+		if(getMovesMade() == 0 && myKingSideCastlingMove != null)
+		{
+			myKingSideCastlingMove.removeFromBoard(board);
+			getPossibleMoves().remove(myKingSideCastlingMove);
+			myQueenSideCastlingMove.removeFromBoard(board);
+			getPossibleMoves().remove(myQueenSideCastlingMove);
+		}
+		super.performMove(move, board, printOut);
+	}
+
+	/**
+	 * Called when a move that this piece previously made has been reverted
+	 */
+	@Override
+	public void revertedAMove(final ChessBoard board, final Position oldPosition)
+	{
+		if(getMovesMade() == 0 && myKingSideCastlingMove != null)
+		{
+			addPossibleMove(myKingSideCastlingMove);
+			myKingSideCastlingMove.updatePossibility(board, true);
+
+			addPossibleMove(myQueenSideCastlingMove);
+			myQueenSideCastlingMove.updatePossibility(board, true);
+		}
+	}
+
 	/**
 	 * 
 	 * @return the move that takes the king two steps to the right
@@ -111,5 +144,11 @@ public class King extends Piece
 	public int getSecondDimensionMaxIndex()
 	{
 		return 9; //8 one step moves in each direction plus two castling moves
+	}
+
+	@Override
+	public int expectedNumberOfPossibleMoves()
+	{
+		return 10;
 	}
 }

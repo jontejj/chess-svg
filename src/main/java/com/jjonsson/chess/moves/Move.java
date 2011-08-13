@@ -267,7 +267,7 @@ public abstract class Move
 		return myDestination;
 	}
 
-	public Position getPreviousDestination()
+	public ImmutablePosition getPreviousDestination()
 	{
 		return myPreviousDestination;
 	}
@@ -359,9 +359,17 @@ public abstract class Move
 	 */
 	public abstract void updatePossibility(ChessBoard board, boolean updatePieceAtDestination);
 
-	public void removeFromBoard(final ChessBoard chessBoard)
+	public void disable(final ChessBoard chessBoard)
 	{
 		myIsRemoved = true;
+		removeFromBoard(chessBoard);
+		myCanBeMadeCache = false;
+		myOldPieceAtDestination = myPieceAtDestination;
+		myPieceAtDestination = null;
+	}
+
+	public void removeFromBoard(final ChessBoard chessBoard)
+	{
 		if(myCanBeMadeCache)
 		{
 			chessBoard.removeAvailableMove(myDestination, myPiece, this);
@@ -370,9 +378,7 @@ public abstract class Move
 		{
 			chessBoard.removeNonAvailableMove(myDestination, myPiece, this);
 		}
-		myCanBeMadeCache = false;
-		myOldPieceAtDestination = myPieceAtDestination;
-		myPieceAtDestination = null;
+		myPreviousDestination = null;
 	}
 
 	public boolean isRemoved()
@@ -502,6 +508,7 @@ public abstract class Move
 		board.movePiece(myPiece, this);
 		myPiece.updateCurrentPosition(this);
 		myMovesMade++;
+		getPiece().setMovesMade(getPiece().getMovesMade() + 1);
 	}
 
 	@Override

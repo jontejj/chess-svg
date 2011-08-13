@@ -42,6 +42,7 @@ import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.listeners.MoveListener;
+import com.jjonsson.chess.moves.CastlingMove;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;
@@ -98,6 +99,8 @@ public final class ChessBoard
 	 */
 	private Map<Position, Set<Move>> myBlackNonAvailableMoves;
 	private Map<Position, Set<Move>> myWhiteNonAvailableMoves;
+
+	private Map<Position, CastlingMove> myCastlingMoves;
 
 	private short myBlackAvailableMovesCount;
 	private short myWhiteAvailableMovesCount;
@@ -218,6 +221,7 @@ public final class ChessBoard
 		myBlackAvailableMoves = createMoveMap();
 		myBlackAvailableMovesCount = 0;
 		myBlackNonAvailableMoves = createMoveMap();
+		myCastlingMoves = Maps.newHashMap();
 	}
 
 	/**
@@ -294,15 +298,9 @@ public final class ChessBoard
 	{
 		for(Piece p : getPieces())
 		{
-			List<Move> toMoves = p.getPossibleMoves();
-			//Piece originalPiece = chessBoard.getPiece(p.getCurrentPosition());
-			//List<Move> fromMoves = originalPiece.getPossibleMoves();
-
 			//Note that if the arrays differ only the common moves will be copied, the rest is ignored
-			//int endIndex = Math.min(fromMoves.size(), toMoves.size());
-			for(int i = toMoves.size() - 1; i > 0; i--)
+			for(Move currentMove : p.getPossibleMoves())
 			{
-				Move currentMove = toMoves.get(i);
 				Move fromMove = chessBoard.getMove(currentMove);
 				if(fromMove != null)
 				{
@@ -627,6 +625,7 @@ public final class ChessBoard
 				Piece blackRightRock = getPiece(createPosition(BLACK_STARTING_ROW, H));
 				myBlackKing.getQueenSideCastlingMove().setRock(blackLeftRock);
 				myBlackKing.getKingSideCastlingMove().setRock(blackRightRock);
+				updateCastlingMoveMap(myBlackKing);
 			}
 			if(myWhiteKing.isAtStartingPosition())
 			{
@@ -634,11 +633,25 @@ public final class ChessBoard
 				Piece whiteRightRock = getPiece(createPosition(WHITE_STARTING_ROW, H));
 				myWhiteKing.getQueenSideCastlingMove().setRock(whiteLeftRock);
 				myWhiteKing.getKingSideCastlingMove().setRock(whiteRightRock);
+				updateCastlingMoveMap(myWhiteKing);
 			}
 		}
 		catch (InvalidPosition e)
 		{
 			LOGGER.severe("Something wrong with board setup, got " + e);
+		}
+	}
+
+	private void updateCastlingMoveMap(final King king)
+	{
+		if(king.getQueenSideCastlingMove().hasConnectedWithRock())
+		{
+			myCastlingMoves.put(king.getQueenSideCastlingMove().getIntermediatePosition(), king.getQueenSideCastlingMove());
+			myCastlingMoves.put(king.getQueenSideCastlingMove().getRockDestination(), king.getQueenSideCastlingMove());
+		}
+		if(king.getKingSideCastlingMove().hasConnectedWithRock())
+		{
+			myCastlingMoves.put(king.getKingSideCastlingMove().getRockDestination(), king.getKingSideCastlingMove());
 		}
 	}
 
@@ -1176,21 +1189,18 @@ public final class ChessBoard
 		piece.performMove(move, this);
 	}
 
+	/**
+	 * 
+	 * @param from a string like "1E"
+	 * @param to a string like "1G"
+	 * @throws UnavailableMoveException
+	 * @throws InvalidPosition
+	 */
 	public void move(final String from, final String to) throws UnavailableMoveException, InvalidPosition
 	{
 		Position fromPos = fromString(from);
 		Position toPos = fromString(to);
-		Piece piece = getPiece(fromPos);
-		if(piece == null)
-		{
-			throw new UnavailableMoveException(null);
-		}
-		Move move = getAvailableMove(piece, toPos);
-		if(move == null)
-		{
-			throw new UnavailableMoveException(null);
-		}
-		piece.performMove(move, this);
+		move(fromPos, toPos);
 	}
 
 	/**
@@ -1217,6 +1227,14 @@ public final class ChessBoard
 
 			//Update possibilities
 			updatePossibiltyForSetOfMoves(moves);
+
+			//Because all the destinations for a castling move can't be stored in the above maps this needs special handling here
+			Move castlingMove = myCastlingMoves.get(position);
+			if(castlingMove != null)
+			{
+				castlingMove.updateDestination(this);
+				castlingMove.updatePossibility(this, false);
+			}
 		}
 	}
 

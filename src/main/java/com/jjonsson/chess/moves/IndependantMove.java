@@ -49,6 +49,8 @@ public abstract class IndependantMove extends Move
 				//The move isn't possible anymore
 				board.addNonAvailableMove(getDestination(), getPiece(), this);
 			}
+			//Make sure that the previous destination is saved
+			setDestination(getDestination());
 		}
 	}
 

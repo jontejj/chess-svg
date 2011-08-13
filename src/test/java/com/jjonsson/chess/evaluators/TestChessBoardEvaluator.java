@@ -85,4 +85,11 @@ public class TestChessBoardEvaluator
 
 		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
 	}
+
+	@Test
+	public void testShouldBeCheckMate3()
+	{
+		ChessBoard board = loadBoard("should_be_checkmate_6");
+		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
+	}
 }

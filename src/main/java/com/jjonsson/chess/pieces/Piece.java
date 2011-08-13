@@ -2,6 +2,7 @@ package com.jjonsson.chess.pieces;
 
 import static com.jjonsson.utilities.Logger.LOGGER;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -20,7 +21,6 @@ import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.ordering.PieceValueOrdering;
 
 /**
@@ -77,7 +77,7 @@ public abstract class Piece
 	/**
 	 * List of "in theory" possible moves that this piece can make
 	 */
-	private List<Move> myPossibleMoves;
+	private Collection<Move> myPossibleMoves;
 
 	private Move[][] myMoves;
 
@@ -107,10 +107,10 @@ public abstract class Piece
 	public Piece(final MutablePosition startingPosition, final boolean affinity, final ChessBoard boardPieceIsToBePlacedOn)
 	{
 		myMoves = createMoveTable();
-		myListeners = Sets.newHashSet();
-		myPossibleMoves = Lists.newArrayList();
+		myListeners = Sets.newHashSetWithExpectedSize(2);
+		myPossibleMoves = Sets.newHashSetWithExpectedSize(expectedNumberOfPossibleMoves());
 
-		myPiecesThatTakesMyPieceOver = Sets.newHashSet();
+		myPiecesThatTakesMyPieceOver = Sets.newHashSetWithExpectedSize(8);
 
 		myPosition = startingPosition;
 		myCurrentPosition = ImmutablePosition.getPosition(startingPosition);
@@ -331,9 +331,18 @@ public abstract class Piece
 	public abstract void addPossibleMoves();
 
 	/**
+	 * 
+	 * @return the amount of moves that is expected to be put into possibleMoves
+	 */
+	public int expectedNumberOfPossibleMoves()
+	{
+		return 8;
+	}
+
+	/**
 	 * @return a list of "in theory" possible moves that this piece can make
 	 */
-	public List<Move> getPossibleMoves()
+	public Collection<Move> getPossibleMoves()
 	{
 		return myPossibleMoves;
 	}
@@ -350,9 +359,8 @@ public abstract class Piece
 	public List<Move> getAvailableMoves(final boolean sort, final ChessBoard board)
 	{
 		List<Move> availableMoves = Lists.newArrayList();
-		List<Move> possibleMoves = getPossibleMoves();
 
-		for(Move m : possibleMoves)
+		for(Move m : getPossibleMoves())
 		{
 			if(m.canBeMade(board))
 			{
@@ -374,9 +382,8 @@ public abstract class Piece
 	public List<Move> getMoves()
 	{
 		List<Move> moves = Lists.newArrayList();
-		List<Move> possibleMoves = getPossibleMoves();
 
-		for(Move m : possibleMoves)
+		for(Move m : getPossibleMoves())
 		{
 			moves.add(m);
 			if(m instanceof DependantMove)
@@ -441,6 +448,7 @@ public abstract class Piece
 		return myPiecesThatTakesMyPieceOver.size() * getTakeOverImportanceValue();
 	}
 
+	//TODO: these should be refactored to their own class
 	/**
 	 * 
 	 * @return how many moves this piece has made
@@ -448,6 +456,11 @@ public abstract class Piece
 	public long getMovesMade()
 	{
 		return myMovesMade;
+	}
+
+	public void setMovesMade(final long movesMade)
+	{
+		myMovesMade = movesMade;
 	}
 
 	/**
@@ -485,15 +498,6 @@ public abstract class Piece
 		}
 
 		move.makeMove(board);
-
-		if(move instanceof RevertingMove)
-		{
-			myMovesMade--;
-		}
-		else
-		{
-			myMovesMade++;
-		}
 
 		updateMoves(board);
 
@@ -583,7 +587,7 @@ public abstract class Piece
 	{
 		for(Move m : myPossibleMoves)
 		{
-			m.removeFromBoard(chessBoard);
+			m.disable(chessBoard);
 			m.syncCountersWithBoard(chessBoard);
 		}
 	}

@@ -73,7 +73,8 @@ public class PersistenceLogger implements MoveListener
 		Iterator<MoveItem> fromFirstMoveToLastIterator = myPersistenceStorage.descendingIterator();
 		while(fromFirstMoveToLastIterator.hasNext())
 		{
-			fromFirstMoveToLastIterator.next().perform(board);
+			MoveItem moveItem = fromFirstMoveToLastIterator.next();
+			moveItem.perform(board);
 		}
 		myIsApplyingMoveHistory = false;
 	}

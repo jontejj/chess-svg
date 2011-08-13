@@ -5,6 +5,7 @@ import com.jjonsson.chess.ChessBoard;
 public class ImmutablePosition extends Position
 {
 	private byte myPersistenceByte;
+	private int myHashcode;
 
 	private static final ImmutablePosition[][] POSITIONS = createPositions();
 
@@ -26,6 +27,14 @@ public class ImmutablePosition extends Position
 	{
 		super(row, column);
 		myPersistenceByte = getPersistenceByte();
+		//Well, this isn't going to change, lets cache it!
+		myHashcode = super.hashCode();
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return myHashcode;
 	}
 
 	private byte getPersistenceByte()
@@ -77,5 +86,4 @@ public class ImmutablePosition extends Position
 	{
 		return this;
 	}
-
 }

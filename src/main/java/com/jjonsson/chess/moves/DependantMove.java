@@ -167,6 +167,8 @@ public abstract class DependantMove extends Move
 				//The move isn't possible anymore
 				board.addNonAvailableMove(getDestination(), getPiece(), this);
 			}
+			//Make sure that the previous destination is saved
+			setDestination(getDestination());
 		}
 	}
 
@@ -334,15 +336,15 @@ public abstract class DependantMove extends Move
 
 
 	/**
-	 * Moves depending on this one will need to be removed as well
+	 * Moves depending on this one will need to be disabled as well
 	 */
 	@Override
-	public void removeFromBoard(final ChessBoard chessBoard)
+	public void disable(final ChessBoard chessBoard)
 	{
-		super.removeFromBoard(chessBoard);
+		super.disable(chessBoard);
 		if(myMoveDependingOnMe != null)
 		{
-			myMoveDependingOnMe.removeFromBoard(chessBoard);
+			myMoveDependingOnMe.disable(chessBoard);
 		}
 	}
 
