@@ -1169,7 +1169,7 @@ public final class ChessBoard
 		{
 			throw new UnavailableMoveItem("Couldn't find a move to " + to + " for the piece " + piece, from, to);
 		}
-		piece.performMove(move, this);
+		piece.performMove(move, this, false);
 	}
 
 	/**
@@ -1181,7 +1181,7 @@ public final class ChessBoard
 	 */
 	public void move(final String from, final String to) throws UnavailableMoveException, UnavailableMoveItem
 	{
-		move(ImmutablePosition.from(from), ImmutablePosition.from(to));
+		move(ImmutablePosition.position(from), ImmutablePosition.position(to));
 	}
 
 	/**

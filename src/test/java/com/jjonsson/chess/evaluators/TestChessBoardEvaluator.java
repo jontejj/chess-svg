@@ -1,9 +1,6 @@
 package com.jjonsson.chess.evaluators;
 
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
-import static com.jjonsson.chess.moves.Position.A;
-import static com.jjonsson.chess.moves.Position.B;
-import static com.jjonsson.chess.moves.Position.E;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static org.junit.Assert.assertEquals;
 
@@ -54,8 +51,8 @@ public class TestChessBoardEvaluator
 	public void testShouldBeCheckMate() throws UnavailableMoveException, UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("should_be_checkmate_4");
-		board.move(position(6, B), position(6, A));
-		board.move(position(8, E), position(4, A));
+		board.move(position("6B"), position("6A"));
+		board.move(position("8E"), position("4A"));
 		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
 	}
 

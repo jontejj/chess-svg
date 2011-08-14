@@ -1,11 +1,9 @@
 package com.jjonsson.chess.persistence;
 
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
-import static com.jjonsson.chess.moves.Position.D;
 import static com.jjonsson.chess.moves.Position.E;
 import static com.jjonsson.chess.moves.Position.F;
 import static com.jjonsson.chess.moves.Position.G;
-import static com.jjonsson.chess.moves.Position.H;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
@@ -56,7 +54,7 @@ public class TestPersistance
 				buffer.rewind();
 			}
 		}
-		Rock r = new Rock(MutablePosition.position(8, H), WHITE, board);
+		Rock r = new Rock(position("8H").asMutable(), WHITE, board);
 		buffer.putShort(r.getPersistenceData());
 		buffer.flip();
 		Piece r2 = Piece.getPieceFromPersistenceData(buffer, board);
@@ -101,8 +99,8 @@ public class TestPersistance
 		String tempFilename = "temp_save_test";
 		//Load a board and make changes to it
 		ChessBoard board = loadBoard("king_should_not_be_able_to_move");
-		Piece blackRock = board.getPiece(position(8, H));
-		Move rockMove = board.getAvailableMove(position(8, F), BLACK);
+		Piece blackRock = board.getPiece(position("8H"));
+		Move rockMove = board.getAvailableMove(position("8F"), BLACK);
 		rockMove.getPiece().performMove(rockMove, board);
 
 		assertTrue(BoardLoader.saveBoard(board, tempFilename));
@@ -110,10 +108,10 @@ public class TestPersistance
 		//Verify that the changes could be read
 		ChessBoard savedBoard = new ChessBoard(false, true);
 		assertTrue(BoardLoader.loadFileIntoBoard(new File(tempFilename), savedBoard));
-		Piece savedRock = savedBoard.getPiece(position(8, F));
+		Piece savedRock = savedBoard.getPiece(position("8F"));
 		assertTrue("Saved piece doesn't match the read one", blackRock.same(savedRock));
 		assertEquals(1, savedBoard.undoMoves(1, false));
-		assertNotNull(savedBoard.getPiece(position(8, H)));
+		assertNotNull(savedBoard.getPiece(position("8H")));
 	}
 
 
@@ -122,9 +120,9 @@ public class TestPersistance
 	{
 		//Load a board and make changes to it
 		ChessBoard board = loadBoard("king_to_3D_should_not_be_possible");
-		King whiteKing = King.class.cast(board.getPiece(position(2, E)));
+		King whiteKing = King.class.cast(board.getPiece(position("2E")));
 
-		assertNull(board.getAvailableMove(whiteKing, position(3, D)));
+		assertNull(board.getAvailableMove(whiteKing, position("3D")));
 	}
 
 	@Test

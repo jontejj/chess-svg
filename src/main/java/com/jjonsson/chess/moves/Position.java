@@ -122,6 +122,9 @@ public abstract class Position
 		return myRow == p.getRow() && myColumn == p.getColumn();
 	}
 
+	/**
+	 * Returns a string like "1A"
+	 */
 	@Override
 	public String toString()
 	{

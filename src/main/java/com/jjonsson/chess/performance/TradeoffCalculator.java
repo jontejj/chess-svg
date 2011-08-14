@@ -1,6 +1,6 @@
 package com.jjonsson.chess.performance;
 
-import static com.jjonsson.chess.moves.ImmutablePosition.from;
+import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.utilities.Logger.LOGGER;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -38,7 +38,7 @@ public final class TradeoffCalculator
 		double duration = (double)(nanosPerClone * BENCHMARK_AMOUNT) / SECONDS.toNanos(1);
 		LOGGER.warning("cloning took " + duration + " secs, nanos per clone: " + nanosPerClone);
 
-		Move move = board.getAvailableMove(from("4E"), WHITE);
+		Move move = board.getAvailableMove(position("4E"), WHITE);
 		SearchLimiter limiter = new SearchLimiter(0);
 
 		startTime = System.nanoTime();

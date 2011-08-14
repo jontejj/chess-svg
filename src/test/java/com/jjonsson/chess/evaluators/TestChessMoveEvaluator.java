@@ -1,13 +1,7 @@
 package com.jjonsson.chess.evaluators;
 
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
-import static com.jjonsson.chess.moves.Position.A;
 import static com.jjonsson.chess.moves.Position.B;
-import static com.jjonsson.chess.moves.Position.C;
-import static com.jjonsson.chess.moves.Position.D;
-import static com.jjonsson.chess.moves.Position.E;
-import static com.jjonsson.chess.moves.Position.G;
-import static com.jjonsson.chess.moves.Position.H;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
@@ -72,9 +66,9 @@ public class TestChessMoveEvaluator
 	{
 		ChessBoard board = loadBoard("chechmate_threat_must_be_neatrulized");
 		assertEquals(ChessState.PLAYING, board.getCurrentState());
-		makeSureMoveWasNotMade(board, position(8, G));
-		Piece blackQueen = board.getPiece(position(7, G));
-		Move possibleCheckMateMove = board.getAvailableMove(blackQueen, position(3, G));
+		makeSureMoveWasNotMade(board, position("8G"));
+		Piece blackQueen = board.getPiece(position("7G"));
+		Move possibleCheckMateMove = board.getAvailableMove(blackQueen, position("3G"));
 		blackQueen.performMove(possibleCheckMateMove, board);
 		//The King should be able to flee
 		assertFalse(ChessState.CHECKMATE == board.getCurrentState());
@@ -89,14 +83,14 @@ public class TestChessMoveEvaluator
 	public void testOnlyMakeSureMoves() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("white_queen_should_not_move_to_5H");
-		makeSureMoveWasNotMade(board, position(5, H));
+		makeSureMoveWasNotMade(board, position("5H"));
 	}
 
 	@Test
 	public void testDontMoveIntoThreatenedSquare() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("white_queen_should_not_move_to_4C");
-		makeSureMoveWasNotMade(board, position(4, C));
+		makeSureMoveWasNotMade(board, position("4C"));
 	}
 
 	@Test
@@ -106,14 +100,14 @@ public class TestChessMoveEvaluator
 		//This should move the queen out of harms way
 		ChessMoveEvaluator.performBestMove(board);
 		//Verify that the black pawn can't take over the queen
-		assertTrue(board.getAvailableMoves(position(3, B), Piece.BLACK).isEmpty());
+		assertTrue(board.getAvailableMoves(position("3B"), Piece.BLACK).isEmpty());
 	}
 
 	@Test
 	public void testQueenShouldEvadeBeingTaken() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("queen_should_evade");
-		Piece blackQueen = board.getPiece(position(5, D));
+		Piece blackQueen = board.getPiece(position("5D"));
 		Piece knight = blackQueen.getCheapestPieceThatTakesMeOver();
 		assertNotNull(knight);
 		//This should move the queen out of harms way (offering the rock)
@@ -127,8 +121,8 @@ public class TestChessMoveEvaluator
 	public void testKnightShouldEvadeBeingTaken() throws NoMovesAvailableException, UnavailableMoveException
 	{
 		ChessBoard board = loadBoard("knight_should_not_be_left_unprotected");
-		ImmutablePosition knightPosition = position(5, A);
-		King blackDefendingKing = King.class.cast(board.getPiece(position(6, B)));
+		ImmutablePosition knightPosition = position("5A");
+		King blackDefendingKing = King.class.cast(board.getPiece(position("6B")));
 		Piece knight = board.getPiece(knightPosition);
 		Piece bishop = knight.getCheapestPieceThatTakesMeOver();
 		assertNotNull(bishop);
@@ -165,7 +159,7 @@ public class TestChessMoveEvaluator
 	{
 		ChessBoard board = loadBoard("bishop_should_escape_from_6E");
 		ChessMoveEvaluator.performBestMove(board);
-		assertTrue(board.getAvailableMoves(position(6, E), WHITE).isEmpty());
+		assertTrue(board.getAvailableMoves(position("6E"), WHITE).isEmpty());
 	}
 
 	@Test

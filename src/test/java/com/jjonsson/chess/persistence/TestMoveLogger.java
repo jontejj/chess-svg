@@ -1,7 +1,6 @@
 package com.jjonsson.chess.persistence;
 
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
-import static com.jjonsson.chess.moves.Position.H;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static org.junit.Assert.assertFalse;
 
@@ -22,10 +21,10 @@ public class TestMoveLogger
 	{
 		ChessBoard board = loadBoard("repetitive_test");
 
-		ImmutablePosition whiteRockStartingPosition = position(1, H);
-		ImmutablePosition whiteRockMoveDestination = position(3, H);
-		ImmutablePosition blackRockStartingPosition = position(8, H);
-		ImmutablePosition blackRockMoveDestination = position(6, H);
+		ImmutablePosition whiteRockStartingPosition = position("1H");
+		ImmutablePosition whiteRockMoveDestination = position("3H");
+		ImmutablePosition blackRockStartingPosition = position("8H");
+		ImmutablePosition blackRockMoveDestination = position("6H");
 
 
 		Piece whiteRock = board.getPiece(whiteRockStartingPosition);

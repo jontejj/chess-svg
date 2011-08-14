@@ -1,9 +1,6 @@
 package com.jjonsson.chess.gui.components;
 
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
-import static com.jjonsson.chess.moves.Position.A;
-import static com.jjonsson.chess.moves.Position.B;
-import static com.jjonsson.chess.moves.Position.E;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
@@ -85,8 +82,8 @@ public class TestChessWindow
 		showClicks(window);
 
 		ChessBoardComponent component = window.getBoardComponent();
-		ImmutablePosition toPosition = position(4, E);
-		ImmutablePosition fromPosition = position(2, E);
+		ImmutablePosition toPosition = position("4E");
+		ImmutablePosition fromPosition = position("2E");
 		component.positionClicked(fromPosition);
 		TestChessBoardComponent.sleep();
 		component.positionClicked(toPosition);
@@ -143,8 +140,8 @@ public class TestChessWindow
 		showClicks(window);
 
 		ChessBoardComponent component = window.getBoardComponent();
-		ImmutablePosition pawnPosition = position(7, A);
-		ImmutablePosition rockPosition = position(8, B);
+		ImmutablePosition pawnPosition = position("7A");
+		ImmutablePosition rockPosition = position("8B");
 		component.positionClicked(pawnPosition);
 		TestChessBoardComponent.sleep();
 		//Take over rock
@@ -178,8 +175,8 @@ public class TestChessWindow
 		disableAI(window);
 
 		ChessBoardComponent component = window.getBoardComponent();
-		ImmutablePosition fromPosition = position(2, A);
-		ImmutablePosition toPosition = position(4, A);
+		ImmutablePosition fromPosition = position("2A");
+		ImmutablePosition toPosition = position("4A");
 		component.positionClicked(fromPosition);
 		TestChessBoardComponent.sleep();
 		component.positionClicked(toPosition);

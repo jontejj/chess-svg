@@ -72,8 +72,9 @@ public final class ImmutablePosition extends Position
 	 * @return a cached position
 	 * @throws IndexOutOfBoundsException if the given string is less than 2 chars
 	 * @throws NumberFormatException if the first digit in the string isn't a number
+	 * @throws NullPointerException if the given string is null
 	 */
-	public static ImmutablePosition from(final String position)
+	public static ImmutablePosition position(final String position)
 	{
 		return POSITIONS[Integer.parseInt(position.substring(0, 1)) - 1][position.charAt(1) - 'A'];
 	}
@@ -117,6 +118,15 @@ public final class ImmutablePosition extends Position
 			throw new InvalidPosition(row, column);
 		}
 		return from(row, column);
+	}
+
+	/**
+	 * 
+	 * @return a newly created mutable version of this position
+	 */
+	public MutablePosition asMutable()
+	{
+		return MutablePosition.from(getRow(), getColumn());
 	}
 
 	/**

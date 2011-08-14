@@ -1,14 +1,7 @@
 package com.jjonsson.chess.scenarios;
 
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
-import static com.jjonsson.chess.moves.Position.A;
-import static com.jjonsson.chess.moves.Position.B;
-import static com.jjonsson.chess.moves.Position.C;
-import static com.jjonsson.chess.moves.Position.D;
-import static com.jjonsson.chess.moves.Position.E;
 import static com.jjonsson.chess.moves.Position.F;
-import static com.jjonsson.chess.moves.Position.G;
-import static com.jjonsson.chess.moves.Position.H;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
@@ -54,10 +47,10 @@ public class TestScenarios
 	{
 		ChessBoard board = loadBoard("pawn_take_over_move_should_remove_two_step_move");
 		WhitePawn wp = (WhitePawn)board.getPiece(position(2, F));
-		Move takeOverMove = board.getAvailableMove(wp, position(3, G));
+		Move takeOverMove = board.getAvailableMove(wp, position("3G"));
 		Assert.assertNotNull(takeOverMove);
 		wp.performMove(takeOverMove, board, false);
-		Move twoStepMove = board.getAvailableMove(wp, position(5, G));
+		Move twoStepMove = board.getAvailableMove(wp, position("5G"));
 		assertNull(twoStepMove);
 	}
 
@@ -66,12 +59,12 @@ public class TestScenarios
 	{
 		ChessBoard board = loadBoard("new_move_is also_on_stopping_path_take_over_should_also_be_possible");
 
-		Queen q = (Queen)board.getPiece(position(2, F));
+		Queen q = (Queen)board.getPiece(position("2F"));
 
-		Move stoppingMove = board.getAvailableMove(q, position(3, G));
+		Move stoppingMove = board.getAvailableMove(q, position("3G"));
 		Assert.assertNotNull(stoppingMove);
 
-		Move takeOverMove = board.getAvailableMove(q, position(4, H));
+		Move takeOverMove = board.getAvailableMove(q, position("4H"));
 		Position oldQueenPosition = takeOverMove.getCurrentPosition().copy();
 		Assert.assertNotNull(takeOverMove);
 
@@ -90,28 +83,19 @@ public class TestScenarios
 	 * Tests if available moves is removed when a piece is taken and that a pawn is replaced when it reaches it's destination
 	 * @throws UnavailableMoveException
 	 * @throws NoMovesAvailableException
+	 * @throws UnavailableMoveItem
 	 */
 	@Test
-	public void testPawnReplacementAndGameStateChanges() throws UnavailableMoveException, NoMovesAvailableException
+	public void testPawnReplacementAndGameStateChanges() throws UnavailableMoveException, NoMovesAvailableException, UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");
-		WhitePawn pawn = (WhitePawn)board.getPiece(position(7, A));
 
-		Move replacementMove = board.getAvailableMove(pawn, position(8, B));
-		assertNotNull(replacementMove);
-
-		//Takes over the rock, replacing the pawn with a queen, checking the black king
-		pawn.performMove(replacementMove, board, false);
-
+		//White pawn takes over the rock, replacing the pawn with a queen, checking the black king
+		board.move("7A", "8B");
 		assertEquals(ChessState.CHECK, board.getCurrentState());
 
-		Piece defendingKnight = board.getPiece(position(6, C));
-		assertNotNull(defendingKnight);
-		Move defendingMove = board.getAvailableMove(defendingKnight, position(8, B));
-		assertNotNull(defendingMove);
-
-		//Take over the queen
-		defendingKnight.performMove(defendingMove, board, false);
+		//Take over the queen with the knight
+		board.move("6C", "8B");
 
 		assertEquals(ChessState.PLAYING, board.getCurrentState());
 		board.performRandomMove();
@@ -119,17 +103,13 @@ public class TestScenarios
 	}
 
 	@Test
-	public void testKingPossibleMovesUnderCheck() throws UnavailableMoveException
+	public void testKingPossibleMovesUnderCheck() throws UnavailableMoveException, UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("queen_left_move_check_king_not_possible_to_move_down");
-		Queen q = (Queen)board.getPiece(position(4, H));
-
-		Move takeOverMove = board.getAvailableMove(q, position(4, E));
-		q.performMove(takeOverMove, board, false);
-
+		board.move("4H", "4E");
 		assertEquals(ChessState.CHECK, board.getCurrentState());
-		King k = (King)board.getPiece(position(2, E));
-		Move downMove = board.getAvailableMove(k, position(1, E));
+		King k = (King)board.getPiece(position("2E"));
+		Move downMove = board.getAvailableMove(k, position("1E"));
 		assertNull(downMove);
 	}
 
@@ -137,41 +117,31 @@ public class TestScenarios
 	public void testTakeOverMoveShouldNotBePossible()
 	{
 		ChessBoard board = loadBoard("knight_should_not_be_possible_to_take");
-		King k = (King)board.getPiece(position(8, F));
-		Move takeOverMove = board.getAvailableMove(k, position(8, E));
+		King k = (King)board.getPiece(position("8F"));
+		Move takeOverMove = board.getAvailableMove(k, position("8E"));
 		assertNull(takeOverMove);
 	}
 
 	@Test
-	public void testPawnTwoStepMoveShouldNotBeAbleToPassThroughAPiece() throws UnavailableMoveException
+	public void testPawnTwoStepMoveShouldNotBeAbleToPassThroughAPiece() throws UnavailableMoveException, UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("pawn_two_step_move_should_not_be_able_to_pass_by_king_and_protect_him");
-		Queen q = Queen.class.cast(board.getPiece(position(6, D)));
+		board.move("6D", "5E");
 
-		Move checkMove = board.getAvailableMove(q, position(5, E));
-		q.performMove(checkMove, board, false);
+		WhitePawn wp = WhitePawn.class.cast(board.getPiece(position("2E")));
 
-		WhitePawn wp = WhitePawn.class.cast(board.getPiece(position(2, E)));
-
-		Move unavailableMove = board.getAvailableMove(wp, position(4, E));
+		Move unavailableMove = board.getAvailableMove(wp, position("4E"));
 
 		assertNull("PawnTwoStepMove should not be able to pass through a piece", unavailableMove);
 	}
 
 	@Test
-	public void testPawnForwardMoveShouldNotProtectPieces() throws UnavailableMoveException
+	public void testPawnForwardMoveShouldNotProtectPieces() throws UnavailableMoveException, UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("queen_to_3D_should_not_checkmate");
-		Queen q = Queen.class.cast(board.getPiece(position(3, B)));
-		Move checkingMove = board.getAvailableMove(q, position(3, D));
-		q.performMove(checkingMove, board, false);
-
+		board.move("3B", "3D");
 		assertEquals(ChessState.CHECK, board.getCurrentState());
-
-		King k = King.class.cast(board.getPiece(position(2, E)));
-		Move takeQueenMove = board.getAvailableMove(k, position(3, D));
-		k.performMove(takeQueenMove, board, false);
-
+		board.move("2E", "3D");
 		assertEquals(ChessState.PLAYING, board.getCurrentState());
 	}
 
@@ -191,58 +161,40 @@ public class TestScenarios
 	}
 
 	@Test
-	public void testEnPassantPossiblility() throws UnavailableMoveException
+	public void testEnPassantPossiblility() throws UnavailableMoveException, UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("enpassant_possible");
-		ImmutablePosition enPassantTriggeringDestination = position(4, B);
+		ImmutablePosition enPassantTriggeringDestination = position("4B");
 		//First we test if black can make an en-passant move
-		WhitePawn whiteTriggeringPiece = WhitePawn.class.cast(board.getPiece(position(2, B)));
-		Move enpassantTriggeringMove = board.getAvailableMove(whiteTriggeringPiece, enPassantTriggeringDestination);
-		whiteTriggeringPiece.performMove(enpassantTriggeringMove, board);
-
-		BlackPawn leftBlackPawn = BlackPawn.class.cast(board.getPiece(position(4, A)));
-		Move enpassantMoveFromLeft = board.getAvailableMove(leftBlackPawn, position(3, B));
-		assertNotNull(enpassantMoveFromLeft);
-		leftBlackPawn.performMove(enpassantMoveFromLeft, board);
+		board.move("2B", enPassantTriggeringDestination.toString()); //White opens for en-passant
+		board.move("4A", "3B"); //Black makes en-passant from left
 		//En-passant should take over the piece that triggered the possibility of en-passant
 		assertNull(board.getPiece(enPassantTriggeringDestination));
-		board.undoMove(enpassantMoveFromLeft, false);
-
-		BlackPawn rightBlackPawn = BlackPawn.class.cast(board.getPiece(position(4, C)));
-		Move enpassantMoveFromRight = board.getAvailableMove(rightBlackPawn, position(3, B));
-		assertNotNull(enpassantMoveFromRight);
-		rightBlackPawn.performMove(enpassantMoveFromRight, board);
+		board.undoMoves(1, false); //Undo should place the white pawn back on 4B
+		assertNotNull(board.getPiece(enPassantTriggeringDestination));
+		board.move("4C", "3B"); //Black makes en-passant from right
 		assertNull(board.getPiece(enPassantTriggeringDestination));
-		board.undoMove(enpassantMoveFromRight, false);
+		board.undoMoves(1, false); //Undo should place the white pawn back on 4B
 
 		//Then white
-		enPassantTriggeringDestination = position(5, G);
-		BlackPawn blackTriggeringPiece = BlackPawn.class.cast(board.getPiece(position(7, G)));
-		enpassantTriggeringMove = board.getAvailableMove(blackTriggeringPiece, enPassantTriggeringDestination);
-		blackTriggeringPiece.performMove(enpassantTriggeringMove, board);
+		enPassantTriggeringDestination = position("5G");
+		board.move("7G", enPassantTriggeringDestination.toString());
 
-		WhitePawn leftWhitePawn = WhitePawn.class.cast(board.getPiece(position(5, F)));
-		enpassantMoveFromLeft = board.getAvailableMove(leftWhitePawn, position(6, G));
-		assertNotNull(enpassantMoveFromLeft);
-		leftWhitePawn.performMove(enpassantMoveFromLeft, board);
+		board.move("5F", "6G");
 		assertNull(board.getPiece(enPassantTriggeringDestination));
-		board.undoMove(enpassantMoveFromLeft, false);
+		board.undoMoves(1, false);
 
-		WhitePawn rightWhitePawn = WhitePawn.class.cast(board.getPiece(position(5, H)));
-		enpassantMoveFromRight = board.getAvailableMove(rightWhitePawn, position(6, G));
-		assertNotNull(enpassantMoveFromRight);
-		rightWhitePawn.performMove(enpassantMoveFromRight, board);
+		board.move("5H", "6G");
 		assertNull(board.getPiece(enPassantTriggeringDestination));
-		board.undoMove(enpassantMoveFromRight, false);
+		board.undoMoves(1, false);
 
 		//Check that an intermediate move disables the possibility of an en-passant move
-		Move intermediateWhiteMove = board.getAvailableMove(whiteTriggeringPiece, position(5, B));
-		whiteTriggeringPiece.performMove(intermediateWhiteMove, board);
-		Move intermediateBlackMove = board.getAvailableMove(rightBlackPawn, position(3, C));
-		rightBlackPawn.performMove(intermediateBlackMove, board);
+		board.move("4B", "5B");
+		board.move("4C", "3C");
 
 		//An en-passant move should only be possible right after the right pawn two-step move
-		assertFalse(enpassantMoveFromRight.canBeMade(board));
+		Piece blackPiece = board.getPiece(position("5H"));
+		assertNull(board.getAvailableMove(blackPiece, position("6G")));
 
 		//TODO: verify that en-passant is possible even after board save/load operations
 	}
@@ -251,8 +203,8 @@ public class TestScenarios
 	public void testThatAPieceCanMoveWhenAnotherPieceProtectsTheKing() throws UnavailableMoveException
 	{
 		ChessBoard board = loadBoard("black_pawn_at_7D_should_be_able_to_move_to_6D");
-		BlackPawn pawn = BlackPawn.class.cast(board.getPiece(position(7, D)));
-		Move move = board.getAvailableMove(pawn, position(6, D));
+		BlackPawn pawn = BlackPawn.class.cast(board.getPiece(position("7D")));
+		Move move = board.getAvailableMove(pawn, position("6D"));
 		pawn.performMove(move, board);
 	}
 
@@ -262,10 +214,10 @@ public class TestScenarios
 		ChessBoard board = loadBoard("should_not_be_checkmate");
 		assertEquals(ChessState.CHECK, board.getCurrentState());
 		//This also tests that moves are updated somewhat properly
-		board.move(position(8, G), position(8, H));
-		board.move(position(4, C), position(4, D));
-		board.move(position(8, H), position(8, G));
-		board.move(position(4, D), position(5, D));
+		board.move(position("8G"), position("8H"));
+		board.move(position("4C"), position("4D"));
+		board.move(position("8H"), position("8G"));
+		board.move(position("4D"), position("5D"));
 		assertEquals(ChessState.CHECK, board.getCurrentState());
 	}
 
@@ -273,8 +225,8 @@ public class TestScenarios
 	public void testTrickyPlayWithKing()
 	{
 		ChessBoard board = loadBoard("king_should_not_able_to_take_bishop_at_2E");
-		Piece king = board.getPiece(position(1, D));
-		Move notAvailableMove = board.getNonAvailableMove(king, position(2, E));
+		Piece king = board.getPiece(position("1D"));
+		Move notAvailableMove = board.getNonAvailableMove(king, position("2E"));
 		assertFalse(notAvailableMove.canBeMade(board));
 	}
 
@@ -282,9 +234,9 @@ public class TestScenarios
 	public void testThatAKingCantMoveIntoThreatenedPosition() throws UnavailableMoveException, UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("white_king_should_not_be_able_to_take_over_bishop_after_take_over");
-		board.move(position(3, F), position(2, E));
-		Piece king = board.getPiece(position(1, D));
-		Move takeOverMove = board.getAvailableMove(king, position(2, E));
+		board.move(position("3F"), position("2E"));
+		Piece king = board.getPiece(position("1D"));
+		Move takeOverMove = board.getAvailableMove(king, position("2E"));
 		assertNull(takeOverMove);
 	}
 }
