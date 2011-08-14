@@ -1,6 +1,6 @@
 package com.jjonsson.chess.moves;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.pieces.Piece;
 
 public class KnightMove extends IndependantMove

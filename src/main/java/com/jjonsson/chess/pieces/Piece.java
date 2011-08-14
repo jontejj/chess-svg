@@ -12,7 +12,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Shorts;
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.listeners.MoveListener;

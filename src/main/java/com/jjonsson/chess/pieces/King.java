@@ -6,7 +6,7 @@ import static com.jjonsson.chess.moves.Move.NO_CHANGE;
 import static com.jjonsson.chess.moves.Move.RIGHT;
 import static com.jjonsson.chess.moves.Move.UP;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.CastlingMove;
 import com.jjonsson.chess.moves.ImmutablePosition;

@@ -2,7 +2,7 @@ package com.jjonsson.chess.moves;
 
 import static com.jjonsson.utilities.Logger.LOGGER;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;

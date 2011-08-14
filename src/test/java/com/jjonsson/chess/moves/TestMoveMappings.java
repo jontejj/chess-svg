@@ -5,7 +5,7 @@ import static junit.framework.Assert.assertSame;
 
 import org.junit.Test;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.pieces.Piece;
 

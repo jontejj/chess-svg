@@ -1,7 +1,7 @@
 package com.jjonsson.chess.evaluators.orderings;
 
 import com.google.common.collect.Ordering;
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 

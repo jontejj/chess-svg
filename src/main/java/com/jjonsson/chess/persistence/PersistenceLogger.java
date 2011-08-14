@@ -7,7 +7,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.listeners.MoveListener;

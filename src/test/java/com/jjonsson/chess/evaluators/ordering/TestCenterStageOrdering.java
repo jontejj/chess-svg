@@ -6,7 +6,7 @@ import static junit.framework.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.CenterStageOrdering;
 import com.jjonsson.chess.moves.Move;
 

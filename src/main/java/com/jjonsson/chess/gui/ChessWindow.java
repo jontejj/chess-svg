@@ -33,7 +33,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.listeners.StatusListener;
 import com.jjonsson.chess.persistence.BoardLoader;

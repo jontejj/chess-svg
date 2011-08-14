@@ -5,7 +5,7 @@ import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.utilities.Logger.LOGGER;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.evaluators.ProgressTracker;
 import com.jjonsson.chess.evaluators.SearchLimiter;

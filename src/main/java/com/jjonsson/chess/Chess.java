@@ -1,5 +1,6 @@
 package com.jjonsson.chess;
 
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.gui.ChessWindow;
 import com.jjonsson.chess.gui.WindowUtilities;
 

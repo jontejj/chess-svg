@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import org.apache.batik.swing.svg.JSVGComponent;
 import org.w3c.dom.svg.SVGDocument;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.PieceImageCache;
 import com.jjonsson.chess.listeners.MoveListener;

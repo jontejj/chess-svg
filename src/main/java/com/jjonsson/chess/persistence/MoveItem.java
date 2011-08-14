@@ -2,7 +2,7 @@ package com.jjonsson.chess.persistence;
 
 import java.nio.ByteBuffer;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.moves.ImmutablePosition;

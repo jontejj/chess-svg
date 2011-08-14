@@ -21,7 +21,7 @@ import javax.swing.JComponent;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.evaluators.ChessMoveEvaluator;

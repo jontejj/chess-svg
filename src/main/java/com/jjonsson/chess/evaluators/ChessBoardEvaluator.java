@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;

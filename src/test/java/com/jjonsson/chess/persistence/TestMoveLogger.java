@@ -6,7 +6,7 @@ import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;

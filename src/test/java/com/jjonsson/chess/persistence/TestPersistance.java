@@ -21,7 +21,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MutablePosition;

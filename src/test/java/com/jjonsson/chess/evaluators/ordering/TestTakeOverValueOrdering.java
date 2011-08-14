@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.TakeOverValueOrdering;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.Piece;

@@ -14,7 +14,7 @@ import javax.swing.JMenuItem;
 
 import org.junit.Test;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.gui.ChessWindow;
 import com.jjonsson.chess.gui.WindowUtilities;

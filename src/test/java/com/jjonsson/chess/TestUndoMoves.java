@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;

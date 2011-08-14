@@ -5,7 +5,7 @@ import static com.jjonsson.utilities.Logger.LOGGER;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.CountDownLatch;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.persistence.BoardLoader;
 import com.jjonsson.utilities.Logger;

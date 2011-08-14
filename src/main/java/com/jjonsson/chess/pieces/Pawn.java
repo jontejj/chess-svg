@@ -3,7 +3,7 @@ package com.jjonsson.chess.pieces;
 import static com.jjonsson.chess.moves.Position.BLACK_STARTING_ROW;
 import static com.jjonsson.chess.moves.Position.WHITE_STARTING_ROW;
 
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.PawnOneStepMove;
 import com.jjonsson.chess.moves.PawnTwoStepMove;

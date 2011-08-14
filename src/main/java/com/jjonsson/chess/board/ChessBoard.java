@@ -1,4 +1,4 @@
-package com.jjonsson.chess;
+package com.jjonsson.chess.board;
 
 import static com.jjonsson.chess.moves.Position.A;
 import static com.jjonsson.chess.moves.Position.B;

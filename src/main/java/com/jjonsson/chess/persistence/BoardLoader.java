@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import com.jjonsson.chess.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.DuplicatePieceException;
 import com.jjonsson.chess.exceptions.InvalidBoardException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
