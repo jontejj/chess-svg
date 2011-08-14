@@ -53,8 +53,6 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 		ResourceAllocator.freeThread();
 		mySignal.countDown();
 	}
-
-	public static volatile long threadsCreated = 0;
 	/**
 	 * This may run in the caller thread instead of running in a new thread if it's more efficient not to allocate a new thread (
 	 * which involves creating a clone of the chessboard etc.)
@@ -68,7 +66,6 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 			//Only copy the board/limiter if we aren't running in the "main" thread
 			if(makeThreadSafe())
 			{
-				threadsCreated++;
 				myThread = new Thread(this);
 				myThread.setUncaughtExceptionHandler(this);
 				myThread.start();
@@ -88,15 +85,12 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	private void runInCurrentThread()
 	{
 		//TODO: this seems to fix a concurrency bug which it shouldn't have to (:
-		if(myLimiter.getCurrentDepth() == 1)
+		if(myLimiter.getCurrentDepth() == 1 && !makeThreadSafe())
 		{
-			if(!makeThreadSafe())
-			{
-				//This means that we can't continue and thus will the moves down this path not be evaluated (BAD)
-				mySignal.countDown();
-				LOGGER.severe("Failed to evaluate some moves due to a bug in the chessboard cloning process");
-				return;
-			}
+			//This means that we can't continue and thus will the moves down this path not be evaluated (BAD)
+			mySignal.countDown();
+			LOGGER.severe("Failed to evaluate some moves due to a bug in the chessboard cloning process");
+			return;
 		}
 		ChessMoveEvaluator.evaluateMove(myMoveToEvaluate, myBoard, myLimiter, myResult, myMovesLeftOnBranch);
 		mySignal.countDown();

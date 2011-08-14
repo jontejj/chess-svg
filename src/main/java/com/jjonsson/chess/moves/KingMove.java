@@ -25,7 +25,7 @@ public class KingMove extends IndependantMove
 	@Override
 	public boolean canBeMadeInternal(final ChessBoard board)
 	{
-		Position newPosition = this.getDestination();
+		ImmutablePosition newPosition = this.getDestination();
 		if(newPosition == null)
 		{
 			//The move was out of bounds

@@ -14,6 +14,7 @@ import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.DuplicatePieceException;
 import com.jjonsson.chess.exceptions.InvalidBoardException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 
 public final class BoardLoader
 {
@@ -75,7 +76,15 @@ public final class BoardLoader
 		}
 		catch (UnavailableMoveException e)
 		{
-			LOGGER.warning("Could not apply move during board load operation: " + e.toString());
+			LOGGER.warning("Could not apply move during board load operation: " + e);
+		}
+		catch (UnavailableMoveItem e)
+		{
+			LOGGER.info("Could only apply " + boardToLoadInto.getMoveLogger().getMovesMade() + " moves because: " + e);
+		}
+		catch (ArrayIndexOutOfBoundsException e)
+		{
+			LOGGER.warning("Faulty position, index that is faulty: " + e);
 		}
 		return false;
 	}

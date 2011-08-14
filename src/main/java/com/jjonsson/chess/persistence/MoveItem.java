@@ -4,10 +4,11 @@ import java.nio.ByteBuffer;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 
-public class MoveItem
+public final class MoveItem
 {
 	private ImmutablePosition myFromPosition;
 	private ImmutablePosition myToPosition;
@@ -36,7 +37,7 @@ public class MoveItem
 		buffer.put(myToPosition.getPersistence());
 	}
 
-	public void perform(final ChessBoard board) throws UnavailableMoveException
+	public void perform(final ChessBoard board) throws UnavailableMoveException, UnavailableMoveItem
 	{
 		board.move(myFromPosition, myToPosition);
 	}

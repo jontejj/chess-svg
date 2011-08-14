@@ -14,11 +14,11 @@ import com.jjonsson.chess.pieces.Piece;
 
 public class MoveLogger implements MoveListener
 {
-	protected Deque<Move> myMoveHistory;
-	protected Map<Integer, Piece> myRemovalHistory;
+	private Deque<Move> myMoveHistory;
+	private Map<Integer, Piece> myRemovalHistory;
 
 	/**
-	 * Defines how many moves that are remembered so that the game doesn't get stuck in a repetitive loop
+	 * Defines how many moves (for each move) that are remembered so that the game doesn't get stuck in a repetitive loop
 	 */
 	@VisibleForTesting
 	public static final int REPITION_HISTORY_RESET_INTERVAL = 30;

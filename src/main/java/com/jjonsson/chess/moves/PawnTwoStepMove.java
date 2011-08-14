@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import com.google.common.collect.ImmutableSet;
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Pawn;
 import com.jjonsson.chess.pieces.Piece;
@@ -63,20 +62,13 @@ public class PawnTwoStepMove extends PawnMove
 	 *
 	 * @return the position that this two step move passes by
 	 */
-	private Position getEnpassantPosition()
+	private ImmutablePosition getEnpassantPosition()
 	{
-		try
+		if(getPiece().isBlack())
 		{
-			if(getPiece().isBlack())
-			{
-				return getCurrentPosition().up();
-			}
-			return getCurrentPosition().down();
+			return getCurrentPosition().up();
 		}
-		catch (InvalidPosition e)
-		{
-			throw new UnsupportedOperationException(this + " caused an invalid position. Enpassant moves will not be possible. This should never happen", e);
-		}
+		return getCurrentPosition().down();
 	}
 
 	/**

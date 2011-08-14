@@ -1,7 +1,7 @@
 package com.jjonsson.chess.pieces;
 
-import static com.jjonsson.chess.moves.Position.BLACK_STARTING_ROW_INDEX;
-import static com.jjonsson.chess.moves.Position.WHITE_STARTING_ROW_INDEX;
+import static com.jjonsson.chess.moves.Position.BLACK_STARTING_ROW;
+import static com.jjonsson.chess.moves.Position.WHITE_STARTING_ROW;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.moves.MutablePosition;
@@ -73,7 +73,7 @@ public abstract class Pawn extends Piece
 	 */
 	public static boolean isTimeForReplacement(final Position position, final boolean affinity)
 	{
-		int destinationRow = (affinity == BLACK) ? WHITE_STARTING_ROW_INDEX : BLACK_STARTING_ROW_INDEX;
+		int destinationRow = (affinity == BLACK) ? WHITE_STARTING_ROW : BLACK_STARTING_ROW;
 		return position.getRow() == destinationRow;
 	}
 

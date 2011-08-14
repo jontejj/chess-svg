@@ -94,7 +94,7 @@ public class RevertingMove extends IndependantMove {
 			//Could happen for a reverting move if the move it's connected to isn't possible to do due to it being out of bounds
 			return null;
 		}
-		return ImmutablePosition.getPosition(row, column);
+		return ImmutablePosition.from(row, column);
 	}
 
 	@Override

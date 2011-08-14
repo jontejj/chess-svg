@@ -1,29 +1,37 @@
 package com.jjonsson.chess.moves;
 
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.exceptions.InvalidPosition;
+import com.jjonsson.utilities.HashCodes;
 
 public abstract class Position
 {
 
-	protected byte myRow;
-	protected byte myColumn;
+	private byte myRow;
+	private byte myColumn;
 
-	public static final int A = 1;
-	public static final int B = 2;
-	public static final int C = 3;
-	public static final int D = 4;
-	public static final int E = 5;
-	public static final int F = 6;
-	public static final int G = 7;
-	public static final int H = 8;
+	public static final int A = 0;
+	public static final int B = 1;
+	public static final int C = 2;
+	public static final int D = 3;
+	public static final int E = 4;
+	public static final int F = 5;
+	public static final int G = 6;
+	public static final int H = 7;
 
-	public static final int BLACK_STARTING_ROW = ChessBoard.BOARD_SIZE;
-	public static final int BLACK_PAWN_ROW = ChessBoard.BOARD_SIZE - 1;
-	public static final int BLACK_STARTING_ROW_INDEX = ChessBoard.BOARD_SIZE - 1;
-	public static final int WHITE_STARTING_ROW = 1;
-	public static final int WHITE_PAWN_ROW = 2;
-	public static final int WHITE_STARTING_ROW_INDEX = 0;
+	public static final int BLACK_STARTING_ROW = ChessBoard.BOARD_SIZE - 1;
+	public static final int BLACK_PAWN_ROW = ChessBoard.BOARD_SIZE - 2;
+	public static final int WHITE_STARTING_ROW = 0;
+	public static final int WHITE_PAWN_ROW = 1;
+
+
+	/**
+	 * A row is stored in the four leftmost bits
+	 */
+	protected static final byte ROW_OFFSET = 4;
+	/**
+	 * A column is stored in the four rightmost bits
+	 */
+	protected static final byte COLUMN_MASK = 0x0F;
 
 	private static final char[] COLUMNS = {'A','B','C','D','E','F','G','H'};
 
@@ -36,6 +44,16 @@ public abstract class Position
 	{
 		myRow = row;
 		myColumn = column;
+	}
+
+	protected void addRowChange(final byte rowChange)
+	{
+		myRow += rowChange;
+	}
+
+	protected void addColumnChange(final byte columnChange)
+	{
+		myColumn += columnChange;
 	}
 
 	/**
@@ -56,37 +74,6 @@ public abstract class Position
 		return myColumn;
 	}
 
-	/**
-	 * 
-	 * @param row the row for this position, valid numbers are 1-8
-	 * @param column the column for this position, valid numbers are 1-8 (A-H)
-	 * @throws InvalidPosition if one or both of the given parameters are out of range
-	 */
-	public static MutablePosition createPosition(final int row, final int column) throws InvalidPosition
-	{
-		if(isInvalidPosition(row-1, column-1))
-		{
-			throw new InvalidPosition(row, column);
-		}
-
-		return new MutablePosition((byte)(row - 1), (byte)(column - 1));
-	}
-
-	public static MutablePosition createPosition(final short persistenceData)
-	{
-		byte row = (byte) (persistenceData >> 12);
-		byte column = (byte) (persistenceData >> Byte.SIZE & 0xF);
-		return new MutablePosition(row, column);
-	}
-
-	public static MutablePosition fromString(final String position) throws InvalidPosition
-	{
-		if(position.length() != 2)
-		{
-			throw new IllegalArgumentException("Invalid position string: " + position);
-		}
-		return createPosition(Integer.parseInt(position.substring(0, 1)), position.charAt(1) - 'A' + 1);
-	}
 
 	/**
 	 * Validates that row and column are NOT between 0-7 (inclusive)
@@ -115,33 +102,13 @@ public abstract class Position
 		return row < 0 || column < 0 || row >= ChessBoard.BOARD_SIZE || column >= ChessBoard.BOARD_SIZE;
 	}
 
-	public Position up() throws InvalidPosition
-	{
-		return Position.createPosition(myRow + 2, myColumn + 1);
-	}
-
-	public Position down() throws InvalidPosition
-	{
-		return Position.createPosition(myRow, myColumn + 1);
-	}
-
-	public Position right() throws InvalidPosition
-	{
-		return Position.createPosition(myRow + 1, myColumn + 2);
-	}
-
-	public Position left() throws InvalidPosition
-	{
-		return Position.createPosition(myRow + 1, myColumn);
-	}
-
 	/**
 	 * This method can be used to bind this position to a specific piece
 	 */
 	@Override
 	public int hashCode()
 	{
-		return myRow * 1237 + myColumn;
+		return myRow * HashCodes.PRIME_NUMBER + myColumn;
 	}
 
 	@Override

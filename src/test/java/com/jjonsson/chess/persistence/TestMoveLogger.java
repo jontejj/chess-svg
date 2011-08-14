@@ -1,16 +1,16 @@
 package com.jjonsson.chess.persistence;
 
+import static com.jjonsson.chess.moves.ImmutablePosition.position;
+import static com.jjonsson.chess.moves.Position.H;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
-import com.jjonsson.chess.moves.Position;
-import com.jjonsson.chess.persistence.MoveLogger;
 import com.jjonsson.chess.pieces.Piece;
 
 
@@ -18,14 +18,14 @@ public class TestMoveLogger
 {
 
 	@Test
-	public void testMovesMadeShouldBeResetPeriodically() throws InvalidPosition, UnavailableMoveException
+	public void testMovesMadeShouldBeResetPeriodically() throws UnavailableMoveException
 	{
 		ChessBoard board = loadBoard("repetitive_test");
 
-		Position whiteRockStartingPosition = Position.createPosition(1, Position.H);
-		Position whiteRockMoveDestination = Position.createPosition(3, Position.H);
-		Position blackRockStartingPosition = Position.createPosition(8, Position.H);
-		Position blackRockMoveDestination = Position.createPosition(6, Position.H);
+		ImmutablePosition whiteRockStartingPosition = position(1, H);
+		ImmutablePosition whiteRockMoveDestination = position(3, H);
+		ImmutablePosition blackRockStartingPosition = position(8, H);
+		ImmutablePosition blackRockMoveDestination = position(6, H);
 
 
 		Piece whiteRock = board.getPiece(whiteRockStartingPosition);

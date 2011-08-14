@@ -1,7 +1,10 @@
 package com.jjonsson.chess.moves;
 
+import static com.jjonsson.chess.moves.ImmutablePosition.position;
+import static com.jjonsson.chess.moves.ImmutablePosition.of;
+import static com.jjonsson.chess.moves.Position.A;
+import static com.jjonsson.chess.moves.Position.B;
 import static com.jjonsson.chess.moves.Position.D;
-import static com.jjonsson.chess.moves.Position.createPosition;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
@@ -25,20 +28,20 @@ public class TestPosition
 	public void testHashCode()
 	{
 		Set<Integer> test = Sets.newHashSet();
-		for(byte r = 1;r<=ChessBoard.BOARD_SIZE + 1; r++)
+		for(byte r = 0;r<=ChessBoard.BOARD_SIZE + 1; r++)
 		{
-			for(byte c = 1;c<=ChessBoard.BOARD_SIZE + 1; c++)
+			for(byte c = 0;c<=ChessBoard.BOARD_SIZE + 1; c++)
 			{
 
 				Position p;
 				try
 				{
-					p = Position.createPosition(r, c);
+					p = of(r, c);
 					assertTrue(test.add(p.hashCode()));
 				}
 				catch (InvalidPosition e)
 				{
-					assertTrue(Position.isInvalidPosition((byte)(r-1), (byte)(c-1)));
+					assertTrue(Position.isInvalidPosition(r, c));
 					assertNotNull(e.toString());
 				}
 			}
@@ -46,19 +49,19 @@ public class TestPosition
 	}
 
 	@Test
-	public void testPositionTraversal() throws InvalidPosition
+	public void testPositionTraversal()
 	{
-		Position whiteRightTower = Position.createPosition(1, Position.A);
-		Position whiteRightKnight = Position.createPosition(1, Position.B);
+		ImmutablePosition whiteRightTower = position(1, A);
+		ImmutablePosition whiteRightKnight = position(1, B);
 		assertEquals(whiteRightKnight, whiteRightTower.up().right().right().down().left());
 	}
 
 	@Test
-	public void testPersistence() throws InvalidPosition
+	public void testPersistence()
 	{
 		byte persistenceByte = (byte) 0x33;
-		ImmutablePosition position = ImmutablePosition.fromByte(persistenceByte);
+		ImmutablePosition position = ImmutablePosition.from(persistenceByte);
 		assertEquals(persistenceByte, position.getPersistence());
-		assertTrue(position.equals(createPosition(4, D)));
+		assertTrue(position.equals(position(4, D)));
 	}
 }

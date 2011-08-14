@@ -33,6 +33,7 @@ import com.jjonsson.chess.gui.Settings;
 import com.jjonsson.chess.gui.WindowUtilities;
 import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.listeners.StatusListener;
+import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
@@ -369,10 +370,10 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		return new Point(pos.getColumn() * myCurrentPieceSize.width, (ChessBoard.BOARD_SIZE - pos.getRow() - 1) * myCurrentPieceSize.height);
 	}
 
-	private Position getPositionForPoint(final Point p) throws InvalidPosition
+	private ImmutablePosition getPositionForPoint(final Point p) throws InvalidPosition
 	{
-		int roundedRow = ChessBoard.BOARD_SIZE - (int)Math.floor(p.y / myCurrentPieceSize.height);
-		return Position.createPosition(roundedRow, p.x / myCurrentPieceSize.width + 1);
+		int roundedRow = ChessBoard.BOARD_SIZE - 1 - (int)Math.floor(p.y / myCurrentPieceSize.height);
+		return ImmutablePosition.of(roundedRow, p.x / myCurrentPieceSize.width);
 	}
 
 	/**
@@ -407,15 +408,15 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		long startNanos = System.nanoTime();
 		LOGGER.finest("Board clicked");
 		Point p = e.getPoint();
-		Position selectedPosition = null;
+		ImmutablePosition selectedPosition = null;
 		try
 		{
 			selectedPosition = getPositionForPoint(p);
 		}
-		catch (InvalidPosition e1)
+		catch (InvalidPosition ip)
 		{
 			//User must have clicked outside the board
-			LOGGER.info("Out of bounds: " + e1);
+			LOGGER.info("Out of bounds position: " + ip);
 			return;
 		}
 
@@ -436,7 +437,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void mouseExited(final MouseEvent e){}
 
-	public void positionClicked(final Position positionThatWasClicked)
+	public void positionClicked(final ImmutablePosition positionThatWasClicked)
 	{
 		if(myCurrentlySelectedPiece != null)
 		{
@@ -499,6 +500,30 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		statusChange();
 	}
 
+	private class PerformBestMoveThread extends Thread
+	{
+		@Override
+		public void run()
+		{
+			try
+			{
+				ChessMoveEvaluator.performBestMove(getBoard(), myStatusListener);
+			}
+			catch (NoMovesAvailableException e)
+			{
+				setResultOfInteraction("No valid moves found");
+			}
+			catch(SearchInterruptedError interrupted)
+			{
+				LOGGER.finest("Aborted searching for a move");
+				return;
+			}
+			statusChange();
+			repaint();
+			myTracker.removeJob(this);
+		}
+	}
+
 	@Override
 	public void nextPlayer()
 	{
@@ -511,29 +536,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			{
 				setResultOfInteraction("Thinking ...");
 				//Run in a seperate thread to let the eventQueue run along
-				Thread t = new Thread()
-				{
-					@Override
-					public void run()
-					{
-						try
-						{
-							ChessMoveEvaluator.performBestMove(getBoard(), myStatusListener);
-						}
-						catch (NoMovesAvailableException e)
-						{
-							setResultOfInteraction("No valid moves found");
-						}
-						catch(SearchInterruptedError interrupted)
-						{
-							LOGGER.finest("Aborted searching for a move");
-							return;
-						}
-						statusChange();
-						repaint();
-						myTracker.removeJob(this);
-					}
-				};
+				PerformBestMoveThread t = new PerformBestMoveThread();
 				myTracker.addJob(t);
 				t.setUncaughtExceptionHandler(this);
 				t.start();

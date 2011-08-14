@@ -1,6 +1,5 @@
 package com.jjonsson.chess.gui.components;
 
-import static com.jjonsson.chess.gui.Settings.DEBUG;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -121,14 +120,14 @@ public class TestChessBoardComponent
 	{
 		try
 		{
-			if(DEBUG)
+			if(Settings.DEBUG)
 			{
 				Thread.sleep(SLEEP_TIME);
 			}
 		}
 		catch(InterruptedException ie)
 		{
-			throw new RuntimeException("Got interrupted during my sleep", ie);
+			throw new IllegalStateException("Got interrupted during my sleep", ie);
 		}
 	}
 }

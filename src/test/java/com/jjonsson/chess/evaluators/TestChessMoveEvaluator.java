@@ -1,5 +1,13 @@
 package com.jjonsson.chess.evaluators;
 
+import static com.jjonsson.chess.moves.ImmutablePosition.position;
+import static com.jjonsson.chess.moves.Position.A;
+import static com.jjonsson.chess.moves.Position.B;
+import static com.jjonsson.chess.moves.Position.C;
+import static com.jjonsson.chess.moves.Position.D;
+import static com.jjonsson.chess.moves.Position.E;
+import static com.jjonsson.chess.moves.Position.G;
+import static com.jjonsson.chess.moves.Position.H;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
@@ -12,9 +20,9 @@ import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
-import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.King;
@@ -25,16 +33,14 @@ public class TestChessMoveEvaluator
 	/**
 	 * Test if the AI is to aggressive and doesn't recognize that the best move may be to move to cover
 	 * instead of taking a less valuable piece as a trade for a more valuable one
-	 * @throws UnavailableMoveException
 	 * @throws NoMovesAvailableException
-	 * @throws InvalidPosition
 	 */
 	@Test
-	public void testStupidTakeOverShouldNotBeMade() throws NoMovesAvailableException, InvalidPosition
+	public void testStupidTakeOverShouldNotBeMade() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("bishop_should_move_rational");
 		//Pawn should not be taken by the bishop at 7G
-		makeSureMoveWasNotMade(board, Position.createPosition(2, Position.B));
+		makeSureMoveWasNotMade(board, position(2, B));
 	}
 
 	@Test
@@ -62,13 +68,13 @@ public class TestChessMoveEvaluator
 	}
 
 	@Test
-	public void testCheckmateThreatShouldBeNeutralizedByAResonableMove() throws NoMovesAvailableException, InvalidPosition, UnavailableMoveException
+	public void testCheckmateThreatShouldBeNeutralizedByAResonableMove() throws NoMovesAvailableException, UnavailableMoveException
 	{
 		ChessBoard board = loadBoard("chechmate_threat_must_be_neatrulized");
 		assertEquals(ChessState.PLAYING, board.getCurrentState());
-		makeSureMoveWasNotMade(board, Position.createPosition(8, Position.G));
-		Piece blackQueen = board.getPiece(Position.createPosition(7, Position.G));
-		Move possibleCheckMateMove = board.getAvailableMove(blackQueen, Position.createPosition(3, Position.G));
+		makeSureMoveWasNotMade(board, position(8, G));
+		Piece blackQueen = board.getPiece(position(7, G));
+		Move possibleCheckMateMove = board.getAvailableMove(blackQueen, position(3, G));
 		blackQueen.performMove(possibleCheckMateMove, board);
 		//The King should be able to flee
 		assertFalse(ChessState.CHECKMATE == board.getCurrentState());
@@ -77,39 +83,37 @@ public class TestChessMoveEvaluator
 	/**
 	 * Test if the AI avoids making risky moves that haven't been searched deeper than one level and thus may look good but
 	 * when in fact they aren't
-	 * @throws UnavailableMoveException
 	 * @throws NoMovesAvailableException
-	 * @throws InvalidPosition
 	 */
 	@Test
-	public void testOnlyMakeSureMoves() throws NoMovesAvailableException, InvalidPosition
+	public void testOnlyMakeSureMoves() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("white_queen_should_not_move_to_5H");
-		makeSureMoveWasNotMade(board, Position.createPosition(5, Position.H));
+		makeSureMoveWasNotMade(board, position(5, H));
 	}
 
 	@Test
-	public void testDontMoveIntoThreatenedSquare() throws NoMovesAvailableException, InvalidPosition
+	public void testDontMoveIntoThreatenedSquare() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("white_queen_should_not_move_to_4C");
-		makeSureMoveWasNotMade(board, Position.createPosition(4, Position.C));
+		makeSureMoveWasNotMade(board, position(4, C));
 	}
 
 	@Test
-	public void testWhiteQueenShouldAvoidBeingTaken() throws NoMovesAvailableException, InvalidPosition
+	public void testWhiteQueenShouldAvoidBeingTaken() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("white_pawn_should_protect_queen_by_moving_to_4C");
 		//This should move the queen out of harms way
 		ChessMoveEvaluator.performBestMove(board);
 		//Verify that the black pawn can't take over the queen
-		assertTrue(board.getAvailableMoves(Position.createPosition(3, Position.B), Piece.BLACK).isEmpty());
+		assertTrue(board.getAvailableMoves(position(3, B), Piece.BLACK).isEmpty());
 	}
 
 	@Test
-	public void testQueenShouldEvadeBeingTaken() throws NoMovesAvailableException, InvalidPosition
+	public void testQueenShouldEvadeBeingTaken() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("queen_should_evade");
-		Piece blackQueen = board.getPiece(Position.createPosition(5, Position.D));
+		Piece blackQueen = board.getPiece(position(5, D));
 		Piece knight = blackQueen.getCheapestPieceThatTakesMeOver();
 		assertNotNull(knight);
 		//This should move the queen out of harms way (offering the rock)
@@ -120,11 +124,11 @@ public class TestChessMoveEvaluator
 	}
 
 	@Test
-	public void testKnightShouldEvadeBeingTaken() throws NoMovesAvailableException, InvalidPosition, UnavailableMoveException
+	public void testKnightShouldEvadeBeingTaken() throws NoMovesAvailableException, UnavailableMoveException
 	{
 		ChessBoard board = loadBoard("knight_should_not_be_left_unprotected");
-		Position knightPosition = Position.createPosition(5, Position.A);
-		King blackDefendingKing = King.class.cast(board.getPiece(Position.createPosition(6, Position.B)));
+		ImmutablePosition knightPosition = position(5, A);
+		King blackDefendingKing = King.class.cast(board.getPiece(position(6, B)));
 		Piece knight = board.getPiece(knightPosition);
 		Piece bishop = knight.getCheapestPieceThatTakesMeOver();
 		assertNotNull(bishop);
@@ -157,11 +161,19 @@ public class TestChessMoveEvaluator
 	}
 
 	@Test
-	public void testBishopShouldAvoidBeingTaken() throws NoMovesAvailableException, InvalidPosition
+	public void testBishopShouldAvoidBeingTaken() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("bishop_should_escape_from_6E");
 		ChessMoveEvaluator.performBestMove(board);
-		assertTrue(board.getAvailableMoves(Position.createPosition(6, Position.E), WHITE).isEmpty());
+		assertTrue(board.getAvailableMoves(position(6, E), WHITE).isEmpty());
+	}
+
+	@Test
+	public void testThatStalemateIsAvoidedWhileHavingAdvantage() throws NoMovesAvailableException
+	{
+		ChessBoard board = loadBoard("should_not_make_move_that_stalemates");
+		ChessMoveEvaluator.performBestMove(board);
+		assertFalse(ChessState.STALEMATE.equals(board.getCurrentState()));
 	}
 
 	private void makeSureMoveWasNotMade(final ChessBoard board, final Position badPosition) throws NoMovesAvailableException

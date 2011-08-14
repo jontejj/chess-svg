@@ -1,5 +1,7 @@
 package com.jjonsson.chess.persistence;
 
+import static com.jjonsson.utilities.Logger.LOGGER;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -7,6 +9,7 @@ import java.util.Iterator;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.listeners.MoveListener;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
@@ -61,16 +64,17 @@ public class PersistenceLogger implements MoveListener
 				//End of moves
 				break;
 			}
-			ImmutablePosition fromPos = ImmutablePosition.fromByte(fromByte);
-			ImmutablePosition toPos = ImmutablePosition.fromByte(buffer.get());
+			ImmutablePosition fromPos = ImmutablePosition.from(fromByte);
+			ImmutablePosition toPos = ImmutablePosition.from(buffer.get());
 			myPersistenceStorage.push(MoveItem.from(fromPos, toPos));
 		}
 	}
 
-	public void applyMoveHistory(final ChessBoard board) throws UnavailableMoveException
+	public void applyMoveHistory(final ChessBoard board) throws UnavailableMoveException, UnavailableMoveItem
 	{
 		myIsApplyingMoveHistory = true;
 		Iterator<MoveItem> fromFirstMoveToLastIterator = myPersistenceStorage.descendingIterator();
+		LOGGER.finest("Applying " + myPersistenceStorage.size() + " moves");
 		while(fromFirstMoveToLastIterator.hasNext())
 		{
 			MoveItem moveItem = fromFirstMoveToLastIterator.next();

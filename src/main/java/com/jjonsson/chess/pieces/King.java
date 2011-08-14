@@ -17,8 +17,8 @@ import com.jjonsson.chess.moves.Position;
 
 public class King extends Piece
 {
-	private static final ImmutablePosition WHITE_KING_START_POSITION = ImmutablePosition.getPosition(0, 4);
-	private static final ImmutablePosition BLACK_KING_START_POSITION = ImmutablePosition.getPosition(ChessBoard.BOARD_SIZE - 1, 4);
+	private static final ImmutablePosition WHITE_KING_START_POSITION = ImmutablePosition.from(0, 4);
+	private static final ImmutablePosition BLACK_KING_START_POSITION = ImmutablePosition.from(ChessBoard.BOARD_SIZE - 1, 4);
 
 	private CastlingMove myKingSideCastlingMove;
 	private CastlingMove myQueenSideCastlingMove;

@@ -35,7 +35,7 @@ public class CastlingMove extends IndependantMove
 		myKingMove = new KingCastlingMovePart(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
 		if(isQueenSideCastlingMove())
 		{
-			myQueenSideCastlingKingStepPosition = ImmutablePosition.getPosition(getCurrentPosition().getRow(), getCurrentPosition().getColumn() - 3);
+			myQueenSideCastlingKingStepPosition = ImmutablePosition.from(getCurrentPosition().getRow(), getCurrentPosition().getColumn() - 3);
 		}
 	}
 
@@ -187,7 +187,7 @@ public class CastlingMove extends IndependantMove
 	 * @return the destination for the rock move that this castling does.
 	 * @throws NullPointerException when setRock hasn't been called, use hasConnectedWithRock to determine this
 	 */
-	public ImmutablePosition getRockDestination() throws NullPointerException
+	public ImmutablePosition getRockDestination()
 	{
 		return myRockMove.getDestination();
 	}

@@ -1,9 +1,9 @@
 package com.jjonsson.chess.evaluators;
 
+import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.moves.Position.A;
 import static com.jjonsson.chess.moves.Position.B;
 import static com.jjonsson.chess.moves.Position.E;
-import static com.jjonsson.chess.moves.Position.createPosition;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static org.junit.Assert.assertEquals;
 
@@ -11,8 +11,8 @@ import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
-import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
+import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 
 public class TestChessBoardEvaluator
 {
@@ -51,16 +51,16 @@ public class TestChessBoardEvaluator
 	}
 
 	@Test
-	public void testShouldBeCheckMate() throws UnavailableMoveException, InvalidPosition
+	public void testShouldBeCheckMate() throws UnavailableMoveException, UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("should_be_checkmate_4");
-		board.move(createPosition(6, B), createPosition(6, A));
-		board.move(createPosition(8, E), createPosition(4, A));
+		board.move(position(6, B), position(6, A));
+		board.move(position(8, E), position(4, A));
 		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
 	}
 
 	@Test
-	public void testShouldBeCheckMate2() throws UnavailableMoveException, InvalidPosition
+	public void testShouldBeCheckMate2() throws UnavailableMoveException, UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("move_order_which_created_check_when_it_should_be_checkmate");
 		board.move("7G", "6G");

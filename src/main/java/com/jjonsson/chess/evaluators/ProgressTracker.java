@@ -27,7 +27,6 @@ public final class ProgressTracker
 		movesMadeAtLastSync = 0;
 		startTime = System.nanoTime();
 		myLastSync = System.nanoTime();
-		MoveEvaluatingThread.threadsCreated = 0;
 	}
 
 	public static synchronized void moveHasBeenMade()
@@ -57,7 +56,6 @@ public final class ProgressTracker
 				movesPerSecond = (long) (movesMade / passedSeconds);
 			}
 			LOGGER.finest("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
-			LOGGER.finest("Threads Created: " + MoveEvaluatingThread.threadsCreated);
 		}
 	}
 }

@@ -1,7 +1,9 @@
 package com.jjonsson.chess.pieces;
 
+import static com.jjonsson.utilities.Bits.containBits;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -12,7 +14,6 @@ import com.google.common.collect.Sets;
 import com.google.common.primitives.Shorts;
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
-import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.listeners.MoveListener;
 import com.jjonsson.chess.moves.ChainMove;
@@ -49,6 +50,8 @@ public abstract class Piece
 	 */
 	protected static final double PROTECTIVE_MOVE_ACCUMULATOR_IMPORTANCE_FACTOR = 0.01;
 
+	private static final int EXPECTED_TAKEOVERS_PER_PIECE = 4;
+
 	//Used to save/load a piece
 	protected static final byte BISHOP = 0;
 	protected static final byte PAWN = 1;
@@ -62,6 +65,13 @@ public abstract class Piece
 	//The affinity (color) of a piece
 	public static final boolean WHITE = false;
 	public static final boolean BLACK = true;
+
+	/**
+	 * The fourth bit is the color identifier
+	 */
+	private static final byte BLACK_BIT = (byte) 0x8;
+
+	private static final byte TYPE_MASK = (byte) 0x07;
 
 	public static final boolean NO_SORT = false;
 	public static final boolean SORT = true;
@@ -110,7 +120,7 @@ public abstract class Piece
 		myListeners = Sets.newHashSetWithExpectedSize(2);
 		myPossibleMoves = Sets.newHashSetWithExpectedSize(expectedNumberOfPossibleMoves());
 
-		myPiecesThatTakesMyPieceOver = Sets.newHashSetWithExpectedSize(8);
+		myPiecesThatTakesMyPieceOver = Sets.newHashSetWithExpectedSize(EXPECTED_TAKEOVERS_PER_PIECE);
 
 		myPosition = startingPosition;
 		myCurrentPosition = ImmutablePosition.getPosition(startingPosition);
@@ -206,8 +216,7 @@ public abstract class Piece
 		byte type = getPersistenceIdentifierType();
 		if(isBlack())
 		{
-			//The fourth bit is the color identifier
-			type = (byte) (0x8 | type);
+			type |= BLACK_BIT;
 		}
 		return type;
 	}
@@ -221,21 +230,20 @@ public abstract class Piece
 	}
 	/**
 	 * 
-	 * @param persistenceData the bits to read piece information from
+	 * @param buffer the buffer to read piece information from
 	 * <br>From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
 	 * @param board the board the piece is going to be placed on
 	 * @return a newly constructed piece
-	 * @throws InvalidPosition
+	 * @throws ArrayIndexOutOfBoundsException if the persistanceData contains an invalid position in the first byte
 	 */
-	public static Piece getPieceFromPersistenceData(final short persistenceData, final ChessBoard board)
+	public static Piece getPieceFromPersistenceData(final ByteBuffer buffer, final ChessBoard board)
 	{
 		Piece piece = null;
 		//From left, first 4 bits row, 4 bits column and then 8 bits type (where only the four rightmost is used)
-		MutablePosition position = Position.createPosition(persistenceData);
-		boolean affinity = ((persistenceData & 0x0008) == 0x0008);
-		int type = persistenceData & 0x0007;
-
-		switch(type)
+		MutablePosition position = MutablePosition.from(buffer.get());
+		byte pieceInfo = buffer.get();
+		boolean affinity = containBits(pieceInfo, BLACK_BIT);
+		switch(pieceInfo & TYPE_MASK)
 		{
 			case BISHOP:
 				piece = new Bishop(position, affinity, board);
@@ -422,6 +430,11 @@ public abstract class Piece
 		return myPosition;
 	}
 
+	/**
+	 * @param moveToPerform
+	 * @throws ArrayIndexOutOfBoundsException if the move results in an invalid position,
+	 * as this shouldn't happen there should be no need for catching this
+	 */
 	public void updateCurrentPosition(final Move moveToPerform)
 	{
 		myPosition.applyMove(moveToPerform);

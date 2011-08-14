@@ -1,22 +1,24 @@
 package com.jjonsson.chess.performance;
 
-import static com.jjonsson.chess.moves.Position.E;
-import static com.jjonsson.chess.moves.Position.createPosition;
+import static com.jjonsson.chess.moves.ImmutablePosition.from;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.utilities.Logger.LOGGER;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.jjonsson.chess.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.evaluators.ProgressTracker;
 import com.jjonsson.chess.evaluators.SearchLimiter;
-import com.jjonsson.chess.exceptions.InvalidPosition;
+import com.jjonsson.chess.evaluators.SearchResult;
 import com.jjonsson.chess.listeners.StatusListener;
 import com.jjonsson.chess.moves.Move;
 
 public final class TradeoffCalculator
 {
+	private TradeoffCalculator(){}
+
 	private static final int BENCHMARK_AMOUNT = 100000;
-	public static void main(final String[] args) throws InvalidPosition
+	public static void main(final String[] args)
 	{
 		StatusListener listener = new StatusListener(){
 			@Override public void statusHasBeenUpdated(){}
@@ -33,10 +35,10 @@ public final class TradeoffCalculator
 			board.copy();
 		}
 		long nanosPerClone = (System.nanoTime() - startTime) / BENCHMARK_AMOUNT;
-		double duration = (double)(nanosPerClone * BENCHMARK_AMOUNT) / 1000000000;
+		double duration = (double)(nanosPerClone * BENCHMARK_AMOUNT) / SECONDS.toNanos(1);
 		LOGGER.warning("cloning took " + duration + " secs, nanos per clone: " + nanosPerClone);
 
-		Move move = board.getAvailableMove(createPosition(4, E), WHITE);
+		Move move = board.getAvailableMove(from("4E"), WHITE);
 		SearchLimiter limiter = new SearchLimiter(0);
 
 		startTime = System.nanoTime();
@@ -45,11 +47,11 @@ public final class TradeoffCalculator
 			ChessMoveEvaluator.performMoveWithMeasurements(move, board, limiter);
 			board.undoMove(move, false);
 			ProgressTracker.moveHasBeenMade();
-			//ChessMoveEvaluator.evaluateMove(move, board, limiter, new SearchResult(), 0);
+			ChessMoveEvaluator.evaluateMove(move, board, limiter, new SearchResult(), 0);
 		}
 		ProgressTracker.done();
 		long nanosPerMove = (System.nanoTime() - startTime) / BENCHMARK_AMOUNT;
-		duration = (double)(nanosPerMove * BENCHMARK_AMOUNT) / 1000000000;
+		duration = (double)(nanosPerMove * BENCHMARK_AMOUNT) / SECONDS.toNanos(1);
 
 		LOGGER.warning("eval took " + duration + " secs, nanos per move eval: " + nanosPerMove);
 

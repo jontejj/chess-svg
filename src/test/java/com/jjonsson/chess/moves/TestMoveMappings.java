@@ -2,6 +2,7 @@ package com.jjonsson.chess.moves;
 
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertSame;
+
 import org.junit.Test;
 
 import com.jjonsson.chess.ChessBoard;
@@ -28,11 +29,11 @@ public class TestMoveMappings
 				int column = move.getSecondDimensionIndex();
 				Move existingMove = moveMappings[row][column];
 				String duplicateText = String.format("Duplicate for: (%d, %d) index: [%d, %d] for piece: %s, " +
-														"Existing Move: %s, Conflicting Move: %s", 
-														move.getRowChange(), 
-														move.getColumnChange(),
-														row,
-														column, piece, existingMove, move);
+						"Existing Move: %s, Conflicting Move: %s",
+						move.getRowChange(),
+						move.getColumnChange(),
+						row,
+						column, piece, existingMove, move);
 
 				assertNull(duplicateText, existingMove);
 				assertSame(move, piece.getMove(move));

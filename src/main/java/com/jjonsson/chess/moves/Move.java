@@ -272,6 +272,11 @@ public abstract class Move
 		return myPreviousDestination;
 	}
 
+	public void updatePreviousDestination()
+	{
+		myPreviousDestination = myDestination;
+	}
+
 	public void setDestination(final ImmutablePosition newDestination)
 	{
 		myPreviousDestination = myDestination;
@@ -294,7 +299,7 @@ public abstract class Move
 		}
 		else
 		{
-			setDestination(ImmutablePosition.getPosition(newRow, newColumn));
+			setDestination(ImmutablePosition.from(newRow, newColumn));
 		}
 	}
 

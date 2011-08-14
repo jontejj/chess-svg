@@ -1,11 +1,11 @@
 package com.jjonsson.chess.persistence;
 
+import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.moves.Position.D;
 import static com.jjonsson.chess.moves.Position.E;
 import static com.jjonsson.chess.moves.Position.F;
 import static com.jjonsson.chess.moves.Position.G;
 import static com.jjonsson.chess.moves.Position.H;
-import static com.jjonsson.chess.moves.Position.createPosition;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
@@ -16,7 +16,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Set;
 
@@ -24,7 +24,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.ChessBoard;
-import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MutablePosition;
@@ -37,39 +36,41 @@ public class TestPersistance
 {
 
 	@Test
-	public void testGetPieceFromPersistanceData() throws InvalidPosition
+	public void testGetPieceFromPersistanceData()
 	{
 		ChessBoard board = new ChessBoard(false);
 
 		Set<Short> persistanceUniquenessTest = Sets.newHashSet();
-		for(int row = 1; row <= ChessBoard.BOARD_SIZE; row++)
+		ByteBuffer buffer = ByteBuffer.allocate(2);
+		for(int row = 0; row < ChessBoard.BOARD_SIZE; row++)
 		{
-			for(int column = 1; column <= ChessBoard.BOARD_SIZE; column++)
+			for(int column = 0; column < ChessBoard.BOARD_SIZE; column++)
 			{
-				MutablePosition kingPos = createPosition(row, column);
-				King k = new King(kingPos, BLACK, board);
-				short p = k.getPersistenceData();
-				Piece k2 = Piece.getPieceFromPersistenceData(p, board);
+				King k = new King(MutablePosition.from(row, column), BLACK, board);
+				short persistanceData = k.getPersistenceData();
+				buffer.putShort(persistanceData);
+				buffer.flip();
+				Piece k2 = Piece.getPieceFromPersistenceData(buffer, board);
 				assertTrue("Saved piece doesn't match the read one", k.same(k2));
-				assertTrue(persistanceUniquenessTest.add(p));
+				assertTrue(persistanceUniquenessTest.add(persistanceData));
+				buffer.rewind();
 			}
 		}
-
-		MutablePosition rockPos = createPosition(8, H);
-		Rock r = new Rock(rockPos, WHITE, board);
-		short p1 = r.getPersistenceData();
-		Piece r2 = Piece.getPieceFromPersistenceData(p1, board);
+		Rock r = new Rock(MutablePosition.position(8, H), WHITE, board);
+		buffer.putShort(r.getPersistenceData());
+		buffer.flip();
+		Piece r2 = Piece.getPieceFromPersistenceData(buffer, board);
 		assertTrue("Saved piece doesn't match the read one", r.same(r2));
 	}
 
 	@Test
-	public void testThatMovedKingCantCastleAfterBoardSaveAndLoad() throws InvalidPosition, UnavailableMoveException, FileNotFoundException
+	public void testThatMovedKingCantCastleAfterBoardSaveAndLoad() throws UnavailableMoveException
 	{
 		String tempFilename = "temp_save_test_1";
 		ChessBoard board = loadBoard("castling_move");
-		Position kingOriginalPos = createPosition(1, E);
-		Position castlingDestinationPos = createPosition(1, G);
-		Position kingTempPos = createPosition(1, F);
+		Position kingOriginalPos = position(1, E);
+		Position castlingDestinationPos = position(1, G);
+		Position kingTempPos = position(1, F);
 		King whiteKing = board.getKing(WHITE);
 
 		//First verify that it's possible to castle before any moves have been made
@@ -95,13 +96,13 @@ public class TestPersistance
 	}
 
 	@Test
-	public void testSaveBoard() throws InvalidPosition, UnavailableMoveException
+	public void testSaveBoard() throws UnavailableMoveException
 	{
 		String tempFilename = "temp_save_test";
 		//Load a board and make changes to it
 		ChessBoard board = loadBoard("king_should_not_be_able_to_move");
-		Piece blackRock = board.getPiece(createPosition(8, H));
-		Move rockMove = board.getAvailableMove(createPosition(8, F), BLACK);
+		Piece blackRock = board.getPiece(position(8, H));
+		Move rockMove = board.getAvailableMove(position(8, F), BLACK);
 		rockMove.getPiece().performMove(rockMove, board);
 
 		assertTrue(BoardLoader.saveBoard(board, tempFilename));
@@ -109,21 +110,21 @@ public class TestPersistance
 		//Verify that the changes could be read
 		ChessBoard savedBoard = new ChessBoard(false, true);
 		assertTrue(BoardLoader.loadFileIntoBoard(new File(tempFilename), savedBoard));
-		Piece savedRock = savedBoard.getPiece(createPosition(8, F));
+		Piece savedRock = savedBoard.getPiece(position(8, F));
 		assertTrue("Saved piece doesn't match the read one", blackRock.same(savedRock));
 		assertEquals(1, savedBoard.undoMoves(1, false));
-		assertNotNull(savedBoard.getPiece(createPosition(8, H)));
+		assertNotNull(savedBoard.getPiece(position(8, H)));
 	}
 
 
 	@Test
-	public void testLoadBoard() throws InvalidPosition
+	public void testLoadBoard()
 	{
 		//Load a board and make changes to it
 		ChessBoard board = loadBoard("king_to_3D_should_not_be_possible");
-		King whiteKing = King.class.cast(board.getPiece(createPosition(2, E)));
+		King whiteKing = King.class.cast(board.getPiece(position(2, E)));
 
-		assertNull(board.getAvailableMove(whiteKing, createPosition(3, D)));
+		assertNull(board.getAvailableMove(whiteKing, position(3, D)));
 	}
 
 	@Test
