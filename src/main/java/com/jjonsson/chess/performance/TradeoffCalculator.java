@@ -9,7 +9,6 @@ import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.evaluators.ProgressTracker;
 import com.jjonsson.chess.evaluators.SearchLimiter;
-import com.jjonsson.chess.evaluators.SearchResult;
 import com.jjonsson.chess.listeners.StatusListener;
 import com.jjonsson.chess.moves.Move;
 
@@ -47,7 +46,7 @@ public final class TradeoffCalculator
 			ChessMoveEvaluator.performMoveWithMeasurements(move, board, limiter);
 			board.undoMove(move, false);
 			ProgressTracker.moveHasBeenMade();
-			ChessMoveEvaluator.evaluateMove(move, board, limiter, new SearchResult(), 0);
+			//ChessMoveEvaluator.evaluateMove(move, board, limiter, new SearchResult(), 0);
 		}
 		ProgressTracker.done();
 		long nanosPerMove = (System.nanoTime() - startTime) / BENCHMARK_AMOUNT;

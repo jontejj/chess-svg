@@ -300,10 +300,9 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		if(ChessBoardEvaluator.inPlay(getBoard()))
 		{
 			//Mark pieces with available moves
-			ImmutableList<Piece> currentPlayerPieces = ImmutableList.copyOf(getBoard().getPiecesForAffinity(getBoard().getCurrentPlayer()));
-			for(Piece p : currentPlayerPieces)
+			for(Piece p : ImmutableList.copyOf(getBoard().getPieces()))
 			{
-				if(p.canMakeAMove(getBoard()))
+				if(p.hasSameAffinityAs(getBoard().getCurrentPlayer()) && p.canMakeAMove(getBoard()))
 				{
 					markSquare(p.getCurrentPosition(),AVAILABLE_PIECE_BORDER, graphics);
 				}
@@ -381,7 +380,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 
 	private ImmutablePosition getPositionForPoint(final Point p) throws InvalidPosition
 	{
-		int roundedRow = ChessBoard.BOARD_SIZE - 1 - (int)Math.floor(p.y / myCurrentPieceSize.height);
+		int roundedRow = ChessBoard.BOARD_SIZE - 1 - (int)Math.floor((double)p.y / myCurrentPieceSize.height);
 		return ImmutablePosition.of(roundedRow, p.x / myCurrentPieceSize.width);
 	}
 

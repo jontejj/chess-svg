@@ -63,7 +63,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 		boolean shouldContinueInNewThread = ChessMoveEvaluator.shouldContinueInNewThread(myBoard, myLimiter, myMovesLeftOnBranch, myMoveToEvaluate);
 		if(shouldContinueInNewThread && ResourceAllocator.claimThread())
 		{
-			//Only copy the board/limiter if we aren't running in the "main" thread
+			//Only copy the board/limiter if we aren't running the next move eval in the same thread
 			if(makeThreadSafe())
 			{
 				myThread = new Thread(this);

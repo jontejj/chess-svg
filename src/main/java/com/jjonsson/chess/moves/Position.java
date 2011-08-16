@@ -102,9 +102,6 @@ public abstract class Position
 		return row < 0 || column < 0 || row >= ChessBoard.BOARD_SIZE || column >= ChessBoard.BOARD_SIZE;
 	}
 
-	/**
-	 * This method can be used to bind this position to a specific piece
-	 */
 	@Override
 	public int hashCode()
 	{

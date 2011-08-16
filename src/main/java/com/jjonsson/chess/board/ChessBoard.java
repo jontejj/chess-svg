@@ -85,11 +85,6 @@ public final class ChessBoard
 	 */
 	private static final byte READ_MOVE_HISTORY_BIT = (byte) (1 << 6);
 
-	//TODO: These six maps could be stored in a multidimensional array instead
-
-	private Map<ImmutablePosition, Piece> myWhitePieces;
-	private Map<ImmutablePosition, Piece> myBlackPieces;
-
 	private short myBlackAvailableMovesCount;
 	private short myWhiteAvailableMovesCount;
 
@@ -135,6 +130,15 @@ public final class ChessBoard
 	private long myWhiteTakeOverPiecesCount;
 
 	/**
+	 * The total piece value for all the white pieces
+	 */
+	private int myWhitePieceValueCount;
+	/**
+	 * The total piece value for all the black pieces
+	 */
+	private int myBlackPieceValueCount;
+
+	/**
 	 * The difficulty the user has chosen (Good values are 1-5) defaults to {@link ChessBoard.DEFAULT_DIFFICULTY}
 	 */
 	private int	myDifficulty;
@@ -156,8 +160,6 @@ public final class ChessBoard
 		myMoveLogger = MoveLoggerFactory.createMoveLogger();
 		addMoveListener(myMoveLogger);
 
-		myBlackPieces = Maps.newHashMap();
-		myWhitePieces = Maps.newHashMap();
 		myPieces = Sets.newIdentityHashSet();
 
 		myPieceToPositionAvailableMoves = Maps.newHashMap();
@@ -310,6 +312,7 @@ public final class ChessBoard
 		clear();
 		setupWhitePieces();
 		setupBlackPieces();
+		setupCastlingMoves();
 
 		//Set lists of all the possible moves for all of the pieces
 		setPossibleMoves();
@@ -479,9 +482,11 @@ public final class ChessBoard
 		}
 		ImmutablePosition currentPosition = p.getCurrentPosition();
 		//TODO: what if this overwrites an existing piece?
-		myPieces.add(p);
+		if(myPieces.add(p))
+		{
+			pieceValueChanged(p.getValue(), p.getAffinity());
+		}
 		getPositionContainer(currentPosition).setCurrentPiece(p);
-		getMapForAffinity(p.getAffinity()).put(currentPosition, p);
 		myPieceToPositionAvailableMoves.put(p, new HashMap<ImmutablePosition, Move>());
 		myPieceToPositionNonAvailableMoves.put(p, new HashMap<ImmutablePosition, Move>());
 		if(initializePossibleMoves)
@@ -518,19 +523,15 @@ public final class ChessBoard
 		addPiece(new Knight(MutablePosition.from(WHITE_STARTING_ROW, B), WHITE, this), false, true);
 		addPiece(new Knight(MutablePosition.from(WHITE_STARTING_ROW, G), WHITE, this), false, true);
 
-		Rock leftRock = new Rock(MutablePosition.from(WHITE_STARTING_ROW, A), WHITE, this);
-		addPiece(leftRock, false, true);
-		Rock rightRock = new Rock(MutablePosition.from(WHITE_STARTING_ROW, H), WHITE, this);
-		addPiece(rightRock, false, true);
+		addPiece(new Rock(MutablePosition.from(WHITE_STARTING_ROW, A), WHITE, this), false, true);
+		addPiece(new Rock(MutablePosition.from(WHITE_STARTING_ROW, H), WHITE, this), false, true);
 
 		addPiece(new Queen(MutablePosition.from(WHITE_STARTING_ROW, D), WHITE, this), false, true);
+
 		addPiece(new Bishop(MutablePosition.from(WHITE_STARTING_ROW, C), WHITE, this), false, true);
 		addPiece(new Bishop(MutablePosition.from(WHITE_STARTING_ROW, F), WHITE, this), false, true);
 
 		addPiece(new King(MutablePosition.from(WHITE_STARTING_ROW, E), WHITE, this), false, true);
-
-		myWhiteKing.getKingSideCastlingMove().setRock(rightRock);
-		myWhiteKing.getQueenSideCastlingMove().setRock(leftRock);
 	}
 
 	/**
@@ -546,52 +547,28 @@ public final class ChessBoard
 		addPiece(new Knight(MutablePosition.from(BLACK_STARTING_ROW, B), BLACK, this), false, true);
 		addPiece(new Knight(MutablePosition.from(BLACK_STARTING_ROW, G), BLACK, this), false, true);
 
-		Rock leftRock = new Rock(MutablePosition.from(BLACK_STARTING_ROW, A), BLACK, this);
-		addPiece(leftRock, false, true);
-
-		Rock rightRock = new Rock(MutablePosition.from(BLACK_STARTING_ROW, H), BLACK, this);
-		addPiece(rightRock, false, true);
+		addPiece(new Rock(MutablePosition.from(BLACK_STARTING_ROW, A), BLACK, this), false, true);
+		addPiece(new Rock(MutablePosition.from(BLACK_STARTING_ROW, H), BLACK, this), false, true);
 
 		addPiece(new Queen(MutablePosition.from(BLACK_STARTING_ROW, D), BLACK, this), false, true);
+
 		addPiece(new Bishop(MutablePosition.from(BLACK_STARTING_ROW, C), BLACK, this), false, true);
 		addPiece(new Bishop(MutablePosition.from(BLACK_STARTING_ROW, F), BLACK, this), false, true);
 
 		addPiece(new King(MutablePosition.from(BLACK_STARTING_ROW, E), BLACK, this), false, true);
-
-		myBlackKing.getKingSideCastlingMove().setRock(rightRock);
-		myBlackKing.getQueenSideCastlingMove().setRock(leftRock);
 	}
 
 	private void setupCastlingMoves()
 	{
 		if(myBlackKing.isAtStartingPosition())
 		{
-			Piece blackLeftRock = getPiece(ImmutablePosition.from(BLACK_STARTING_ROW, A));
-			Piece blackRightRock = getPiece(ImmutablePosition.from(BLACK_STARTING_ROW, H));
-			myBlackKing.getQueenSideCastlingMove().setRock(blackLeftRock);
-			myBlackKing.getKingSideCastlingMove().setRock(blackRightRock);
-			updateCastlingMoveMap(myBlackKing);
+			myBlackKing.setLeftRock(getPiece(ImmutablePosition.from(BLACK_STARTING_ROW, A)));
+			myBlackKing.setRightRock(getPiece(ImmutablePosition.from(BLACK_STARTING_ROW, H)));
 		}
 		if(myWhiteKing.isAtStartingPosition())
 		{
-			Piece whiteLeftRock = getPiece(ImmutablePosition.from(WHITE_STARTING_ROW, A));
-			Piece whiteRightRock = getPiece(ImmutablePosition.from(WHITE_STARTING_ROW, H));
-			myWhiteKing.getQueenSideCastlingMove().setRock(whiteLeftRock);
-			myWhiteKing.getKingSideCastlingMove().setRock(whiteRightRock);
-			updateCastlingMoveMap(myWhiteKing);
-		}
-	}
-
-	private void updateCastlingMoveMap(final King king)
-	{
-		if(king.getQueenSideCastlingMove().hasConnectedWithRock())
-		{
-			getPositionContainer(king.getQueenSideCastlingMove().getIntermediatePosition()).setCastlingMove(king.getQueenSideCastlingMove());
-			getPositionContainer(king.getQueenSideCastlingMove().getRockDestination()).setCastlingMove(king.getQueenSideCastlingMove());
-		}
-		if(king.getKingSideCastlingMove().hasConnectedWithRock())
-		{
-			getPositionContainer(king.getKingSideCastlingMove().getRockDestination()).setCastlingMove(king.getKingSideCastlingMove());
+			myWhiteKing.setLeftRock(getPiece(ImmutablePosition.from(WHITE_STARTING_ROW, A)));
+			myWhiteKing.setRightRock(getPiece(ImmutablePosition.from(WHITE_STARTING_ROW, H)));
 		}
 	}
 
@@ -610,9 +587,11 @@ public final class ChessBoard
 	public void removePiece(final Piece p)
 	{
 		ImmutablePosition currentPosition = p.getCurrentPosition();
-		myPieces.remove(p);
+		if(myPieces.remove(p))
+		{
+			pieceValueChanged(-p.getValue(), p.getAffinity());
+		}
 		getPositionContainer(currentPosition).setCurrentPiece(null);
-		getMapForAffinity(p.getAffinity()).remove(currentPosition);
 		for(MoveListener ml : myMoveListeners)
 		{
 			ml.pieceRemoved(p);
@@ -663,7 +642,7 @@ public final class ChessBoard
 	 * @throws NullPointerException if position is null
 	 * @throws ArrayIndexOutOfBoundsException if position is an invalid position
 	 */
-	private PositionContainer getPositionContainer(final ImmutablePosition position)
+	public PositionContainer getPositionContainer(final ImmutablePosition position)
 	{
 		return myPositions[position.getRow()][position.getColumn()];
 	}
@@ -830,26 +809,6 @@ public final class ChessBoard
 		return myMoveLogger;
 	}
 
-	private Map<ImmutablePosition, Piece> getMapForAffinity(final boolean affinity)
-	{
-		if(affinity == Piece.BLACK)
-		{
-			return myBlackPieces;
-		}
-
-		return myWhitePieces;
-	}
-
-	public Collection<Piece> getPiecesForAffinity(final boolean affinity)
-	{
-		if(affinity == Piece.BLACK)
-		{
-			return myBlackPieces.values();
-		}
-
-		return myWhitePieces.values();
-	}
-
 	/**
 	 * Note that this may contain false positives as the game may be in check.
 	 * @param affinity the affinity of the player's moves that should be returned
@@ -884,7 +843,7 @@ public final class ChessBoard
 	 * @param position the wanted position
 	 * @param affinity the affinity of the player that should be able to move into the position
 	 * @return the first available move for the given position and the given affinity
-	 * @throws NoSuchElementException if no available move exists
+	 * @exception NoSuchElementException if no available move exists
 	 * @throws NullPointerException if position is null
 	 */
 	public Move getAvailableMove(final ImmutablePosition position, final boolean affinity)
@@ -1054,9 +1013,6 @@ public final class ChessBoard
 				return false;
 			}
 		}
-		Map<ImmutablePosition, Piece> map = getMapForAffinity(pieceToMove.getAffinity());
-		map.remove(oldPosition);
-		map.put(newPosition, pieceToMove);
 
 		if(moveToPerform instanceof RevertingMove)
 		{
@@ -1138,9 +1094,9 @@ public final class ChessBoard
 	{
 		myBlackAvailableMovesCount = 0;
 		myWhiteAvailableMovesCount = 0;
+		myWhitePieceValueCount = 0;
+		myBlackPieceValueCount = 0;
 		myPieces.clear();
-		myWhitePieces.clear();
-		myBlackPieces.clear();
 		setupPositionContainers();
 		for(MoveListener ml :  myMoveListeners)
 		{
@@ -1162,6 +1118,11 @@ public final class ChessBoard
 			throw new IllegalStateException("ChessBoard without perstistance activated tried to read board with persistence activated. Programming error.");
 		}
 		return true;
+	}
+
+	public boolean hasPersistencePossibility()
+	{
+		return myPersistenceLogger != null;
 	}
 
 	/**
@@ -1495,14 +1456,19 @@ public final class ChessBoard
 		//int playerNrOfNonAvailableMoves = getNonAvailableMoves(affinity).size();
 		long playerProtectiveMoves = getProtectedPiecesCount(affinity);
 		long playerTakeOverCount = getTakeOverPiecesCount(affinity);
-		long totalPieceValue = 0;
-		for(Piece p : getPiecesForAffinity(affinity))
-		{
-			totalPieceValue += p.getValue();
-		}
+		long totalPieceValue = getTotalPieceValueForAffinity(affinity);
 		//Counts the available moves for the king
 		int kingMobility = this.getKing(affinity).getAvailableMoves(NO_SORT, this).size() * KING_MOBILITY_FACTOR;
 		return playerNrOfAvailableMoves + playerProtectiveMoves + playerTakeOverCount + totalPieceValue + kingMobility;
+	}
+
+	private long getTotalPieceValueForAffinity(final boolean affinity)
+	{
+		if(affinity == BLACK)
+		{
+			return myBlackPieceValueCount;
+		}
+		return myWhitePieceValueCount;
 	}
 
 	public int getDifficulty()
@@ -1532,5 +1498,17 @@ public final class ChessBoard
 			return;
 		}
 		myPersistenceLogger.setStartBoard(this);
+	}
+
+	public void pieceValueChanged(final int valueChange, final boolean affinity)
+	{
+		if(affinity == BLACK)
+		{
+			myBlackPieceValueCount += valueChange;
+		}
+		else
+		{
+			myWhitePieceValueCount += valueChange;
+		}
 	}
 }

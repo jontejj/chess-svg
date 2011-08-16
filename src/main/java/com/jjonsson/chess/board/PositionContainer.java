@@ -52,7 +52,6 @@ public class PositionContainer
 
 	private void createMoveMaps()
 	{
-		//TODO: perhaps IdentityHashSet's instead? they use a default size of 21 which seems like too big
 		myWhiteAvailableMoves = Sets.newHashSet();
 		myWhiteNonAvailableMoves = Sets.newHashSet();
 		myBlackAvailableMoves = Sets.newHashSet();
@@ -175,6 +174,7 @@ public class PositionContainer
 	{
 		//TODO: can this be done more efficiently?
 		//Update destinations
+		//TODO: if this would place the king's moves last it may be possible to not update all the king's moves between each turn
 		ImmutableSet<Move> movesToUpdate = new Builder<Move>().addAll(myWhiteAvailableMoves).
 		addAll(myWhiteNonAvailableMoves).
 		addAll(myBlackAvailableMoves).

@@ -3,7 +3,6 @@ package com.jjonsson.chess.moves;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Rock;
 
@@ -44,28 +43,20 @@ public class CastlingMove extends IndependantMove
 	}
 
 	/**
-	 * This also sanity checks the input so that's a{@link Rock}
 	 * @param aRock The rock that this castling move also moves
+	 * @throws NullPointerException if aRock is null
 	 */
-	public void setRock(final Piece aRock)
+	public void setRock(final Rock aRock)
 	{
-		if(aRock == null)
+		if(isQueenSideCastlingMove())
 		{
-			return;
+			myRockMove = new RockCastlingMovePart(0, 3, aRock);
 		}
-
-		if(aRock instanceof Rock)
+		else
 		{
-			myRock = aRock;
-			if(isQueenSideCastlingMove())
-			{
-				myRockMove = new RockCastlingMovePart(0, 3, myRock);
-			}
-			else
-			{
-				myRockMove = new RockCastlingMovePart(0, -2, myRock);
-			}
+			myRockMove = new RockCastlingMovePart(0, -2, aRock);
 		}
+		myRock = aRock;
 	}
 
 	@Override
@@ -108,11 +99,6 @@ public class CastlingMove extends IndependantMove
 		{
 			return false;
 		}
-		//TODO: remove this when the test case files have been updated with the new piece identifiers
-		if(!King.class.cast(getPiece()).isAtStartingPosition())
-		{
-			return false;
-		}
 
 		if(!myKingMove.canBeMadeInternal(board))
 		{
@@ -149,6 +135,7 @@ public class CastlingMove extends IndependantMove
 		getPiece().updateCurrentPosition(myKingMove);
 
 		setMovesMade(getMovesMade()+1);
+		getPiece().setMovesMade(getPiece().getMovesMade() + 1);
 		if(!myRock.performMove(myRockMove, board, false))
 		{
 			LOGGER.warning("Castling move: " + this + " not available");
@@ -185,7 +172,7 @@ public class CastlingMove extends IndependantMove
 	/**
 	 * 
 	 * @return the destination for the rock move that this castling does.
-	 * @throws NullPointerException when setRock hasn't been called, use hasConnectedWithRock to determine this
+	 * @throws NullPointerException when {@link CastlingMove#setRock(Piece)} hasn't been called, use {@link CastlingMove#hasConnectedWithRock()} to determine this
 	 */
 	public ImmutablePosition getRockDestination()
 	{

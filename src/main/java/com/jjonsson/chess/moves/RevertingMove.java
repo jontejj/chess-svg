@@ -101,7 +101,7 @@ public class RevertingMove extends IndependantMove {
 	{
 		if(canBeMade(board))
 		{
-			Position oldPosition = getCurrentPosition().copy();
+			Position oldPosition = getCurrentPosition();
 
 			if(myPieceThatReplacedMyPiece != null)
 			{

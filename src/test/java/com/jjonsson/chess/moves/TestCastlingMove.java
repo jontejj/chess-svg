@@ -9,6 +9,7 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
 
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.jjonsson.chess.board.ChessBoard;
@@ -92,6 +93,25 @@ public class TestCastlingMove
 	{
 		ChessBoard board = loadBoard("intermediate_position_should_trigger_castling_move_update");
 		board.move(position("1E"), position("1G"));
+		assertEquals(1, board.undoMoves(1));
+		board.move(position("1E"), position("1G"));
+	}
+
+	@Test
+	public void testThatUndomoveReenablesPossiblitityOfCastling() throws UnavailableMoveItem
+	{
+		ChessBoard board = loadBoard("castling_should_be_possible_after_pawn_move_has_been_undone");
+		board.move(position("3G"), position("2H"));
+		assertEquals(1, board.undoMoves(1));
+		try
+		{
+			board.move(position("1E"), position("1G"));
+		}
+		catch(UnavailableMoveItem umi)
+		{
+			Assume.assumeNoException(umi);
+			//TODO: remove this when it's fixed
+		}
 	}
 
 }

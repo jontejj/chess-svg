@@ -1,5 +1,7 @@
 package com.jjonsson.chess.evaluators.orderings;
 
+import java.io.Serializable;
+
 import com.google.common.collect.Ordering;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.Piece;
@@ -10,11 +12,12 @@ import com.jjonsson.chess.pieces.Piece;
  * @author jonatanjoensson
  *
  */
-public class EvadeOrdering extends Ordering<Move>
+public class EvadeOrdering extends Ordering<Move> implements Serializable
 {
+	private static final long	serialVersionUID	= -6835980280759444802L;
 
 	@Override
-	public int compare(Move left, Move right)
+	public int compare(final Move left, final Move right)
 	{
 		Piece pieceThreateningLeftPiece = left.getPiece().getCheapestPieceThatTakesMeOver();
 		Piece pieceThreateningRightPiece = right.getPiece().getCheapestPieceThatTakesMeOver();
@@ -23,7 +26,7 @@ public class EvadeOrdering extends Ordering<Move>
 			//TODO(jontejj): if this is expensive it needs to be cached in a better way, but how?
 			int movesThreateningLeftDestination = left.getPiece().getBoard().getNumberOfMovesThreateningPosition(left.getDestination(), !left.getAffinity(), left.getPiece());
 			int movesThreateningRightDestination = right.getPiece().getBoard().getNumberOfMovesThreateningPosition(right.getDestination(), !right.getAffinity(), right.getPiece());
-			
+
 			return left.getPiece().getValue() - right.getPiece().getValue() + (movesThreateningRightDestination - movesThreateningLeftDestination);
 			//return pieceThreateningRightPiece.getValue() - pieceThreateningLeftPiece.getValue();
 		}

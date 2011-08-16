@@ -94,9 +94,11 @@ public final class BoardLoader
 	{
 		try
 		{
-			ByteBuffer buffer = ByteBuffer.allocate(board.getPersistenceSize(true));
 			//TODO: perhaps this should be optional?
-			board.writePersistenceData(buffer, true);
+			boolean includeMovesPossible = board.hasPersistencePossibility();
+			ByteBuffer buffer = ByteBuffer.allocate(board.getPersistenceSize(includeMovesPossible));
+
+			board.writePersistenceData(buffer, includeMovesPossible);
 			buffer.flip();
 			Files.write(buffer.array(), new File(pathToFile));
 			return true;

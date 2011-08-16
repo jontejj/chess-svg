@@ -111,7 +111,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		this.setContentPane(myComponent);
 
 		this.addWindowListener(new WindowListener());
-		this.addComponentListener(new ComponentAdapter(this));
+		this.addComponentListener(new ResizeComponentAdapter(this));
 
 		createStatusBar();
 	}

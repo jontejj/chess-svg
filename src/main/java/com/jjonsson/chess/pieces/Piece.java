@@ -436,8 +436,10 @@ public abstract class Piece
 	 */
 	public void updateCurrentPosition(final Move moveToPerform)
 	{
+		int oldValue = getValue();
 		myPosition.applyMove(moveToPerform);
 		myCurrentPosition = ImmutablePosition.getPosition(myPosition);
+		myBoard.pieceValueChanged(oldValue - getValue(), getAffinity());
 	}
 
 	/**
@@ -682,7 +684,7 @@ public abstract class Piece
 	}
 
 	/**
-	 * Use this if the given move wants to be returned by getMove(rowChange, columnChange)
+	 * Use this if the given move wants to be returned by {@link Piece#getMove(Move)}
 	 * @param move
 	 */
 	public void addToMoveTable(final Move move)

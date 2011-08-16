@@ -301,9 +301,8 @@ public final class ChessMoveEvaluator
 	 * how many pieces that can be taken over by the other player
 	 * how many time the move has been made (a repetitiveness protection)
 	 * how progressive a move is
-	 * @param move the move to perform (if it isn't available right now
+	 * @param move the move to perform
 	 * @return the estimated value of the move performed
-	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
 	 */
 	@VisibleForTesting
 	public static long performMoveWithMeasurements(final Move move, final ChessBoard board, final SearchLimiter limiter)

@@ -49,12 +49,41 @@ public class King extends Piece
 		addPossibleMove(new KingMove(DOWN, NO_CHANGE, this));
 		addPossibleMove(new KingMove(DOWN, LEFT, this));
 		addPossibleMove(new KingMove(NO_CHANGE, LEFT, this));
-		if(isAtStartingPosition())
+	}
+
+	/**
+	 * 
+	 * @param rightRock the Rock that is connected to this King's king side castling move
+	 */
+	public void setRightRock(final Piece rightRock)
+	{
+		if(isRock(rightRock) && isAtStartingPosition())
 		{
 			myKingSideCastlingMove = new CastlingMove(0, 2, this);
+			myKingSideCastlingMove.setRock((Rock) rightRock);
 			addPossibleMove(myKingSideCastlingMove);
+			getBoard().getPositionContainer(myKingSideCastlingMove.getRockDestination()).setCastlingMove(myKingSideCastlingMove);
+		}
+	}
+
+	private boolean isRock(final Piece aPiece)
+	{
+		return aPiece != null && aPiece instanceof Rock;
+	}
+
+	/**
+	 * 
+	 * @param leftRock the Rock that is connected to this King's queen side castling move
+	 */
+	public void setLeftRock(final Piece leftRock)
+	{
+		if(isRock(leftRock) && isAtStartingPosition())
+		{
 			myQueenSideCastlingMove = new CastlingMove(0, -2, this);
+			myQueenSideCastlingMove.setRock((Rock) leftRock);
 			addPossibleMove(myQueenSideCastlingMove);
+			getBoard().getPositionContainer(myQueenSideCastlingMove.getIntermediatePosition()).setCastlingMove(myQueenSideCastlingMove);
+			getBoard().getPositionContainer(myQueenSideCastlingMove.getRockDestination()).setCastlingMove(myQueenSideCastlingMove);
 		}
 	}
 
@@ -62,10 +91,10 @@ public class King extends Piece
 	{
 		if(isBlack())
 		{
-			return BLACK_KING_START_POSITION.equals(getCurrentPosition());
+			return BLACK_KING_START_POSITION == getCurrentPosition();
 		}
 
-		return WHITE_KING_START_POSITION.equals(getCurrentPosition());
+		return WHITE_KING_START_POSITION == getCurrentPosition();
 	}
 
 	@Override
@@ -88,14 +117,25 @@ public class King extends Piece
 	@Override
 	public boolean performMove(final Move move, final ChessBoard board, final boolean printOut)
 	{
-		if(getMovesMade() == 0 && myKingSideCastlingMove != null)
+		if(getMovesMade() == 0)
 		{
-			myKingSideCastlingMove.removeFromBoard(board);
-			getPossibleMoves().remove(myKingSideCastlingMove);
-			myQueenSideCastlingMove.removeFromBoard(board);
-			getPossibleMoves().remove(myQueenSideCastlingMove);
+			if(myKingSideCastlingMove != null)
+			{
+				myKingSideCastlingMove.removeFromBoard(board);
+				getPossibleMoves().remove(myKingSideCastlingMove);
+			}
+			if(myQueenSideCastlingMove != null)
+			{
+				myQueenSideCastlingMove.removeFromBoard(board);
+				getPossibleMoves().remove(myQueenSideCastlingMove);
+			}
 		}
-		return super.performMove(move, board, printOut);
+		if(!super.performMove(move, board, printOut))
+		{
+			revertedAMove(board, getCurrentPosition());
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -104,32 +144,20 @@ public class King extends Piece
 	@Override
 	public void revertedAMove(final ChessBoard board, final Position oldPosition)
 	{
-		if(getMovesMade() == 0 && myKingSideCastlingMove != null)
+		if(getMovesMade() == 0)
 		{
-			addPossibleMove(myKingSideCastlingMove);
-			myKingSideCastlingMove.updatePossibility(board, true);
+			if(myKingSideCastlingMove != null)
+			{
+				addPossibleMove(myKingSideCastlingMove);
+				myKingSideCastlingMove.updateMove(board);
+			}
 
-			addPossibleMove(myQueenSideCastlingMove);
-			myQueenSideCastlingMove.updatePossibility(board, true);
+			if(myQueenSideCastlingMove != null)
+			{
+				addPossibleMove(myQueenSideCastlingMove);
+				myQueenSideCastlingMove.updateMove(board);
+			}
 		}
-	}
-
-	/**
-	 * 
-	 * @return the move that takes the king two steps to the right
-	 */
-	public CastlingMove getKingSideCastlingMove()
-	{
-		return myKingSideCastlingMove;
-	}
-
-	/**
-	 * 
-	 * @return the move that takes the king three steps to the left
-	 */
-	public CastlingMove getQueenSideCastlingMove()
-	{
-		return myQueenSideCastlingMove;
 	}
 
 	@Override
