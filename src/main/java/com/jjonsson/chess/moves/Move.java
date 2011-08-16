@@ -3,7 +3,6 @@ package com.jjonsson.chess.moves;
 import java.util.Collection;
 
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
 
 public abstract class Move
@@ -496,25 +495,38 @@ public abstract class Move
 	}
 	/**
 	 * Makes this move and updates all the moves of all the pieces that will need to be updated on the given board
-	 * @throws UnavailableMoveException if this move isn't available right now
+	 * @return false if this move isn't available right now, true otherwise
 	 */
-	public void makeMove(final ChessBoard board) throws UnavailableMoveException
+	public boolean makeMove(final ChessBoard board)
 	{
 		if(!canBeMade(board))
 		{
-			//TODO: this throws too often, return boolean instead
-			throw new UnavailableMoveException(this);
+			return false;
 		}
+		return makeMoveWithoutChecking(board);
+	}
+
+	/**
+	 * This doesn't run canBeMade on the move before trying to perform it
+	 * @param board
+	 * @return
+	 */
+	protected boolean makeMoveWithoutChecking(final ChessBoard board)
+	{
 		if(myPieceAtDestination != null)
 		{
 			//Take over is happening
 			myPieceAtDestination = myPieceAtDestination.removeFromBoard(board);
 		}
 
-		board.movePiece(myPiece, this);
+		if(!board.movePiece(myPiece, this))
+		{
+			return false;
+		}
 		myPiece.updateCurrentPosition(this);
 		myMovesMade++;
 		getPiece().setMovesMade(getPiece().getMovesMade() + 1);
+		return true;
 	}
 
 	@Override

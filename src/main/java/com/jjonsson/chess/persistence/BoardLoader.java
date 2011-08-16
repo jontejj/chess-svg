@@ -13,7 +13,6 @@ import com.google.common.io.Files;
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.DuplicatePieceException;
 import com.jjonsson.chess.exceptions.InvalidBoardException;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 
 public final class BoardLoader
@@ -73,10 +72,6 @@ public final class BoardLoader
 		catch (InvalidBoardException e)
 		{
 			LOGGER.severe("Faulty board, detected that only one king exists. The possibility of moves needs to be fixed.");
-		}
-		catch (UnavailableMoveException e)
-		{
-			LOGGER.warning("Could not apply move during board load operation: " + e);
 		}
 		catch (UnavailableMoveItem e)
 		{

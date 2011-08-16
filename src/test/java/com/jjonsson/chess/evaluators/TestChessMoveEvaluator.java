@@ -15,7 +15,6 @@ import org.junit.Test;
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
@@ -62,14 +61,14 @@ public class TestChessMoveEvaluator
 	}
 
 	@Test
-	public void testCheckmateThreatShouldBeNeutralizedByAResonableMove() throws NoMovesAvailableException, UnavailableMoveException
+	public void testCheckmateThreatShouldBeNeutralizedByAResonableMove() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("chechmate_threat_must_be_neatrulized");
 		assertEquals(ChessState.PLAYING, board.getCurrentState());
 		makeSureMoveWasNotMade(board, position("8G"));
 		Piece blackQueen = board.getPiece(position("7G"));
 		Move possibleCheckMateMove = board.getAvailableMove(blackQueen, position("3G"));
-		blackQueen.performMove(possibleCheckMateMove, board);
+		assertTrue(blackQueen.performMove(possibleCheckMateMove, board));
 		//The King should be able to flee
 		assertFalse(ChessState.CHECKMATE == board.getCurrentState());
 	}
@@ -118,7 +117,7 @@ public class TestChessMoveEvaluator
 	}
 
 	@Test
-	public void testKnightShouldEvadeBeingTaken() throws NoMovesAvailableException, UnavailableMoveException
+	public void testKnightShouldEvadeBeingTaken() throws NoMovesAvailableException
 	{
 		ChessBoard board = loadBoard("knight_should_not_be_left_unprotected");
 		ImmutablePosition knightPosition = position("5A");
@@ -130,7 +129,7 @@ public class TestChessMoveEvaluator
 		ChessMoveEvaluator.performBestMove(board);
 
 		Move bishopMove = board.getAvailableMove(bishop, knightPosition);
-		bishop.performMove(bishopMove, board);
+		assertTrue(bishop.performMove(bishopMove, board));
 
 		//The king should now be able to take over the bishop
 		Move bishopTakeOverMove = board.getAvailableMove(blackDefendingKing, knightPosition);

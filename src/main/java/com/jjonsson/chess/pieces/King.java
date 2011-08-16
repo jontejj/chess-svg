@@ -7,7 +7,6 @@ import static com.jjonsson.chess.moves.Move.RIGHT;
 import static com.jjonsson.chess.moves.Move.UP;
 
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.CastlingMove;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.KingMove;
@@ -87,9 +86,8 @@ public class King extends Piece
 	}
 
 	@Override
-	public void performMove(final Move move, final ChessBoard board, final boolean printOut) throws UnavailableMoveException
+	public boolean performMove(final Move move, final ChessBoard board, final boolean printOut)
 	{
-		//TODO: during makeMove remove castling moves from the possibility maps on the chessboard, beware: this may be to late to remove
 		if(getMovesMade() == 0 && myKingSideCastlingMove != null)
 		{
 			myKingSideCastlingMove.removeFromBoard(board);
@@ -97,7 +95,7 @@ public class King extends Piece
 			myQueenSideCastlingMove.removeFromBoard(board);
 			getPossibleMoves().remove(myQueenSideCastlingMove);
 		}
-		super.performMove(move, board, printOut);
+		return super.performMove(move, board, printOut);
 	}
 
 	/**

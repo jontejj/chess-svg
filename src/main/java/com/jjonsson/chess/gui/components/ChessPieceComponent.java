@@ -12,7 +12,6 @@ import org.apache.batik.swing.svg.JSVGComponent;
 import org.w3c.dom.svg.SVGDocument;
 
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.PieceImageCache;
 import com.jjonsson.chess.listeners.MoveListener;
 import com.jjonsson.chess.moves.Move;
@@ -148,15 +147,11 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 			if(takeOverMove != null)
 			{
 				//The currently selected piece is going to take over this one
-				try
+				if(currentlySelected.performMove(takeOverMove, boardComponent.getBoard()))
 				{
-					currentlySelected.performMove(takeOverMove, boardComponent.getBoard());
 					return;
 				}
-				catch (UnavailableMoveException ume)
-				{
-					LOGGER.info(ume.toString());
-				}
+				LOGGER.info("Unavailable move: " + takeOverMove);
 			}
 		}
 

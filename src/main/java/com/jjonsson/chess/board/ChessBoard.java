@@ -37,7 +37,6 @@ import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.DuplicatePieceException;
 import com.jjonsson.chess.exceptions.InvalidBoardException;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.listeners.MoveListener;
@@ -441,6 +440,7 @@ public final class ChessBoard
 	}
 	/**
 	 * Performs a random move for the current player
+	 * @throws NoMovesAvailableException if no move could be made
 	 */
 	public void performRandomMove() throws NoMovesAvailableException
 	{
@@ -452,26 +452,15 @@ public final class ChessBoard
 		List<Move> shuffledMoves = getAvailableMoves(getCurrentPlayer());
 		Collections.shuffle(shuffledMoves);
 
-		try
+		for(Move randomMove : shuffledMoves)
 		{
-			for(Move randomMove : shuffledMoves)
+			Piece piece = randomMove.getPiece();
+			if(piece.performMove(randomMove, this))
 			{
-				Piece piece = randomMove.getPiece();
-				if(piece == null)
-				{
-					throw new NoMovesAvailableException();
-				}
-				if(randomMove.canBeMade(this))
-				{
-					piece.performMove(randomMove, this);
-					break;
-				}
+				return;
 			}
 		}
-		catch(UnavailableMoveException ume)
-		{
-			throw new NoMovesAvailableException(ume);
-		}
+		throw new NoMovesAvailableException();
 	}
 
 	public void addPiece(final Piece p, final boolean initializePossibleMoves, final boolean loadingInProgress)
@@ -1038,7 +1027,7 @@ public final class ChessBoard
 		return myPieces.size();
 	}
 
-	public void movePiece(final Piece pieceToMove, final Move moveToPerform) throws UnavailableMoveException
+	public boolean movePiece(final Piece pieceToMove, final Move moveToPerform)
 	{
 		ImmutablePosition newPosition = moveToPerform.getDestination();
 		ImmutablePosition oldPosition = pieceToMove.getCurrentPosition();
@@ -1062,7 +1051,7 @@ public final class ChessBoard
 				//Restore state and throw
 				getPositionContainer(newPosition).setCurrentPiece(oldPiece);
 				getPositionContainer(oldPosition).setCurrentPiece(pieceToMove);
-				throw new UnavailableMoveException(moveToPerform);
+				return false;
 			}
 		}
 		Map<ImmutablePosition, Piece> map = getMapForAffinity(pieceToMove.getAffinity());
@@ -1083,9 +1072,10 @@ public final class ChessBoard
 				ml.movePerformed(moveToPerform);
 			}
 		}
+		return true;
 	}
 
-	public void move(final ImmutablePosition from, final ImmutablePosition to) throws UnavailableMoveException, UnavailableMoveItem
+	public void move(final ImmutablePosition from, final ImmutablePosition to) throws UnavailableMoveItem
 	{
 		Piece piece = getPiece(from);
 		if(piece == null)
@@ -1097,7 +1087,10 @@ public final class ChessBoard
 		{
 			throw new UnavailableMoveItem("Couldn't find a move to " + to + " for the piece " + piece, from, to);
 		}
-		piece.performMove(move, this, false);
+		if(!piece.performMove(move, this, false))
+		{
+			throw new UnavailableMoveItem("Couldn't perform: " + move, from, to);
+		}
 	}
 
 	/**
@@ -1107,7 +1100,7 @@ public final class ChessBoard
 	 * @throws UnavailableMoveException when the move isn't available even if the caching mechanism thought it was
 	 * @throws UnavailableMoveItem if the caching mechanism didn't consider the move possible
 	 */
-	public void move(final String from, final String to) throws UnavailableMoveException, UnavailableMoveItem
+	public void move(final String from, final String to) throws UnavailableMoveItem
 	{
 		move(ImmutablePosition.position(from), ImmutablePosition.position(to));
 	}
@@ -1320,6 +1313,7 @@ public final class ChessBoard
 	 * Undo the given number of moves
 	 * @param movesToUndo the number of moves to undo
 	 * @return moves that could be reverted
+	 * @throws NullPointerException no moves have been made
 	 */
 	public int undoMoves(final int movesToUndo, final boolean printOuts)
 	{
@@ -1327,18 +1321,18 @@ public final class ChessBoard
 		int movesReverted = 0;
 		while(movesReverted < movesToUndo)
 		{
-			try
-			{
-				Move lastMove = myMoveLogger.getLastMove();
-				lastMove.getPiece().performMove(lastMove.getRevertingMove(), this, printOuts);
-				if(!lastMove.isPartOfAnotherMove())
-				{
-					movesReverted++;
-				}
-			}
-			catch (Exception e)
+			Move lastMove = myMoveLogger.getLastMove();
+			if(lastMove == null)
 			{
 				break;
+			}
+			if(!lastMove.getPiece().performMove(lastMove.getRevertingMove(), this, printOuts))
+			{
+				break;
+			}
+			if(!lastMove.isPartOfAnotherMove())
+			{
+				movesReverted++;
 			}
 		}
 		Move lastMove = myMoveLogger.getLastMove();
@@ -1360,6 +1354,7 @@ public final class ChessBoard
 	 * If the given move was the last one to be made it is undone by this function
 	 * @param moveToUndo the move to undo
 	 * @return true if the move could be undone
+	 * * @throws NullPointerException if moveToUndo is null
 	 */
 	public boolean undoMove(final Move moveToUndo, final boolean printOuts)
 	{
@@ -1367,17 +1362,16 @@ public final class ChessBoard
 		boolean wasPartOfAnotherMove = false;
 
 		myAllowsMoves = false;
-		try
+		RevertingMove revertingMove = moveToUndo.getRevertingMove();
+		if(moveToUndo.getPiece().performMove(revertingMove, this, printOuts))
 		{
-			RevertingMove revertingMove = moveToUndo.getRevertingMove();
-			moveToUndo.getPiece().performMove(revertingMove, this, printOuts);
 			if(revertingMove.isPartOfAnotherMove())
 			{
 				wasPartOfAnotherMove = true;
 				wasUndone = (undoMoves(1, false) == 1);
 			}
 		}
-		catch (Exception e)
+		else
 		{
 			wasUndone = false;
 		}
@@ -1516,7 +1510,7 @@ public final class ChessBoard
 		return myDifficulty;
 	}
 
-	public void applyMoveHistory() throws UnavailableMoveException, UnavailableMoveItem
+	public void applyMoveHistory() throws UnavailableMoveItem
 	{
 		myAllowsMoves = false;
 		if(myPersistenceLogger == null)

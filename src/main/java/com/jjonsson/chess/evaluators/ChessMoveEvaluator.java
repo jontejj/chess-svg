@@ -12,10 +12,8 @@ import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.SearchInterruptedError;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.listeners.StatusListener;
 import com.jjonsson.chess.moves.Move;
-import com.jjonsson.utilities.Logger;
 import com.jjonsson.utilities.ThreadTracker;
 
 /**
@@ -99,23 +97,23 @@ public final class ChessMoveEvaluator
 	 * Performs a move and keeps the StatusListener updated with the latest progress information
 	 * @param board
 	 * @param listener
-	 * @throws NoMovesAvailableException, SearchInterruptedError
+	 * @throws NoMovesAvailableException
+	 * @throws SearchInterruptedError
 	 */
 	public static void performBestMove(final ChessBoard board, final StatusListener listener) throws NoMovesAvailableException
 	{
 		try
 		{
 			Move bestMove = getBestMove(board, listener);
-			bestMove.getPiece().performMove(bestMove, board);
+			if(!bestMove.getPiece().performMove(bestMove, board))
+			{
+				LOGGER.info("Move: " + bestMove + " is not available, performing random move");
+				//In the worst case scenario we make a random move if possible
+				board.performRandomMove();
+			}
 		}
 		catch(NoMovesAvailableException evaluationNoMovesException)
 		{
-			//In the worst case scenario we make a random move if possible
-			board.performRandomMove();
-		}
-		catch (UnavailableMoveException evaluationFailedException)
-		{
-			LOGGER.info(Logger.stackTraceToString(evaluationFailedException));
 			//In the worst case scenario we make a random move if possible
 			board.performRandomMove();
 		}
@@ -317,16 +315,10 @@ public final class ChessMoveEvaluator
 		long otherPlayerBefore = board.getMeasuredStatusForPlayer(!board.getCurrentPlayer());
 		long playerBefore = board.getMeasuredStatusForPlayer(board.getCurrentPlayer());
 
-		try
-		{
-			move.getPiece().performMove(move, board, false);
-		}
-		catch(UnavailableMoveException ume)
+		if(!move.getPiece().performMove(move, board, false))
 		{
 			//if(board.isMoveUnavailableDueToCheck(move) || move.isMoveUnavailableDueToCheckMate(board))
 			return Long.MIN_VALUE;
-
-			//return 0;
 		}
 
 		//Save some measurements for the after state (the current player has changed now so that's why the getCurrentPlayer has been inverted)

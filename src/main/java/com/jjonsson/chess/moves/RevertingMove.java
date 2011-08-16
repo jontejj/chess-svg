@@ -1,7 +1,6 @@
 package com.jjonsson.chess.moves;
 
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Piece;
 
 /**
@@ -98,7 +97,7 @@ public class RevertingMove extends IndependantMove {
 	}
 
 	@Override
-	public void makeMove(final ChessBoard board) throws UnavailableMoveException
+	public boolean makeMove(final ChessBoard board)
 	{
 		if(canBeMade(board))
 		{
@@ -110,7 +109,11 @@ public class RevertingMove extends IndependantMove {
 				myPieceThatReplacedMyPiece.removeFromBoard(board);
 			}
 
-			super.makeMove(board);
+			if(!super.makeMoveWithoutChecking(board))
+			{
+				board.addPiece(myPieceThatReplacedMyPiece, true, false);
+				return false;
+			}
 
 			//The move that this move reverts took over a piece so that needs to be restored
 			if(myPieceToPlaceAtOldPosition != null)
@@ -129,11 +132,9 @@ public class RevertingMove extends IndependantMove {
 			getPiece().setMovesMade(getPiece().getMovesMade() - 2);
 
 			getPiece().revertedAMove(board, oldPosition);
+			return true;
 		}
-		else
-		{
-			throw new UnavailableMoveException(this);
-		}
+		return false;
 	}
 
 	/**

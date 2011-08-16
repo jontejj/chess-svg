@@ -5,13 +5,12 @@ import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.Piece;
@@ -22,11 +21,11 @@ public class TestUndoMoves
 {
 
 	@Test
-	public void testPawnTwoStepMoveUndo() throws UnavailableMoveException
+	public void testPawnTwoStepMoveUndo()
 	{
 		ChessBoard board = new ChessBoard(true);
 		Move pawnTwoStepMove = board.getAvailableMove(position("4C"), WHITE);
-		pawnTwoStepMove.getPiece().performMove(pawnTwoStepMove, board);
+		assertTrue(pawnTwoStepMove.getPiece().performMove(pawnTwoStepMove, board));
 		assertEquals(1, board.undoMoves(1));
 		assertTrue(pawnTwoStepMove.canBeMade(board));
 
@@ -41,7 +40,7 @@ public class TestUndoMoves
 	}
 
 	@Test
-	public void testUndoAndVerifyThatPieceRevivalOccured() throws UnavailableMoveException
+	public void testUndoAndVerifyThatPieceRevivalOccured()
 	{
 		ChessBoard board2 = loadBoard("next_pawn_time_for_replacement_move_should_check_king_horse_take_queen_then_no_more_check");
 
@@ -49,7 +48,7 @@ public class TestUndoMoves
 		Move pawnTakeOverMove = board2.getAvailableMove(takeOverSpot, WHITE);
 
 		//Take over the black rock
-		pawnTakeOverMove.getPiece().performMove(pawnTakeOverMove, board2);
+		assertTrue(pawnTakeOverMove.getPiece().performMove(pawnTakeOverMove, board2));
 
 		Piece whiteQueen = board2.getPiece(takeOverSpot);
 		assertTrue(whiteQueen.isWhite());
@@ -64,7 +63,7 @@ public class TestUndoMoves
 	}
 
 	@Test
-	public void testUndoTwoTakeOverMovesAndVerifyThatBothPiecesWereRevived() throws UnavailableMoveException
+	public void testUndoTwoTakeOverMovesAndVerifyThatBothPiecesWereRevived()
 	{
 		ChessBoard board = loadBoard("undo_two_take_over_moves_in_a_row_for_the_same_piece");
 
@@ -76,7 +75,7 @@ public class TestUndoMoves
 		int movesMade = 0;
 		//Take over a white pawn
 		Move pawnTakeOverMove = board.getAvailableMove(takeOverOneSpot, BLACK);
-		pawnTakeOverMove.getPiece().performMove(pawnTakeOverMove, board);
+		assertTrue(pawnTakeOverMove.getPiece().performMove(pawnTakeOverMove, board));
 		movesMade++;
 
 		//Perform the white rock move

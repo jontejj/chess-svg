@@ -8,7 +8,6 @@ import java.util.Deque;
 import java.util.Iterator;
 
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.listeners.MoveListener;
 import com.jjonsson.chess.moves.ImmutablePosition;
@@ -70,7 +69,7 @@ public class PersistenceLogger implements MoveListener
 		}
 	}
 
-	public void applyMoveHistory(final ChessBoard board) throws UnavailableMoveException, UnavailableMoveItem
+	public void applyMoveHistory(final ChessBoard board) throws UnavailableMoveItem
 	{
 		myIsApplyingMoveHistory = true;
 		Iterator<MoveItem> fromFirstMoveToLastIterator = myPersistenceStorage.descendingIterator();

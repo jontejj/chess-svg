@@ -14,7 +14,6 @@ import com.google.common.collect.Sets;
 import com.google.common.primitives.Shorts;
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.listeners.MoveListener;
 import com.jjonsson.chess.moves.ChainMove;
 import com.jjonsson.chess.moves.DependantMove;
@@ -488,29 +487,30 @@ public abstract class Piece
 	/**
 	 * Moves this Piece with the supplied move.
 	 * @param move the move to apply to this piece
-	 * @throws UnavailableMoveException  if this move isn't available right now
-	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
+	 * @return false if this move isn't available right now
 	 */
-	public void performMove(final Move move, final ChessBoard board) throws UnavailableMoveException
+	public boolean performMove(final Move move, final ChessBoard board)
 	{
-		performMove(move, board, true);
+		return performMove(move, board, true);
 	}
 
 	/**
 	 * Moves this Piece with the supplied move.
 	 * @param move the move to apply to this piece
 	 * @param printOut true if there should be print outs about the move to the standard out stream
-	 * @throws UnavailableMoveException  if this move isn't available right now
-	 * (Note that this will be misleading if there are ChessBoardListener's that performs another move when nextPlayer is called)
+	 * @return false if this move isn't available right now
 	 */
-	public void performMove(final Move move, final ChessBoard board, final boolean printOut) throws UnavailableMoveException
+	public boolean performMove(final Move move, final ChessBoard board, final boolean printOut)
 	{
 		if(printOut)
 		{
 			LOGGER.finest("Performing: " + move);
 		}
 
-		move.makeMove(board);
+		if(!move.makeMove(board))
+		{
+			return false;
+		}
 
 		updateMoves(board);
 
@@ -527,6 +527,7 @@ public abstract class Piece
 		{
 			board.nextPlayer();
 		}
+		return true;
 	}
 
 	/**

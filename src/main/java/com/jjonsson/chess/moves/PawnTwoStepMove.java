@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import com.google.common.collect.ImmutableSet;
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.Pawn;
 import com.jjonsson.chess.pieces.Piece;
 
@@ -24,10 +23,14 @@ public class PawnTwoStepMove extends PawnMove
 	 * @throws UnavailableMoveException  if this move isn't available right now
 	 */
 	@Override
-	public void makeMove(final ChessBoard board) throws UnavailableMoveException
+	public boolean makeMove(final ChessBoard board)
 	{
-		super.makeMove(board);
-		performEnpassantPossibilitySync(board, getPiece(), false);
+		if(super.makeMove(board))
+		{
+			performEnpassantPossibilitySync(board, getPiece(), false);
+			return true;
+		}
+		return false;
 	}
 
 	/**

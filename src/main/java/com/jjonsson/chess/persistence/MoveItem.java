@@ -3,7 +3,6 @@ package com.jjonsson.chess.persistence;
 import java.nio.ByteBuffer;
 
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
@@ -37,7 +36,7 @@ public final class MoveItem
 		buffer.put(myToPosition.getPersistence());
 	}
 
-	public void perform(final ChessBoard board) throws UnavailableMoveException, UnavailableMoveItem
+	public void perform(final ChessBoard board) throws UnavailableMoveItem
 	{
 		board.move(myFromPosition, myToPosition);
 	}

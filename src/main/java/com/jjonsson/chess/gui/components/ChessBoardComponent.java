@@ -28,7 +28,6 @@ import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.SearchInterruptedError;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.gui.Settings;
 import com.jjonsson.chess.gui.WindowUtilities;
 import com.jjonsson.chess.listeners.ChessBoardListener;
@@ -455,15 +454,11 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			if(m != null)
 			{
 				LOGGER.finest("Destination available: " + positionThatWasClicked);
-				try
+				if(myCurrentlySelectedPiece.performMove(m, getBoard()))
 				{
-					myCurrentlySelectedPiece.performMove(m, getBoard());
 					return;
 				}
-				catch (UnavailableMoveException ume)
-				{
-					LOGGER.info(ume.toString());
-				}
+				LOGGER.info("Unavailable move: " + m);
 			}
 			else
 			{

@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 
 public class TestChessBoardEvaluator
@@ -48,7 +47,7 @@ public class TestChessBoardEvaluator
 	}
 
 	@Test
-	public void testShouldBeCheckMate() throws UnavailableMoveException, UnavailableMoveItem
+	public void testShouldBeCheckMate() throws UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("should_be_checkmate_4");
 		board.move(position("6B"), position("6A"));
@@ -57,7 +56,7 @@ public class TestChessBoardEvaluator
 	}
 
 	@Test
-	public void testShouldBeCheckMate2() throws UnavailableMoveException, UnavailableMoveItem
+	public void testShouldBeCheckMate2() throws UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("move_order_which_created_check_when_it_should_be_checkmate");
 		board.move("7G", "6G");

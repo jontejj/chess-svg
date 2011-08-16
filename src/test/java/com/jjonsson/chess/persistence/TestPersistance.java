@@ -9,9 +9,9 @@ import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -22,7 +22,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.Position;
@@ -62,7 +61,7 @@ public class TestPersistance
 	}
 
 	@Test
-	public void testThatMovedKingCantCastleAfterBoardSaveAndLoad() throws UnavailableMoveException
+	public void testThatMovedKingCantCastleAfterBoardSaveAndLoad()
 	{
 		String tempFilename = "temp_save_test_1";
 		ChessBoard board = loadBoard("castling_move");
@@ -76,11 +75,11 @@ public class TestPersistance
 		assertTrue(castlingMoveBeforeSave.canBeMade(board));
 
 		Move kingRightMove = board.getAvailableMove(whiteKing, kingTempPos);
-		whiteKing.performMove(kingRightMove, board);
+		assertTrue(whiteKing.performMove(kingRightMove, board));
 
 		//This removes the possibility to castle
 		Move kingLeftMove = board.getAvailableMove(whiteKing, kingOriginalPos);
-		whiteKing.performMove(kingLeftMove, board);
+		assertTrue(whiteKing.performMove(kingLeftMove, board));
 
 		assertFalse(castlingMoveBeforeSave.canBeMade(board));
 		assertTrue(BoardLoader.saveBoard(board, tempFilename));
@@ -94,14 +93,14 @@ public class TestPersistance
 	}
 
 	@Test
-	public void testSaveBoard() throws UnavailableMoveException
+	public void testSaveBoard()
 	{
 		String tempFilename = "temp_save_test";
 		//Load a board and make changes to it
 		ChessBoard board = loadBoard("king_should_not_be_able_to_move");
 		Piece blackRock = board.getPiece(position("8H"));
 		Move rockMove = board.getAvailableMove(position("8F"), BLACK);
-		rockMove.getPiece().performMove(rockMove, board);
+		assertTrue(rockMove.getPiece().performMove(rockMove, board));
 
 		assertTrue(BoardLoader.saveBoard(board, tempFilename));
 

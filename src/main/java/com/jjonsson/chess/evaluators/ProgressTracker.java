@@ -4,7 +4,6 @@ import static com.jjonsson.utilities.Logger.LOGGER;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.listeners.StatusListener;
 
 public final class ProgressTracker
@@ -28,7 +27,6 @@ public final class ProgressTracker
 		movesMadeAtLastSync = 0;
 		startTime = System.nanoTime();
 		myLastSync = System.nanoTime();
-		UnavailableMoveException.exceptionsThrown = 0;
 	}
 
 	public static synchronized void moveHasBeenMade()
@@ -58,7 +56,6 @@ public final class ProgressTracker
 				movesPerSecond = (long) (movesMade / passedSeconds);
 			}
 			LOGGER.finest("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
-			LOGGER.finest("UME thrown: " + UnavailableMoveException.exceptionsThrown);
 		}
 	}
 }

@@ -3,7 +3,6 @@ package com.jjonsson.chess.moves;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Rock;
@@ -135,27 +134,28 @@ public class CastlingMove extends IndependantMove
 	}
 
 	@Override
-	public void makeMove(final ChessBoard board) throws UnavailableMoveException
+	public boolean makeMove(final ChessBoard board)
 	{
 		if(!canBeMade(board))
 		{
-			throw new UnavailableMoveException(this);
+			return false;
 		}
 
-		board.movePiece(getPiece(), myKingMove);
+		if(!board.movePiece(getPiece(), myKingMove))
+		{
+			return false;
+		}
 		myPreviousPosition = getCurrentPosition();
 		getPiece().updateCurrentPosition(myKingMove);
 
 		setMovesMade(getMovesMade()+1);
-		try
+		if(!myRock.performMove(myRockMove, board, false))
 		{
-			myRock.performMove(myRockMove, board, false);
-		}
-		catch(UnavailableMoveException e)
-		{
-			LOGGER.warning(e.toString() + ", during castling move");
+			LOGGER.warning("Castling move: " + this + " not available");
 			board.undoMove(myKingMove, false);
+			return false;
 		}
+		return true;
 	}
 
 	/**
