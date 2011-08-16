@@ -502,6 +502,7 @@ public abstract class Move
 	{
 		if(!canBeMade(board))
 		{
+			//TODO: this throws too often, return boolean instead
 			throw new UnavailableMoveException(this);
 		}
 		if(myPieceAtDestination != null)

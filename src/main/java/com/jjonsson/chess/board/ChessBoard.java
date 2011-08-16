@@ -23,9 +23,9 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
@@ -41,7 +41,6 @@ import com.jjonsson.chess.exceptions.UnavailableMoveException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.listeners.MoveListener;
-import com.jjonsson.chess.moves.CastlingMove;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.KingMove;
@@ -91,27 +90,6 @@ public final class ChessBoard
 
 	private Map<ImmutablePosition, Piece> myWhitePieces;
 	private Map<ImmutablePosition, Piece> myBlackPieces;
-	/**
-	 * A map that keeps track of every position reachable by a move by the black player
-	 * To each possible position there is a sorted map (sorted by the pieces value) of pieces
-	 * 	and the move that would reach this position
-	 */
-	private Map<ImmutablePosition, Set<Move>> myBlackAvailableMoves;
-	/**
-	 * A map that keeps track of every position reachable by a move by the white player
-	 * To each possible position there is a sorted map (sorted by the pieces value) of pieces
-	 * 	and the move that would reach this position
-	 */
-	private Map<ImmutablePosition, Set<Move>> myWhiteAvailableMoves;
-	/**
-	 * A map that keeps track of every move by the black player that isn't available right now
-	 * To each possible position there is a sorted map (by the pieces value) of pieces
-	 * 	and the move that would reach this position
-	 */
-	private Map<ImmutablePosition, Set<Move>> myBlackNonAvailableMoves;
-	private Map<ImmutablePosition, Set<Move>> myWhiteNonAvailableMoves;
-
-	private Map<ImmutablePosition, CastlingMove> myCastlingMoves;
 
 	private short myBlackAvailableMovesCount;
 	private short myWhiteAvailableMovesCount;
@@ -162,7 +140,8 @@ public final class ChessBoard
 	 */
 	private int	myDifficulty;
 
-	private Map<ImmutablePosition, Piece> myPieces;
+	private Set<Piece> myPieces;
+	private PositionContainer[][] myPositions;
 
 	/**
 	 * Constructs the chess board
@@ -180,7 +159,7 @@ public final class ChessBoard
 
 		myBlackPieces = Maps.newHashMap();
 		myWhitePieces = Maps.newHashMap();
-		myPieces = Maps.newHashMapWithExpectedSize(32);
+		myPieces = Sets.newIdentityHashSet();
 
 		myPieceToPositionAvailableMoves = Maps.newHashMap();
 		myPieceToPositionNonAvailableMoves = Maps.newHashMap();
@@ -191,7 +170,7 @@ public final class ChessBoard
 		}
 		else
 		{
-			createMoveMaps();
+			setupPositionContainers();
 		}
 	}
 
@@ -208,6 +187,19 @@ public final class ChessBoard
 			}
 		}
 	}
+
+	public void setupPositionContainers()
+	{
+		myPositions = new PositionContainer[ChessBoard.BOARD_SIZE][ChessBoard.BOARD_SIZE];
+		for(byte r = ChessBoard.BOARD_SIZE - 1; r >= 0; r--)
+		{
+			for(byte c = ChessBoard.BOARD_SIZE - 1; c >= 0; c--)
+			{
+				myPositions[r][c] = new PositionContainer(this);
+			}
+		}
+	}
+
 	/**
 	 * 
 	 * @param moveListener
@@ -222,35 +214,6 @@ public final class ChessBoard
 	{
 		myPersistenceLogger = persistenceMoveLogger;
 		addMoveListener(persistenceMoveLogger);
-	}
-
-	private void createMoveMaps()
-	{
-		myWhiteAvailableMoves = createMoveMap();
-		myWhiteAvailableMovesCount = 0;
-		myWhiteNonAvailableMoves = createMoveMap();
-		myBlackAvailableMoves = createMoveMap();
-		myBlackAvailableMovesCount = 0;
-		myBlackNonAvailableMoves = createMoveMap();
-		myCastlingMoves = Maps.newHashMap();
-	}
-
-	/**
-	 * Expensive initially but having all the sets initialized during the move evaluations is worth it
-	 * @return
-	 */
-	private Map<ImmutablePosition, Set<Move>> createMoveMap()
-	{
-		//Allocate enough capacity so that no resizing is needed
-		Map<ImmutablePosition, Set<Move>> map = Maps.newHashMapWithExpectedSize(64);
-		for(int r = 0; r < BOARD_SIZE; r++)
-		{
-			for(int c = 0; c < BOARD_SIZE; c++)
-			{
-				map.put(ImmutablePosition.from(r, c), new HashSet<Move>());
-			}
-		}
-		return map;
 	}
 
 	public void setDifficulty(final int newDifficulty)
@@ -376,6 +339,10 @@ public final class ChessBoard
 	 */
 	public boolean isMoveUnavailableDueToCheck(final KingMove kingMove)
 	{
+		if(kingMove.getDestination() == null)
+		{
+			return false;
+		}
 		Collection<Move> movesBehindKing = getNonAvailableMoves(kingMove.getDestination(), !kingMove.getAffinity());
 		for(Move behindMove : movesBehindKing)
 		{
@@ -482,7 +449,7 @@ public final class ChessBoard
 			throw new NoMovesAvailableException();
 		}
 
-		List<Move> shuffledMoves = getMoves(getAvailableMoves(getCurrentPlayer()));
+		List<Move> shuffledMoves = getAvailableMoves(getCurrentPlayer());
 		Collections.shuffle(shuffledMoves);
 
 		try
@@ -523,7 +490,8 @@ public final class ChessBoard
 		}
 		ImmutablePosition currentPosition = p.getCurrentPosition();
 		//TODO: what if this overwrites an existing piece?
-		myPieces.put(currentPosition, p);
+		myPieces.add(p);
+		getPositionContainer(currentPosition).setCurrentPiece(p);
 		getMapForAffinity(p.getAffinity()).put(currentPosition, p);
 		myPieceToPositionAvailableMoves.put(p, new HashMap<ImmutablePosition, Move>());
 		myPieceToPositionNonAvailableMoves.put(p, new HashMap<ImmutablePosition, Move>());
@@ -629,12 +597,12 @@ public final class ChessBoard
 	{
 		if(king.getQueenSideCastlingMove().hasConnectedWithRock())
 		{
-			myCastlingMoves.put(king.getQueenSideCastlingMove().getIntermediatePosition(), king.getQueenSideCastlingMove());
-			myCastlingMoves.put(king.getQueenSideCastlingMove().getRockDestination(), king.getQueenSideCastlingMove());
+			getPositionContainer(king.getQueenSideCastlingMove().getIntermediatePosition()).setCastlingMove(king.getQueenSideCastlingMove());
+			getPositionContainer(king.getQueenSideCastlingMove().getRockDestination()).setCastlingMove(king.getQueenSideCastlingMove());
 		}
 		if(king.getKingSideCastlingMove().hasConnectedWithRock())
 		{
-			myCastlingMoves.put(king.getKingSideCastlingMove().getRockDestination(), king.getKingSideCastlingMove());
+			getPositionContainer(king.getKingSideCastlingMove().getRockDestination()).setCastlingMove(king.getKingSideCastlingMove());
 		}
 	}
 
@@ -652,8 +620,9 @@ public final class ChessBoard
 
 	public void removePiece(final Piece p)
 	{
-		Position currentPosition = p.getCurrentPosition();
-		myPieces.remove(currentPosition);
+		ImmutablePosition currentPosition = p.getCurrentPosition();
+		myPieces.remove(p);
+		getPositionContainer(currentPosition).setCurrentPiece(null);
 		getMapForAffinity(p.getAffinity()).remove(currentPosition);
 		for(MoveListener ml : myMoveListeners)
 		{
@@ -698,12 +667,23 @@ public final class ChessBoard
 		return newPiece;
 	}
 
+	/**
+	 * 
+	 * @param position
+	 * @return
+	 * @throws NullPointerException if position is null
+	 * @throws ArrayIndexOutOfBoundsException if position is an invalid position
+	 */
+	private PositionContainer getPositionContainer(final ImmutablePosition position)
+	{
+		return myPositions[position.getRow()][position.getColumn()];
+	}
+
 	public void removeAvailableMove(final ImmutablePosition pos, final Piece piece, final Move move)
 	{
 		if(pos != null)
 		{
-			Map<ImmutablePosition, Set<Move>> availableMoves = getAvailableMoves(piece.getAffinity());
-			if(availableMoves.get(pos).remove(move))
+			if(getPositionContainer(pos).removeAvailableMove(move))
 			{
 				decrementAvailableMoves(piece.getAffinity());
 			}
@@ -727,8 +707,7 @@ public final class ChessBoard
 	{
 		if(pos != null)
 		{
-			Map<ImmutablePosition, Set<Move>> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
-			nonAvailableMoves.get(pos).remove(move);
+			getPositionContainer(pos).removeNonAvailableMove(move);
 			Map<ImmutablePosition, Move> map = myPieceToPositionNonAvailableMoves.get(piece);
 			Move removedMove = map.remove(pos);
 			if(removedMove != move)
@@ -742,8 +721,7 @@ public final class ChessBoard
 	{
 		if(pos != null)
 		{
-			Map<ImmutablePosition, Set<Move>> availableMoves = getAvailableMoves(piece.getAffinity());
-			if(availableMoves.get(pos).add(move))
+			if(getPositionContainer(pos).addAvailableMove(move))
 			{
 				incrementAvailableMoves(piece.getAffinity());
 			}
@@ -764,8 +742,7 @@ public final class ChessBoard
 		//Out of bounds moves aren't handled here
 		if(pos != null)
 		{
-			Map<ImmutablePosition, Set<Move>> nonAvailableMoves = getNonAvailableMoves(piece.getAffinity());
-			nonAvailableMoves.get(pos).add(move);
+			getPositionContainer(pos).addNonAvailableMove(move);
 			Map<ImmutablePosition, Move> map = myPieceToPositionNonAvailableMoves.get(piece);
 			map.put(pos, move);
 
@@ -889,28 +866,15 @@ public final class ChessBoard
 	 * @param affinity the affinity of the player's moves that should be returned
 	 * @return the available moves for the given affinity
 	 */
-	public Map<ImmutablePosition, Set<Move>> getAvailableMoves(final boolean affinity)
-	{
-		if(affinity == WHITE)
-		{
-			return myWhiteAvailableMoves;
-		}
-
-		return myBlackAvailableMoves;
-	}
-
-	/**
-	 * Extracts all moves from the given map/set into a list that you
-	 * can edit without making changes to this board
-	 * @param moveMap
-	 * @return
-	 */
-	public List<Move> getMoves(final Map<ImmutablePosition, Set<Move>> moveMap)
+	public List<Move> getAvailableMoves(final boolean affinity)
 	{
 		List<Move> moves = Lists.newArrayList();
-		for(Set<Move> moveSet : moveMap.values())
+		for(byte r = ChessBoard.BOARD_SIZE - 1; r >= 0; r--)
 		{
-			moves.addAll(moveSet);
+			for(byte c = ChessBoard.BOARD_SIZE - 1; c >= 0; c--)
+			{
+				moves.addAll(myPositions[r][c].getAvailableMoves(affinity));
+			}
 		}
 		return moves;
 	}
@@ -919,23 +883,11 @@ public final class ChessBoard
 	 * Note that this may contain false positives as the game may be in check.
 	 * @param position the wanted position
 	 * @param affinity the affinity of the player that should be able to move into the position
+	 * @throws NullPointerException if position is null
 	 */
 	public Collection<Move> getAvailableMoves(final ImmutablePosition position, final boolean affinity)
 	{
-		Collection<Move> moves = null;
-		if(affinity == WHITE)
-		{
-			moves = myWhiteAvailableMoves.get(position);
-		}
-		else
-		{
-			moves = myBlackAvailableMoves.get(position);
-		}
-		if(moves == null)
-		{
-			return Collections.emptySet();
-		}
-		return moves;
+		return getPositionContainer(position).getAvailableMoves(affinity);
 	}
 
 	/**
@@ -943,48 +895,23 @@ public final class ChessBoard
 	 * @param position the wanted position
 	 * @param affinity the affinity of the player that should be able to move into the position
 	 * @return the first available move for the given position and the given affinity
+	 * @throws NoSuchElementException if no available move exists
+	 * @throws NullPointerException if position is null
 	 */
 	public Move getAvailableMove(final ImmutablePosition position, final boolean affinity)
 	{
 		return getAvailableMoves(position, affinity).iterator().next();
 	}
 
-	public Map<ImmutablePosition, Set<Move>> getNonAvailableMoves(final boolean affinity)
-	{
-		Map<ImmutablePosition, Set<Move>> moves = null;
-		if(affinity == WHITE)
-		{
-			moves = myWhiteNonAvailableMoves;
-		}
-		else
-		{
-			moves = myBlackNonAvailableMoves;
-		}
-
-		return moves;
-	}
-
 	/**
 	 * Note because of performance issues this returns a modifiable map that you really shouldn't modify :)
 	 * @param position
 	 * @param affinity
+	 * @throws NullPointerException if position is null
 	 */
-	public Set<Move> getNonAvailableMoves(final Position position, final boolean affinity)
+	public Set<Move> getNonAvailableMoves(final ImmutablePosition position, final boolean affinity)
 	{
-		Set<Move> moves = null;
-		if(affinity == BLACK)
-		{
-			moves  = myBlackNonAvailableMoves.get(position);
-		}
-		else
-		{
-			moves = myWhiteNonAvailableMoves.get(position);
-		}
-		if(moves == null)
-		{
-			moves = Collections.emptySet();
-		}
-		return moves;
+		return getPositionContainer(position).getNonAvailableMoves(affinity);
 	}
 
 	/**
@@ -1075,10 +1002,11 @@ public final class ChessBoard
 	/**
 	 * @param atPosition
 	 * @return the Piece that is at the position provided, returns null if the position is free
+	 * @throws NullPointerException if atPosition is null
 	 */
 	public Piece getPiece(final ImmutablePosition atPosition)
 	{
-		return myPieces.get(atPosition);
+		return getPositionContainer(atPosition).getCurrentPiece();
 	}
 
 	/**
@@ -1098,7 +1026,7 @@ public final class ChessBoard
 
 	public Collection<Piece> getPieces()
 	{
-		return myPieces.values();
+		return myPieces;
 	}
 
 	/**
@@ -1107,15 +1035,15 @@ public final class ChessBoard
 	 */
 	public int getTotalPieceCount()
 	{
-		return myBlackPieces.size() + myWhitePieces.size();
+		return myPieces.size();
 	}
 
 	public void movePiece(final Piece pieceToMove, final Move moveToPerform) throws UnavailableMoveException
 	{
 		ImmutablePosition newPosition = moveToPerform.getDestination();
 		ImmutablePosition oldPosition = pieceToMove.getCurrentPosition();
-		myPieces.remove(oldPosition);
-		Piece oldPiece = myPieces.put(newPosition, pieceToMove);
+		getPositionContainer(oldPosition).setCurrentPiece(null);
+		Piece oldPiece = getPositionContainer(newPosition).setCurrentPiece(pieceToMove);
 		if(oldPiece != null && oldPiece != pieceToMove)
 		{
 			//LOGGER.info("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
@@ -1132,8 +1060,8 @@ public final class ChessBoard
 				LOGGER.info("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
 						"Actual piece at destination:" + oldPiece + ", after update this move couldn't be done.");
 				//Restore state and throw
-				myPieces.put(newPosition, oldPiece);
-				myPieces.put(oldPosition, pieceToMove);
+				getPositionContainer(newPosition).setCurrentPiece(oldPiece);
+				getPositionContainer(oldPosition).setCurrentPiece(pieceToMove);
 				throw new UnavailableMoveException(moveToPerform);
 			}
 		}
@@ -1192,76 +1120,7 @@ public final class ChessBoard
 	{
 		if(position != null)
 		{
-			List<Set<Move>> moves = Lists.newArrayList();
-			//TODO: can this be done more efficiently?
-			//Update destinations
-			ImmutableSet<Move> updatedMoves = ImmutableSet.of();
-			updatedMoves = updateDestinationForMapOfMoves(myWhiteAvailableMoves, position, updatedMoves);
-			moves.add(updatedMoves);
-			updatedMoves = updateDestinationForMapOfMoves(myWhiteNonAvailableMoves, position, updatedMoves);
-			moves.add(updatedMoves);
-			updatedMoves = ImmutableSet.of();
-			updatedMoves = updateDestinationForMapOfMoves(myBlackAvailableMoves, position, updatedMoves);
-			moves.add(updatedMoves);
-			updatedMoves = updateDestinationForMapOfMoves(myBlackNonAvailableMoves, position, updatedMoves);
-			moves.add(updatedMoves);
-
-			//Update possibilities
-			updatePossibiltyForSetOfMoves(moves);
-
-			//Because all the destinations for a castling move can't be stored in the above maps this needs special handling here
-			Move castlingMove = myCastlingMoves.get(position);
-			if(castlingMove != null)
-			{
-				castlingMove.updateDestination(this);
-				castlingMove.updatePossibility(this, false);
-			}
-		}
-	}
-
-	/**
-	 * 
-	 * @param moves
-	 * @param pos
-	 * @param exclusionMap a map of moves that won't need an update
-	 * @return a map of the moves that was updated
-	 */
-	private ImmutableSet<Move> updateDestinationForMapOfMoves(final Map<ImmutablePosition, Set<Move>> moves, final ImmutablePosition pos, final ImmutableSet<Move> exclusionMap)
-	{
-		//As the move may be removed during this iteration we need a shallow copy of the move map
-		Set<Move> mo = moves.get(pos);
-		if(mo == null)
-		{
-			LOGGER.severe("Invalid position: " + pos);
-			LOGGER.severe("Last move: " + getLastMove());
-		}
-		ImmutableSet<Move> copy = ImmutableSet.copyOf(moves.get(pos));
-		/*for(Move m : copy)
-		{
-			if(!exclusionMap.contains(m))
-			{
-				m.updateDestination(this);
-			}
-		}*/
-		return copy;
-	}
-
-	/**
-	 * 
-	 * @param moves
-	 */
-	private void updatePossibiltyForSetOfMoves(final List<Set<Move>> moves)
-	{
-		for(Set<Move> set : moves)
-		{
-			for(Move move : set)
-			{
-				//TODO: this shouldn't be needed
-				move.updateDestination(this);
-
-				move.updatePossibility(this, true);
-				move.syncCountersWithBoard(this);
-			}
+			getPositionContainer(position).updatePossibiltyForSetOfMoves();
 		}
 	}
 
@@ -1284,10 +1143,12 @@ public final class ChessBoard
 	 */
 	public void clear()
 	{
+		myBlackAvailableMovesCount = 0;
+		myWhiteAvailableMovesCount = 0;
 		myPieces.clear();
 		myWhitePieces.clear();
 		myBlackPieces.clear();
-		createMoveMaps();
+		setupPositionContainers();
 		for(MoveListener ml :  myMoveListeners)
 		{
 			ml.reset();

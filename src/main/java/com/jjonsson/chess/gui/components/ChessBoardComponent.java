@@ -53,6 +53,13 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	 */
 	private static final double	MARGINSIZE_PERCENTAGE = 0.1;
 
+	static final Color DARK_BACKGROUND				= Color.DARK_GRAY;
+	static final Color LIGHT_BACKGROUND				= Color.LIGHT_GRAY;
+	static final Color AVAILABLE_POSITION_BORDER 	= Color.GREEN;
+	static final Color AVAILABLE_PIECE_BORDER 		= Color.MAGENTA;
+	static final Color SELECT_PIECE_BORDER 			= Color.CYAN;
+	static final Color HINT_MOVE_DESTINATION_BORDER = Color.ORANGE;
+
 	private Set<ChessPieceComponent> pieces;
 
 	private Piece myCurrentlySelectedPiece;
@@ -191,7 +198,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.setRenderingHints(WindowUtilities.getRenderingHints());
-		setBackground(Color.darkGray);
+		setBackground(DARK_BACKGROUND);
 		drawGrid(g2d);
 		if(myShowAvailableClicks)
 		{
@@ -202,8 +209,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 
 		if(myHintMove != null)
 		{
-			markSquare(myHintMove.getCurrentPosition(), Color.GREEN, g2d);
-			markSquare(myHintMove.getDestination(), Color.ORANGE, g2d);
+			markSquare(myHintMove.getCurrentPosition(), AVAILABLE_POSITION_BORDER, g2d);
+			markSquare(myHintMove.getDestination(), HINT_MOVE_DESTINATION_BORDER, g2d);
 		}
 	}
 
@@ -217,11 +224,11 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				int y = myCurrentPieceSize.height*row;
 				if ( (row % 2) == (col % 2) )
 				{
-					g.setColor(Color.darkGray);
+					g.setColor(DARK_BACKGROUND);
 				}
 				else
 				{
-					g.setColor(Color.lightGray);
+					g.setColor(LIGHT_BACKGROUND);
 				}
 				g.fillRect(x,y,myCurrentPieceSize.width,myCurrentPieceSize.height);
 			}
@@ -246,11 +253,14 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	{
 		try
 		{
-			myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
-			setResultOfInteraction("Hint: " + myHintMove);
-			//Makes it easy to make the move
-			setSelectedPiece(myHintMove.getPiece());
-			repaint();
+			if(getBoard().getCurrentPlayer() == Piece.WHITE || myAIdisabled)
+			{
+				myHintMove = ChessMoveEvaluator.getBestMove(getBoard());
+				setResultOfInteraction("Hint: " + myHintMove);
+				//Makes it easy to make the move
+				setSelectedPiece(myHintMove.getPiece());
+				repaint();
+			}
 		}
 		catch (NoMovesAvailableException e)
 		{
@@ -296,7 +306,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			{
 				if(p.canMakeAMove(getBoard()))
 				{
-					markSquare(p.getCurrentPosition(),Color.MAGENTA, graphics);
+					markSquare(p.getCurrentPosition(),AVAILABLE_PIECE_BORDER, graphics);
 				}
 			}
 		}
@@ -326,7 +336,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			List<Move> moves = ImmutableList.copyOf(myCurrentlySelectedPiece.getAvailableMoves(Piece.NO_SORT, getBoard()));
 			for(Move m : moves)
 			{
-				markSquare(m.getDestination(),Color.GREEN, graphics);
+				markSquare(m.getDestination(),AVAILABLE_POSITION_BORDER, graphics);
 			}
 		}
 	}
@@ -336,7 +346,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		if(ChessBoardEvaluator.inPlay(getBoard()) && myCurrentlySelectedPiece != null)
 		{
 			//Mark the selected piece
-			markSquare(myCurrentlySelectedPiece.getCurrentPosition(), Color.CYAN, graphics);
+			markSquare(myCurrentlySelectedPiece.getCurrentPosition(), SELECT_PIECE_BORDER, graphics);
 		}
 	}
 

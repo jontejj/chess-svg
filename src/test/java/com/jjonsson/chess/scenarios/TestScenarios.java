@@ -1,7 +1,6 @@
 package com.jjonsson.chess.scenarios;
 
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
-import static com.jjonsson.chess.moves.Position.F;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
@@ -46,7 +45,7 @@ public class TestScenarios
 	public void testPawnTakeOverMoveShouldRemoveAvailabilityOfTwoStepMove() throws UnavailableMoveException
 	{
 		ChessBoard board = loadBoard("pawn_take_over_move_should_remove_two_step_move");
-		WhitePawn wp = (WhitePawn)board.getPiece(position(2, F));
+		WhitePawn wp = (WhitePawn)board.getPiece(position("2F"));
 		Move takeOverMove = board.getAvailableMove(wp, position("3G"));
 		Assert.assertNotNull(takeOverMove);
 		wp.performMove(takeOverMove, board, false);

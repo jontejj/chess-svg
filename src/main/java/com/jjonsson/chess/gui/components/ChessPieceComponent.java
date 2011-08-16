@@ -3,7 +3,6 @@ package com.jjonsson.chess.gui.components;
 import static com.jjonsson.utilities.Logger.LOGGER;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -79,11 +78,11 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		//setBackground(null);
 		if ( (myPieceToDraw.getCurrentPosition().getRow() % 2) == (myPieceToDraw.getCurrentPosition().getColumn() % 2) )
 		{
-			setBackground(Color.lightGray);
+			setBackground(ChessBoardComponent.LIGHT_BACKGROUND);
 		}
 		else
 		{
-			setBackground(Color.darkGray);
+			setBackground(ChessBoardComponent.DARK_BACKGROUND);
 		}
 	}
 

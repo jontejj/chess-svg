@@ -142,7 +142,14 @@ public abstract class DependantMove extends Move
 		if(updatePieceAtDestination)
 		{
 			setOldPieceAtDestination(getPieceAtDestination());
-			setPieceAtDestination(board.getPiece(getDestination()));
+			if(getDestination() != null)
+			{
+				setPieceAtDestination(board.getPiece(getDestination()));
+			}
+			else
+			{
+				setPieceAtDestination(null);
+			}
 		}
 
 		myCanBeMadeCache = canBeMadeDependantInternal(board);

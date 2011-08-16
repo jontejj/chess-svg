@@ -146,7 +146,7 @@ public final class ChessMoveEvaluator
 		}
 		else
 		{
-			List<Move> moves = board.getMoves(board.getAvailableMoves(board.getCurrentPlayer()));
+			List<Move> moves = board.getAvailableMoves(board.getCurrentPlayer());
 			Collections.sort(moves, MoveOrdering.getInstance());
 			//TODO: instead of doing DFS do BFS and sort the moves before diving (this will also fix concurrency problems)
 

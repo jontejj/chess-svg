@@ -442,7 +442,7 @@ public abstract class Piece
 	}
 
 	/**
-	 * @return the value for this piece
+	 * @return the value for this piece, note that this may change depending on where the piece stands and etc.
 	 */
 	public abstract int getValue();
 

@@ -388,6 +388,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	{
 		noAbortionNecessaryCommands.put(SHOW_AVAILABLE_CLICKS_MENU_ITEM, true);
 		noAbortionNecessaryCommands.put(HIDE_AVAILABLE_CLICKS_MENU_ITEM, true);
+		noAbortionNecessaryCommands.put(SHOW_HINT_MENU_ITEM, true);
 	}
 
 	@Override

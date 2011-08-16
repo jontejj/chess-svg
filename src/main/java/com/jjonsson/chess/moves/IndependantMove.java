@@ -24,7 +24,14 @@ public abstract class IndependantMove extends Move
 		if(updatePieceAtDestination)
 		{
 			setOldPieceAtDestination(getPieceAtDestination());
-			setPieceAtDestination(board.getPiece(getDestination()));
+			if(getDestination() != null)
+			{
+				setPieceAtDestination(board.getPiece(getDestination()));
+			}
+			else
+			{
+				setPieceAtDestination(null);
+			}
 		}
 
 		myCanBeMadeCache = canBeMadeInternal(board);
