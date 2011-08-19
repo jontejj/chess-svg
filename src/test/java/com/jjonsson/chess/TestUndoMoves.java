@@ -11,11 +11,13 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 
 import com.jjonsson.chess.board.ChessBoard;
+import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.Rock;
+import com.jjonsson.chess.pieces.WhitePawn;
 
 public class TestUndoMoves
 {
@@ -28,8 +30,6 @@ public class TestUndoMoves
 		assertTrue(pawnTwoStepMove.getPiece().performMove(pawnTwoStepMove, board));
 		assertEquals(1, board.undoMoves(1));
 		assertTrue(pawnTwoStepMove.canBeMade(board));
-
-
 	}
 
 	@Test
@@ -60,6 +60,30 @@ public class TestUndoMoves
 		Piece blackRock = board2.getPiece(takeOverSpot);
 		assertTrue(blackRock.isBlack());
 		assertTrue(blackRock instanceof Rock);
+	}
+
+	@Test
+	public void testUndoAndVerifyThatReplacementPieceIsRemoved() throws UnavailableMoveItem
+	{
+		ChessBoard board = loadBoard("queen_should_disappear_when_bishop_takes_it_over");
+		board.move(position("7G"), position("8H"));
+		board.undoMoves(1);
+		assertTrue(board.getPiece(position("8H")).isWhite());
+		assertEquals(3, board.undoMoves(3));
+
+		assertNotNull(Rock.class.cast(board.getPiece(position("8H"))));
+		assertNotNull(WhitePawn.class.cast(board.getPiece(position("7G"))));
+	}
+
+	@Test
+	public void testThatUndoPawnReplacementMoveResurrectsPawnAtTheCorrectLocation() throws UnavailableMoveItem
+	{
+		ChessBoard board = loadBoard("undo_pawn_replacement_move");
+		board.undoMoves(1);
+		assertTrue(board.getPiece(position("1G")).isWhite());
+		assertTrue(board.getPiece(position("2H")).isBlack());
+		//Redo the move
+		board.move("2H", "1G");
 	}
 
 	@Test

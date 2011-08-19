@@ -15,6 +15,7 @@ import org.junit.Test;
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
+import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
@@ -168,6 +169,16 @@ public class TestChessMoveEvaluator
 		ChessMoveEvaluator.performBestMove(board);
 		assertFalse(ChessState.STALEMATE.equals(board.getCurrentState()));
 	}
+
+	@Test
+	public void testThatBestMoveDontReturnNull() throws UnavailableMoveItem, NoMovesAvailableException
+	{
+		ChessBoard board = loadBoard("best_move_should_not_be_null");
+		board.move("4C", "5D");
+		assertNotNull(ChessMoveEvaluator.getBestMove(board));
+	}
+
+
 
 	private void makeSureMoveWasNotMade(final ChessBoard board, final Position badPosition) throws NoMovesAvailableException
 	{

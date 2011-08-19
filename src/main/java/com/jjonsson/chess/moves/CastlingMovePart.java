@@ -11,31 +11,35 @@ import com.jjonsson.chess.pieces.Piece;
 public abstract class CastlingMovePart extends IndependantMove
 {
 	/**
+	 * The main castling move that this part belongs to
+	 */
+	private CastlingMove myCastlingMove;
+
+	/**
 	 * Note this move doesn't handle bad positions
 	 * @param rowChange
 	 * @param columnChange
 	 * @param pieceThatTheMoveWillBeMadeWith a Rock or a King
 	 */
-	public CastlingMovePart(final int rowChange, final int columnChange, final Piece pieceThatTheMoveWillBeMadeWith)
+	public CastlingMovePart(final int rowChange, final int columnChange, final Piece pieceThatTheMoveWillBeMadeWith, final CastlingMove castlingMove)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
-		Position currentPosition = getCurrentPosition();
-		byte newRow = (byte)(currentPosition.getRow()+rowChange);
-		byte newColumn = (byte)(currentPosition.getColumn()+columnChange);
-		setDestination(ImmutablePosition.from(newRow, newColumn));
-		setPieceAtDestination(getPiece().getBoard().getPiece(getDestination()));
-	}
-
-	@Override
-	public void updateDestination(final ChessBoard board)
-	{
-		setPieceAtDestination(board.getPiece(getDestination()));
+		super.updateDestination(getPiece().getBoard());
+		myCastlingMove = castlingMove;
 	}
 
 	@Override
 	public void updatePossibility(final ChessBoard board, final boolean updatePieceAtDestination)
 	{
-		myCanBeMadeCache = canBeMadeInternal(board);
+		super.updatePossibility(board, updatePieceAtDestination);
+		//Now that the possibility of this part has changed maybe the main castling move can be made
+		myCastlingMove.updatePossibility(board);
+	}
+
+	@Override
+	public void updateDestination(final ChessBoard board)
+	{
+		//Nothing to do here since the destination never changes
 	}
 
 	/**

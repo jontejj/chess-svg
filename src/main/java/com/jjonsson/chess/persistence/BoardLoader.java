@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.exceptions.DuplicatePieceException;
+import com.jjonsson.chess.exceptions.DuplicatePieceError;
 import com.jjonsson.chess.exceptions.InvalidBoardException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 
@@ -65,7 +65,7 @@ public final class BoardLoader
 			boardToLoadInto.applyMoveHistory();
 			return true;
 		}
-		catch (DuplicatePieceException e)
+		catch (DuplicatePieceError e)
 		{
 			LOGGER.severe("Got a duplicate piece: " + e.getDuplicatePiece() + ", conflicted with: " + e.getExistingPiece());
 		}

@@ -5,11 +5,9 @@ import static com.jjonsson.chess.pieces.Piece.WHITE;
 
 import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Sets;
-import com.jjonsson.chess.moves.CastlingMove;
 import com.jjonsson.chess.moves.Move;
+import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 
 /**
@@ -42,8 +40,6 @@ public class PositionContainer
 	private Set<Move> myBlackNonAvailableMoves;
 	private Set<Move> myWhiteNonAvailableMoves;
 
-	private CastlingMove myCastlingMove;
-
 	public PositionContainer(final ChessBoard board)
 	{
 		myBoard = board;
@@ -64,7 +60,6 @@ public class PositionContainer
 		myWhiteNonAvailableMoves.clear();
 		myBlackAvailableMoves.clear();
 		myBlackNonAvailableMoves.clear();
-		myCastlingMove = null;
 		myCurrentPiece = null;
 	}
 
@@ -110,14 +105,6 @@ public class PositionContainer
 			return true;
 		}
 		return false;
-	}
-	/**
-	 * Set the castling move that reaches this position. This container will update this move when the availability for this position changes.
-	 * @param move the move
-	 */
-	public void setCastlingMove(final CastlingMove move)
-	{
-		myCastlingMove = move;
 	}
 
 	/**
@@ -175,19 +162,46 @@ public class PositionContainer
 		//TODO: can this be done more efficiently?
 		//Update destinations
 		//TODO: if this would place the king's moves last it may be possible to not update all the king's moves between each turn
-		ImmutableSet<Move> movesToUpdate = new Builder<Move>().addAll(myWhiteAvailableMoves).
+		/*ImmutableSet<Move> movesToUpdate = new Builder<Move>().addAll(myWhiteAvailableMoves).
 		addAll(myWhiteNonAvailableMoves).
 		addAll(myBlackAvailableMoves).
-		addAll(myBlackNonAvailableMoves).build();
-
+		addAll(myBlackNonAvailableMoves).build();*/
 		//Update possibilities
-		updatePossibiltyForSetOfMoves(movesToUpdate);
+		//updatePossibiltyForSetOfMoves(movesToUpdate);
 
-		//Because all the destinations for a castling move can't be stored in the above maps this needs special handling here
-		if(myCastlingMove != null)
+		Set<Move> kingMoves = Sets.newHashSetWithExpectedSize(1);
+		Set<Move> regularMoves = Sets.newHashSetWithExpectedSize(myWhiteNonAvailableMoves.size() + myWhiteAvailableMoves.size() +
+				myBlackAvailableMoves.size() + myBlackNonAvailableMoves.size());
+
+		fillMoves(myBlackAvailableMoves, regularMoves, kingMoves);
+		fillMoves(myBlackNonAvailableMoves, regularMoves, kingMoves);
+		fillMoves(myWhiteAvailableMoves, regularMoves, kingMoves);
+		fillMoves(myWhiteNonAvailableMoves, regularMoves, kingMoves);
+
+		updatePossibiltyForSetOfMoves(regularMoves);
+		//The King moves are updated after because they are dependent on the possibility of the other moves
+		updatePossibiltyForSetOfMoves(kingMoves);
+	}
+
+	/**
+	 * Puts the king moves in the {@link source} into the given {@link kingMoves} and all other moves is put into {@link target}
+	 * @param source the set to copy moves from
+	 * @param target the set that is to be without king moves
+	 * @param kingMoves the set to put king moves into from the given source
+	 * @exception NullPointerException if either of the given arguments is null
+	 */
+	private void fillMoves(final Set<Move> source, final Set<Move> target, final Set<Move> kingMoves)
+	{
+		for(Move move : source)
 		{
-			myCastlingMove.updateDestination(myBoard);
-			myCastlingMove.updatePossibility(myBoard, false);
+			if(move.getPiece() instanceof King)
+			{
+				kingMoves.add(move);
+			}
+			else
+			{
+				target.add(move);
+			}
 		}
 	}
 
@@ -201,5 +215,11 @@ public class PositionContainer
 			move.updatePossibility(myBoard, true);
 			move.syncCountersWithBoard(myBoard);
 		}
+	}
+
+	@Override
+	public String toString()
+	{
+		return "" + myCurrentPiece;
 	}
 }

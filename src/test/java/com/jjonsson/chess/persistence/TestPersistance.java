@@ -10,7 +10,6 @@ import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
@@ -22,6 +21,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.board.ChessBoard;
+import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.Position;
@@ -61,7 +61,7 @@ public class TestPersistance
 	}
 
 	@Test
-	public void testThatMovedKingCantCastleAfterBoardSaveAndLoad()
+	public void testThatMovedKingCantCastleAfterBoardSaveAndLoad() throws NoMovesAvailableException
 	{
 		String tempFilename = "temp_save_test_1";
 		ChessBoard board = loadBoard("castling_move");
@@ -77,19 +77,20 @@ public class TestPersistance
 		Move kingRightMove = board.getAvailableMove(whiteKing, kingTempPos);
 		assertTrue(whiteKing.performMove(kingRightMove, board));
 
+		board.performRandomMove();
 		//This removes the possibility to castle
 		Move kingLeftMove = board.getAvailableMove(whiteKing, kingOriginalPos);
 		assertTrue(whiteKing.performMove(kingLeftMove, board));
 
-		assertFalse(castlingMoveBeforeSave.canBeMade(board));
+		castlingMoveBeforeSave = board.getAvailableMove(whiteKing, castlingDestinationPos);
+		assertNull(castlingMoveBeforeSave);
 		assertTrue(BoardLoader.saveBoard(board, tempFilename));
 
 		//Verify that the king can't castle after the save
 		ChessBoard savedBoard = new ChessBoard(false, true);
 		assertTrue(BoardLoader.loadFileIntoBoard(new File(tempFilename), savedBoard));
 		King savedKing = savedBoard.getKing(WHITE);
-		Move castlingMoveAfterSave = savedKing.getMove(castlingMoveBeforeSave);
-		assertFalse(castlingMoveAfterSave.canBeMade(savedBoard));
+		assertNull(savedBoard.getAvailableMove(savedKing, castlingDestinationPos));
 	}
 
 	@Test
@@ -129,7 +130,7 @@ public class TestPersistance
 	{
 		ChessBoard board = loadBoard("board_cloning_test");
 		Collection<Piece> pieces = board.getPieces();
-		ChessBoard copy = board.copy();
+		ChessBoard copy = board.copy(false);
 		for(Piece p : pieces)
 		{
 			assertTrue(p.same(copy.getPiece(p.getCurrentPosition())));

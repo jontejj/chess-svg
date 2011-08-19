@@ -34,7 +34,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
-import com.jjonsson.chess.exceptions.DuplicatePieceException;
+import com.jjonsson.chess.exceptions.DuplicatePieceError;
 import com.jjonsson.chess.exceptions.InvalidBoardException;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
@@ -225,15 +225,16 @@ public final class ChessBoard
 	/**
 	 * Makes a copy of the board without copying the listeners
 	 * <br><b>Note</b>: this does not copy the made moves on the board, so an undo operation on the returned board would always fail
+	 * @param withMoveHistory true if the made moves from this board should be included in the copy
 	 * @return the new board or null if the copy failed
 	 */
-	public ChessBoard copy()
+	public ChessBoard copy(final boolean withMoveHistory)
 	{
-		ChessBoard newBoard = new ChessBoard(false);
-		ByteBuffer buffer = ByteBuffer.allocate(getPersistenceSize(false));
+		ChessBoard newBoard = new ChessBoard(false, withMoveHistory);
+		ByteBuffer buffer = ByteBuffer.allocate(getPersistenceSize(withMoveHistory));
 		try
 		{
-			writePersistenceData(buffer, false);
+			writePersistenceData(buffer, withMoveHistory);
 			buffer.flip();
 			if(BoardLoader.loadBufferIntoBoard(buffer, newBoard))
 			{
@@ -457,10 +458,14 @@ public final class ChessBoard
 
 		for(Move randomMove : shuffledMoves)
 		{
-			Piece piece = randomMove.getPiece();
-			if(piece.performMove(randomMove, this))
+			//Avoid making a move that's part of a castling move
+			if(randomMove.shouldBeIncludedInMoveTable())
 			{
-				return;
+				Piece piece = randomMove.getPiece();
+				if(piece.performMove(randomMove, this))
+				{
+					return;
+				}
 			}
 		}
 		throw new NoMovesAvailableException();
@@ -481,31 +486,45 @@ public final class ChessBoard
 			}
 		}
 		ImmutablePosition currentPosition = p.getCurrentPosition();
-		//TODO: what if this overwrites an existing piece?
-		if(myPieces.add(p))
+		Piece oldPiece = getPositionContainer(currentPosition).setCurrentPiece(p);
+		if(oldPiece != null & oldPiece != p)
 		{
-			pieceValueChanged(p.getValue(), p.getAffinity());
+			//TODO: throw this
+			LOGGER.severe("" + new DuplicatePieceError(oldPiece, p));
 		}
-		getPositionContainer(currentPosition).setCurrentPiece(p);
-		myPieceToPositionAvailableMoves.put(p, new HashMap<ImmutablePosition, Move>());
-		myPieceToPositionNonAvailableMoves.put(p, new HashMap<ImmutablePosition, Move>());
+		addPieceToPositionMaps(p);
 		if(initializePossibleMoves)
 		{
 			p.initilizePossibilityOfMoves(this);
 		}
 
+		notifyListenersAboutPiecePlacement(p, loadingInProgress);
+	}
+
+	public void addPieceToPositionMaps(final Piece piece)
+	{
+		if(myPieces.add(piece))
+		{
+			pieceValueChanged(piece.getValue(), piece.getAffinity());
+		}
+		myPieceToPositionAvailableMoves.put(piece, new HashMap<ImmutablePosition, Move>());
+		myPieceToPositionNonAvailableMoves.put(piece, new HashMap<ImmutablePosition, Move>());
+	}
+
+	public void notifyListenersAboutPiecePlacement(final Piece placedPiece, final boolean loadingInProgress)
+	{
 		if(loadingInProgress)
 		{
 			for(ChessBoardListener listener : myBoardListeners)
 			{
-				listener.piecePlacedLoadingInProgress(p);
+				listener.piecePlacedLoadingInProgress(placedPiece);
 			}
 		}
 		else
 		{
 			for(ChessBoardListener listener : myBoardListeners)
 			{
-				listener.piecePlaced(p);
+				listener.piecePlaced(placedPiece);
 			}
 		}
 	}
@@ -592,6 +611,8 @@ public final class ChessBoard
 			pieceValueChanged(-p.getValue(), p.getAffinity());
 		}
 		getPositionContainer(currentPosition).setCurrentPiece(null);
+		myPieceToPositionAvailableMoves.remove(p);
+		myPieceToPositionNonAvailableMoves.remove(p);
 		for(MoveListener ml : myMoveListeners)
 		{
 			ml.pieceRemoved(p);
@@ -603,8 +624,9 @@ public final class ChessBoard
 	 * @param pawn the pawn to replace
 	 * @return the piece that replaced the pawn
 	 */
-	public Piece replacePawn(final Piece pawn)
+	public Piece promotePawn(final Piece pawn)
 	{
+		pawn.promote();
 		//Remove pawn
 		pawn.removeFromBoard(this);
 
@@ -613,9 +635,9 @@ public final class ChessBoard
 		//Asks the GUI for a replacement piece
 		for(ChessBoardListener cbl : myBoardListeners)
 		{
-			if(cbl.supportsPawnReplacementDialog())
+			if(cbl.supportsPawnPromotionDialog())
 			{
-				newPiece = cbl.getPawnReplacementFromDialog();
+				newPiece = cbl.getPawnPromotionFromDialog();
 				//TODO(jontejj): set position
 				break;
 			}
@@ -625,13 +647,7 @@ public final class ChessBoard
 			//Replace him with a Queen
 			newPiece = new Queen(pawn.getPosition().copy(), pawn.getAffinity(), this);
 		}
-		newPiece.setIsPawnReplacementPiece();
-
 		addPiece(newPiece, true, false);
-
-		//Update moves that can reach the queen
-		this.updatePossibilityOfMovesForPosition(newPiece.getCurrentPosition());
-
 		return newPiece;
 	}
 
@@ -655,11 +671,14 @@ public final class ChessBoard
 			{
 				decrementAvailableMoves(piece.getAffinity());
 			}
-			Map<ImmutablePosition, Move> map = myPieceToPositionAvailableMoves.get(piece);
-			Move removedMove = map.remove(pos);
-			if(removedMove != move)
+			if(move.shouldBeIncludedInMoveTable())
 			{
-				map.put(pos, removedMove);
+				Map<ImmutablePosition, Move> map = myPieceToPositionAvailableMoves.get(piece);
+				Move removedMove = map.remove(pos);
+				if(removedMove != move && removedMove != null)
+				{
+					map.put(pos, removedMove);
+				}
 			}
 			//Check if the opposite king previously couldn't move into this position, if so maybe he can now?
 			/*King oppositeKing = getOppositeKing(piece.getAffinity());
@@ -676,11 +695,14 @@ public final class ChessBoard
 		if(pos != null)
 		{
 			getPositionContainer(pos).removeNonAvailableMove(move);
-			Map<ImmutablePosition, Move> map = myPieceToPositionNonAvailableMoves.get(piece);
-			Move removedMove = map.remove(pos);
-			if(removedMove != move)
+			if(move.shouldBeIncludedInMoveTable())
 			{
-				map.put(pos, removedMove);
+				Map<ImmutablePosition, Move> map = myPieceToPositionNonAvailableMoves.get(piece);
+				Move removedMove = map.remove(pos);
+				if(removedMove != move && removedMove != null)
+				{
+					map.put(pos, removedMove);
+				}
 			}
 		}
 	}
@@ -693,15 +715,18 @@ public final class ChessBoard
 			{
 				incrementAvailableMoves(piece.getAffinity());
 			}
-			Map<ImmutablePosition, Move> map = myPieceToPositionAvailableMoves.get(piece);
-			map.put(pos, move);
-			//Check if the opposite king previously could move into this position, if so remove that move because now he can't
-			/*TODO: King oppositeKing = getOppositeKing(piece.getAffinity());
-			Move kingMove = getAvailableMove(oppositeKing, pos);
-			if(kingMove != null)
+			if(move.shouldBeIncludedInMoveTable())
 			{
-				kingMove.updateMove(this);
-			}*/
+				Map<ImmutablePosition, Move> map = myPieceToPositionAvailableMoves.get(piece);
+				map.put(pos, move);
+				//Check if the opposite king previously could move into this position, if so remove that move because now he can't
+				/*TODO: King oppositeKing = getOppositeKing(piece.getAffinity());
+				Move kingMove = getAvailableMove(oppositeKing, pos);
+				if(kingMove != null)
+				{
+					kingMove.updateMove(this);
+				}*/
+			}
 		}
 	}
 
@@ -711,19 +736,22 @@ public final class ChessBoard
 		if(pos != null)
 		{
 			getPositionContainer(pos).addNonAvailableMove(move);
-			Map<ImmutablePosition, Move> map = myPieceToPositionNonAvailableMoves.get(piece);
-			map.put(pos, move);
-
-			//Check if the opposite king previously couldn't move into this position, if so then maybe he can now?
-			/*TODO: if(!(piece instanceof King))
+			if(move.shouldBeIncludedInMoveTable())
 			{
-				King oppositeKing = getOppositeKing(piece.getAffinity());
-				Move kingMove = getNonAvailableMove(oppositeKing, pos);
-				if(kingMove != null)
+				Map<ImmutablePosition, Move> map = myPieceToPositionNonAvailableMoves.get(piece);
+				map.put(pos, move);
+
+				//Check if the opposite king previously couldn't move into this position, if so then maybe he can now?
+				/*TODO: if(!(piece instanceof King))
 				{
-					kingMove.updateMove(this);
-				}
-			}*/
+					King oppositeKing = getOppositeKing(piece.getAffinity());
+					Move kingMove = getNonAvailableMove(oppositeKing, pos);
+					if(kingMove != null)
+					{
+						kingMove.updateMove(this);
+					}
+				}*/
+			}
 		}
 	}
 
@@ -990,29 +1018,31 @@ public final class ChessBoard
 	{
 		ImmutablePosition newPosition = moveToPerform.getDestination();
 		ImmutablePosition oldPosition = pieceToMove.getCurrentPosition();
-		getPositionContainer(oldPosition).setCurrentPiece(null);
-		Piece oldPiece = getPositionContainer(newPosition).setCurrentPiece(pieceToMove);
-		if(oldPiece != null && oldPiece != pieceToMove)
+
+		Piece assumedTakeOverPiece = moveToPerform.getPieceAtDestination();
+		Piece currentPieceAtDestination = getPositionContainer(newPosition).getCurrentPiece();
+		if(assumedTakeOverPiece != currentPieceAtDestination && !moveToPerform.isEnPassant())
 		{
-			//LOGGER.info("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
-			//		"Actual piece at destination:" + oldPiece);
 			//The move was out of sync, lets fix it
 			//TODO: this wouldn't be needed if the moves were updated properly
-			moveToPerform.setPieceAtDestination(oldPiece);
-			if(moveToPerform.canBeMade(this))
+			LOGGER.info("Move out of sync, Old piece at destination:" + assumedTakeOverPiece +
+					"Actual piece at destination:" + currentPieceAtDestination);
+			moveToPerform.setPieceAtDestination(currentPieceAtDestination);
+			moveToPerform.updatePossibility(this, false);
+			if(!moveToPerform.canBeMade(this))
 			{
-				oldPiece.removeFromBoard(this);
-			}
-			else
-			{
-				LOGGER.info("Move out of sync, Old piece at destination:" + moveToPerform.getPieceAtDestination() +
-						"Actual piece at destination:" + oldPiece + ", after update this move couldn't be done.");
-				//Restore state and throw
-				getPositionContainer(newPosition).setCurrentPiece(oldPiece);
-				getPositionContainer(oldPosition).setCurrentPiece(pieceToMove);
+				LOGGER.info("Due to the move being out of sync it was thought to be available when in fact it wasn't. Faulty move: " + moveToPerform);
 				return false;
 			}
 		}
+		if(moveToPerform.getPieceAtDestination() != null)
+		{
+			//Take over is happening
+			moveToPerform.getPieceAtDestination().removeFromBoard(this);
+		}
+
+		getPositionContainer(oldPosition).setCurrentPiece(null);
+		getPositionContainer(newPosition).setCurrentPiece(pieceToMove);
 
 		if(moveToPerform instanceof RevertingMove)
 		{
@@ -1183,11 +1213,11 @@ public final class ChessBoard
 	/**
 	 * This reads a setting byte, move history and piece information
 	 * @param buffer the buffer to read from
-	 * @throws DuplicatePieceException if two pieces are found at the same position
 	 * @throws InvalidBoardException if a King is missing
 	 * @throws ArrayIndexOutOfBoundsException if a position for a piece is invalid
+	 * @throws DuplicatePieceError if two pieces are found at the same position
 	 */
-	public void readPersistenceData(final ByteBuffer buffer) throws DuplicatePieceException, InvalidBoardException
+	public void readPersistenceData(final ByteBuffer buffer) throws InvalidBoardException
 	{
 		//Read the state of the game
 		readGameStatePersistenceData(buffer);
@@ -1195,17 +1225,7 @@ public final class ChessBoard
 		//Read each piece from the buffer
 		while(buffer.remaining() > 0)
 		{
-			Piece piece = Piece.getPieceFromPersistenceData(buffer, this);
-			if(piece != null)
-			{
-				Piece existingPiece = this.getPiece(piece.getCurrentPosition());
-				if(existingPiece != null && existingPiece.getPersistenceData() != piece.getPersistenceData())
-				{
-					//Don't place a piece where one is already placed
-					throw new DuplicatePieceException(existingPiece, piece);
-				}
-				addPiece(piece, false, true);
-			}
+			addPiece(Piece.getPieceFromPersistenceData(buffer, this), false, true);
 		}
 		if(myWhiteKing == null || myBlackKing == null)
 		{

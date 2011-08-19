@@ -32,7 +32,7 @@ public class PersistenceLogger implements MoveListener
 
 	public void setStartBoard(final ChessBoard board)
 	{
-		myStartBoard = board.copy();
+		myStartBoard = board.copy(false);
 	}
 
 	public void writeMoveHistory(final ByteBuffer buffer)
@@ -77,7 +77,24 @@ public class PersistenceLogger implements MoveListener
 		while(fromFirstMoveToLastIterator.hasNext())
 		{
 			MoveItem moveItem = fromFirstMoveToLastIterator.next();
-			moveItem.perform(board);
+			try
+			{
+				moveItem.perform(board);
+			}
+			catch(UnavailableMoveItem umi)
+			{
+				LOGGER.severe("Failed to apply: " + moveItem);
+				if(fromFirstMoveToLastIterator.hasNext())
+				{
+					LOGGER.info("Didn't apply: ");
+					while(fromFirstMoveToLastIterator.hasNext())
+					{
+						LOGGER.info("MoveItem: " + fromFirstMoveToLastIterator.next());
+					}
+				}
+				//TODO: throw it!
+				//throw umi;
+			}
 		}
 		myIsApplyingMoveHistory = false;
 	}
@@ -85,7 +102,7 @@ public class PersistenceLogger implements MoveListener
 	@Override
 	public void movePerformed(final Move performedMove)
 	{
-		if(!myIsApplyingMoveHistory)
+		if(!myIsApplyingMoveHistory && !performedMove.isPartOfAnotherMove())
 		{
 			myPersistenceStorage.push(MoveItem.from(performedMove));
 		}
@@ -99,7 +116,10 @@ public class PersistenceLogger implements MoveListener
 	@Override
 	public void moveReverted(final RevertingMove move)
 	{
-		myPersistenceStorage.pop();
+		if(!move.isPartOfAnotherMove())
+		{
+			myPersistenceStorage.pop();
+		}
 	}
 
 	@Override

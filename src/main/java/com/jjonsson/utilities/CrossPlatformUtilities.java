@@ -9,11 +9,11 @@ public final class CrossPlatformUtilities
 {
 	private static final int WINDOWS_TITLE_HEIGHT = 58;
 	public static final int USUAL_TITLE_HEIGHT = 22;
-	
+
 	private static boolean isWindows;
-	private static boolean isMac; 
+	private static boolean isMac;
 	private static int shortcutModifier;
-	
+
 	public static final int NO_ACTION	= -1;
 	public static final int	EXIT		= 0;
 	public static final int	SAVE_AS		= 1;
@@ -23,7 +23,8 @@ public final class CrossPlatformUtilities
 	public static final int	UNDO		= 5;
 	public static final int	UNDO_TWICE	= 6;
 	public static final int SHOW_HINT	= 7;
-	
+	public static final int RELOAD		= 8;
+
 	static
 	{
 		String operatingSystem = System.getProperty("os.name").toLowerCase();
@@ -31,17 +32,17 @@ public final class CrossPlatformUtilities
 		isMac = (operatingSystem.indexOf("mac") != -1);
 		shortcutModifier = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 	}
-	
+
 	private CrossPlatformUtilities()
 	{
-		
+
 	}
-	
+
 	public static boolean isWindows()
 	{
 		return isWindows;
 	}
-	
+
 	public static int getTitleHeightForCurrentPlatform()
 	{
 		if(isWindows())
@@ -50,52 +51,57 @@ public final class CrossPlatformUtilities
 		}
 		return USUAL_TITLE_HEIGHT;
 	}
-	
+
 	public static boolean isMac()
 	{
 		return isMac;
 	}
-	
+
 	public static KeyStroke getExitKeyStroke()
 	{
 		return getKeyStrokeForAction(EXIT);
 	}
-	
+
+	public static KeyStroke getReloadKeyStroke()
+	{
+		return getKeyStrokeForAction(RELOAD);
+	}
+
 	public static KeyStroke getLoadKeyStroke()
 	{
 		return getKeyStrokeForAction(LOAD);
 	}
-	
+
 	public static KeyStroke getSaveKeyStroke()
 	{
 		return getKeyStrokeForAction(SAVE);
 	}
-	
+
 	public static KeyStroke getSaveAsKeyStroke()
 	{
 		return getKeyStrokeForAction(SAVE_AS);
 	}
-	
+
 	public static KeyStroke getNewKeyStroke()
 	{
 		return getKeyStrokeForAction(NEW);
 	}
-	
+
 	public static KeyStroke getUndoKeyStroke()
 	{
 		return getKeyStrokeForAction(UNDO);
 	}
-	
+
 	public static KeyStroke getUndoTwiceKeyStroke()
 	{
 		return getKeyStrokeForAction(UNDO_TWICE);
 	}
-	
-	private static KeyStroke getKeyStrokeForAction(int action)
+
+	private static KeyStroke getKeyStrokeForAction(final int action)
 	{
 		int keyCode = 0;
 		int keyModifiers = shortcutModifier;
-		
+
 		switch(action)
 		{
 			case SAVE:
@@ -121,6 +127,9 @@ public final class CrossPlatformUtilities
 			case SHOW_HINT:
 				keyCode = KeyEvent.VK_I;
 				break;
+			case RELOAD:
+				keyCode = KeyEvent.VK_R;
+				break;
 			case EXIT:
 				if(isMac)
 				{
@@ -135,19 +144,19 @@ public final class CrossPlatformUtilities
 			default:
 				break;
 		}
-		
+
 		return KeyStroke.getKeyStroke(keyCode, keyModifiers);
 	}
-	
+
 	/**
 	 * Can be used if you wan't to implement KeyListener instead of ActionListener
 	 * @param event
-	 * @return one of the public constants from this class as an identifier 
+	 * @return one of the public constants from this class as an identifier
 	 */
-	public static int getActionFromKeyEvent(KeyEvent event)
+	public static int getActionFromKeyEvent(final KeyEvent event)
 	{
 		int action = NO_ACTION;
-		
+
 		if((event.getModifiers() & shortcutModifier) > 0)
 		{
 			switch(event.getKeyCode())
@@ -162,19 +171,23 @@ public final class CrossPlatformUtilities
 						action = SAVE;
 					}
 					break;
-					
+
 				case KeyEvent.VK_N:
 					action = NEW;
 					break;
-					
+
 				case KeyEvent.VK_O:
 					action = LOAD;
 					break;
-					
+
 				case KeyEvent.VK_I:
 					action = SHOW_HINT;
 					break;
-					
+
+				case KeyEvent.VK_R:
+					action = RELOAD;
+					break;
+
 				case KeyEvent.VK_Z:
 					if(event.isShiftDown())
 					{
@@ -183,10 +196,10 @@ public final class CrossPlatformUtilities
 					else
 					{
 						action = UNDO_TWICE;
-					}	
+					}
 					break;
-					
-				//Usual exit
+
+					//Usual exit
 				case KeyEvent.VK_Q:
 					if(event.getModifiers() == shortcutModifier)
 					{
@@ -202,7 +215,7 @@ public final class CrossPlatformUtilities
 		{
 			action = EXIT;
 		}
-		
+
 		return action;
 	}
 

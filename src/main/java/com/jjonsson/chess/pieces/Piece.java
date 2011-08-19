@@ -96,16 +96,16 @@ public abstract class Piece
 	private boolean myIsRemoved;
 
 	/**
-	 * True if a pawn has been exchanged for this piece
-	 */
-	private boolean myIsPawnReplacementPiece;
-
-	/**
 	 * The board that this piece is placed on
 	 */
 	private ChessBoard myBoard;
 
 	private long myMovesMade;
+
+	/**
+	 * True for pawns that have reached their bottom/top destination row
+	 */
+	private boolean myHasBeenPromoted;
 
 
 	/**
@@ -126,6 +126,30 @@ public abstract class Piece
 		myAffinity = affinity;
 		myBoard = boardPieceIsToBePlacedOn;
 		addPossibleMoves();
+	}
+
+	/**
+	 * Called when pawns have reached their bottom/top destination row
+	 */
+	public void promote()
+	{
+		myHasBeenPromoted = true;
+	}
+
+	/**
+	 * Called when a promotion have been undone
+	 */
+	public void dePromote()
+	{
+		myHasBeenPromoted = false;
+	}
+
+	/**
+	 * @return true for pawns that have reached their bottom/top destination row
+	 */
+	public boolean isPromoted()
+	{
+		return myHasBeenPromoted;
 	}
 
 	@VisibleForTesting
@@ -514,7 +538,10 @@ public abstract class Piece
 			return false;
 		}
 
-		updateMoves(board);
+		if(!isRemoved())
+		{
+			updateMoves(board);
+		}
 
 		//Update old position
 		board.updatePossibilityOfMovesForPosition(move.getOldPosition());
@@ -527,7 +554,15 @@ public abstract class Piece
 		}
 		if(!move.isPartOfAnotherMove())
 		{
-			board.nextPlayer();
+			try
+			{
+				board.nextPlayer();
+			}
+			catch(NullPointerException npe)
+			{
+				LOGGER.severe("Got NPE during nextPlayer: " + npe);
+				LOGGER.severe("Taken piece by last move: " + getBoard().getMoveLogger().getRemovedPieceForLastMove());
+			}
 		}
 		return true;
 	}
@@ -593,13 +628,11 @@ public abstract class Piece
 	{
 		for(Move m : myPossibleMoves)
 		{
-			m.updateDestination(board);
-			m.updatePossibility(board, true);
-			m.syncCountersWithBoard(board);
+			m.updateMove(board);
 		}
 	}
 
-	private void removeMovesFromBoard(final ChessBoard chessBoard)
+	protected void removeMovesFromBoard(final ChessBoard chessBoard)
 	{
 		for(Move m : myPossibleMoves)
 		{
@@ -616,22 +649,18 @@ public abstract class Piece
 	public Piece removeFromBoard(final ChessBoard board)
 	{
 		Piece returnPiece = this;
-		board.removePiece(this);
-		this.removeMovesFromBoard(board);
-		myIsRemoved = true;
-
-		Piece currentPieceAtMyPosition = board.getPiece(getCurrentPosition());
-		//This could happen if the previous piece was taken and there is a new piece that could be taken
-		if(currentPieceAtMyPosition != null && currentPieceAtMyPosition != this)
+		if(!isRemoved())
 		{
-			return currentPieceAtMyPosition.removeFromBoard(board);
-		}
+			this.removeMovesFromBoard(board);
+			board.removePiece(this);
+			myIsRemoved = true;
 
-		for(MoveListener listener : myListeners)
-		{
-			listener.pieceRemoved(returnPiece);
+			for(MoveListener listener : myListeners)
+			{
+				listener.pieceRemoved(returnPiece);
+			}
+			myListeners.clear();
 		}
-		myListeners.clear();
 
 		return returnPiece;
 	}
@@ -639,16 +668,6 @@ public abstract class Piece
 	public boolean isRemoved()
 	{
 		return myIsRemoved;
-	}
-
-	public boolean isPawnReplacementPiece()
-	{
-		return myIsPawnReplacementPiece;
-	}
-
-	public void setIsPawnReplacementPiece()
-	{
-		myIsPawnReplacementPiece = true;
 	}
 
 	public boolean isWhite()
@@ -664,6 +683,7 @@ public abstract class Piece
 	/**
 	 * Called when a move that this piece previously made has been reverted
 	 */
+	@SuppressWarnings("unused") //Used by subclasses, perhaps this should be solved nicer?
 	public void revertedAMove(final ChessBoard board, final Position oldPosition)
 	{
 	}
@@ -675,6 +695,7 @@ public abstract class Piece
 	{
 		if(isRemoved())
 		{
+			getBoard().addPieceToPositionMaps(this);
 			for(Move m : myPossibleMoves)
 			{
 				m.reEnable();

@@ -83,7 +83,7 @@ public final class ImmutablePosition extends Position
 	 * This is the preferred way of creating positions that isn't going to change and where you know that the input row/column are valid
 	 * <br><b>Note:</b> No input validation is made, if that is wanted you should use {@link ImmutablePosition#of(int, int)} instead
 	 * @param row the row for this position, valid numbers are 0-7
-	 * @param column the column for this position, valid numbers are 0-7 (A-H)
+	 * @param column the column for this position, valid numbers are 0-7 (A-H) (Use: {@link Position#A} etc)
 	 * @return a cached position that won't change during the lifetime of the application
 	 * @throws ArrayIndexOutOfBoundsException if one or both of the given parameters are out of range
 	 */
@@ -107,7 +107,7 @@ public final class ImmutablePosition extends Position
 	/**
 	 * This is like {@link ImmutablePosition#from(int, int)} but with added error checking
 	 * @param row the row for this position, valid numbers are 0-7
-	 * @param column the column for this position, valid numbers are 0-7 (A-H)
+	 * @param column the column for this position, valid numbers are 0-7 (A-H) (Use: {@link Position#A} etc)
 	 * @return a cached position that won't change during the lifetime of the application
 	 * @throws InvalidPosition if one or both of the given parameters are out of range
 	 */

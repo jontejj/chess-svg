@@ -4,6 +4,7 @@ import static com.jjonsson.utilities.CrossPlatformUtilities.USUAL_TITLE_HEIGHT;
 import static com.jjonsson.utilities.CrossPlatformUtilities.getExitKeyStroke;
 import static com.jjonsson.utilities.CrossPlatformUtilities.getLoadKeyStroke;
 import static com.jjonsson.utilities.CrossPlatformUtilities.getNewKeyStroke;
+import static com.jjonsson.utilities.CrossPlatformUtilities.getReloadKeyStroke;
 import static com.jjonsson.utilities.CrossPlatformUtilities.getSaveAsKeyStroke;
 import static com.jjonsson.utilities.CrossPlatformUtilities.getSaveKeyStroke;
 import static com.jjonsson.utilities.CrossPlatformUtilities.getShowHintKeyStroke;
@@ -57,6 +58,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	@VisibleForTesting
 	public static final String NEW_MENU_ITEM = "New";
 	private static final String LOAD_MENU_ITEM = "Load";
+	private static final String	RELOAD_MENU_ITEM	= "Reload";
 	private static final String SAVE_MENU_ITEM = "Save";
 	private static final String SAVE_AS_MENU_ITEM = "Save As";
 	@VisibleForTesting
@@ -71,7 +73,6 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 
 	@VisibleForTesting
 	public static final String	SHOW_AVAILABLE_CLICKS_MENU_ITEM	= "Show Available Clicks";
-
 	private static final String	HIDE_AVAILABLE_CLICKS_MENU_ITEM	= "Hide Available Clicks";
 
 	private String lastFileChooserLocation;
@@ -199,6 +200,11 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		loadAction.setAccelerator(getLoadKeyStroke());
 		loadAction.addActionListener(this);
 		fileMenu.add(loadAction);
+
+		JMenuItem reloadAction = new JMenuItem(RELOAD_MENU_ITEM);
+		reloadAction.setAccelerator(getReloadKeyStroke());
+		reloadAction.addActionListener(this);
+		fileMenu.add(reloadAction);
 
 		JMenuItem saveAction = new JMenuItem(SAVE_MENU_ITEM);
 		saveAction.setAccelerator(getSaveKeyStroke());
@@ -350,6 +356,28 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		}
 	}
 
+	private void reload()
+	{
+		if(myCurrentBoardFile != null)
+		{
+			getBoard().clear();
+			myComponent.clear();
+			if(BoardLoader.loadFileIntoBoard(new File(myCurrentBoardFile), getBoard()))
+			{
+				setResultOfInteraction("Reload Ok");
+			}
+			else
+			{
+				setResultOfInteraction("Reload failed! Starting New Game.");
+				newGame();
+			}
+		}
+		else
+		{
+			setResultOfInteraction("No game to reload, use load first.");
+		}
+	}
+
 	private void undo(final int nrOfMoves)
 	{
 		int undoneMoves = getBoard().undoMoves(nrOfMoves);
@@ -388,13 +416,13 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	{
 		noAbortionNecessaryCommands.put(SHOW_AVAILABLE_CLICKS_MENU_ITEM, true);
 		noAbortionNecessaryCommands.put(HIDE_AVAILABLE_CLICKS_MENU_ITEM, true);
-		noAbortionNecessaryCommands.put(SHOW_HINT_MENU_ITEM, true);
+		//noAbortionNecessaryCommands.put(SHOW_HINT_MENU_ITEM, true);
 	}
 
 	@Override
 	public void actionPerformed(final ActionEvent e)
 	{
-		LOGGER.finest(e.getActionCommand());
+		LOGGER.finer(e.getActionCommand());
 		if(!noAbortionNecessaryCommands.containsKey(e.getActionCommand()))
 		{
 			//Cancel current jobs such as when the AI is thinking of the next move or when a hint move is searched for
@@ -417,6 +445,10 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		else if(e.getActionCommand().equals(LOAD_MENU_ITEM))
 		{
 			load();
+		}
+		else if(e.getActionCommand().equals(RELOAD_MENU_ITEM))
+		{
+			reload();
 		}
 		else if(e.getActionCommand().equals(UNDO_BLACK_MENU_ITEM))
 		{

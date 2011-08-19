@@ -1,5 +1,6 @@
 package com.jjonsson.chess.evaluators;
 
+import static com.jjonsson.chess.gui.Settings.DEBUG;
 import static com.jjonsson.utilities.Logger.LOGGER;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -39,14 +40,14 @@ public final class ChessMoveEvaluator
 	 * @param board
 	 * @return the best move for the current player on the given board
 	 * @throws NoMovesAvailableException if the evaluation of available moves didn't return a move<p/>
-	 * This may also throw SearchInterruptedError if interrupted by something (e.g the GUI)
+	 * @throws SearchInterruptedError if interrupted by something (e.g the GUI)
 	 */
 	public static Move getBestMove(final ChessBoard board, final StatusListener listener) throws NoMovesAvailableException
 	{
 		long startTime = System.nanoTime();
 		Move result = null;
 		deepestSearch = 0;
-		ChessBoard copyOfBoard = board.copy();
+		ChessBoard copyOfBoard = board.copy(DEBUG);
 
 		ProgressTracker.setStatusListener(listener);
 		SearchLimiter limiter = new SearchLimiter(board.getDifficulty());
@@ -56,9 +57,9 @@ public final class ChessMoveEvaluator
 		{
 			throw new NoMovesAvailableException();
 		}
-		LOGGER.finest("Best move: " + result);
-		LOGGER.finest("Best move value: " + searchResult.getBestMoveValue());
-		LOGGER.finest("Reached " + deepestSearch + " steps ahead on the deepest path");
+		LOGGER.finer("Best move: " + result);
+		LOGGER.finer("Best move value: " + searchResult.getBestMoveValue());
+		LOGGER.finer("Reached " + deepestSearch + " steps ahead on the deepest path");
 		ProgressTracker.done();
 		//This fetches the corresponding move from our original board
 		result = board.getMove(result);
@@ -76,7 +77,8 @@ public final class ChessMoveEvaluator
 	 * 
 	 * @param board
 	 * @return
-	 * @throws NoMovesAvailableException, SearchInterruptedError
+	 * @throws NoMovesAvailableException
+	 * @throws SearchInterruptedError
 	 */
 	public static Move getBestMove(final ChessBoard board) throws NoMovesAvailableException
 	{
@@ -86,7 +88,8 @@ public final class ChessMoveEvaluator
 	/**
 	 * Performs a move without progress tracking
 	 * @param board
-	 * @throws NoMovesAvailableException, SearchInterruptedError
+	 * @throws NoMovesAvailableException
+	 * @throws SearchInterruptedError
 	 */
 	public static void performBestMove(final ChessBoard board) throws NoMovesAvailableException
 	{
@@ -128,6 +131,7 @@ public final class ChessMoveEvaluator
 	 * 			or a search result with best move set to null if no moves were available
 	 * @throws NoMovesAvailableException
 	 * @throws UnavailableMoveException
+	 * @throws SearchInterruptedError
 	 */
 	private static SearchResult deepSearch(final ChessBoard board, final SearchLimiter limiter)
 	{
@@ -154,19 +158,26 @@ public final class ChessMoveEvaluator
 			ThreadTracker threadTracker = new ThreadTracker();
 			for(Move move : moves)
 			{
-				//TODO(jontejj): how to search deeper when time allows us to
-				if(limiter.getDepth() == SearchLimiter.MAX_DEPTH)
+				if(move.shouldBeIncludedInMoveTable())
 				{
-					//For each main branch
-					limiter.resetMovesLeft();
+					//TODO(jontejj): how to search deeper when time allows us to
+					if(limiter.getDepth() == SearchLimiter.MAX_DEPTH)
+					{
+						//For each main branch
+						limiter.resetMovesLeft();
+					}
+					movesLeftToEvaluateOnThisBranch--;
+					MoveEvaluatingThread moveEvaluator = new MoveEvaluatingThread(board, move, limiter, result, movesLeftToEvaluateOnThisBranch, workersDoneSignal);
+					if(moveEvaluator.isRunningInSeperateThread())
+					{
+						threadTracker.addJob(moveEvaluator.getThread());
+					}
+					moveEvaluator.advancedRun();
 				}
-				movesLeftToEvaluateOnThisBranch--;
-				MoveEvaluatingThread moveEvaluator = new MoveEvaluatingThread(board, move, limiter, result, movesLeftToEvaluateOnThisBranch, workersDoneSignal);
-				if(moveEvaluator.isRunningInSeperateThread())
+				else
 				{
-					threadTracker.addJob(moveEvaluator.getThread());
+					workersDoneSignal.countDown();
 				}
-				moveEvaluator.advancedRun();
 			}
 			try
 			{
@@ -192,6 +203,7 @@ public final class ChessMoveEvaluator
 	 * @param limiter
 	 * @param result
 	 * @param movesLeftToEvaluateOnThisBranch
+	 * @throws SearchInterruptedError
 	 */
 	@VisibleForTesting
 	public static void evaluateMove(final Move move, final ChessBoard board, final SearchLimiter limiter, final SearchResult result, final long movesLeftToEvaluateOnThisBranch)

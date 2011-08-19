@@ -434,7 +434,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 
 		long time = (System.nanoTime() - startNanos);
 		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(SECONDS.toNanos(1)));
-		LOGGER.finest("Seconds: " + bd.toPlainString());
+		LOGGER.finer("Seconds: " + bd.toPlainString());
 	}
 	@Override
 	public void mousePressed(final MouseEvent e){}
@@ -484,7 +484,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void gameStateChanged(final ChessState newState)
 	{
-		LOGGER.finest("" + newState);
+		LOGGER.finer("" + newState);
 		statusChange();
 	}
 
@@ -556,6 +556,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 					}
 					catch (NoMovesAvailableException e)
 					{
+						LOGGER.warning("No moves available for the random player");
 					}
 				}
 			}
@@ -573,7 +574,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	}
 
 	@Override
-	public boolean supportsPawnReplacementDialog()
+	public boolean supportsPawnPromotionDialog()
 	{
 		return true;
 	}
@@ -582,7 +583,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	 *  TODO(jontejj): popup a choice
 	 */
 	@Override
-	public Piece getPawnReplacementFromDialog()
+	public Piece getPawnPromotionFromDialog()
 	{
 		return null;
 	}

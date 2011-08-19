@@ -1,11 +1,13 @@
 package com.jjonsson.chess.evaluators;
 
+import static com.jjonsson.chess.gui.Settings.DEBUG;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.CountDownLatch;
 
 import com.jjonsson.chess.board.ChessBoard;
+import com.jjonsson.chess.exceptions.SearchInterruptedError;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.persistence.BoardLoader;
 import com.jjonsson.utilities.Logger;
@@ -39,12 +41,33 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 		myResult = result;
 		myMovesLeftOnBranch = movesLeftOnBranch;
 		mySignal = workersDoneSignal;
+		boolean shouldContinueInNewThread = ChessMoveEvaluator.shouldContinueInNewThread(myBoard, myLimiter, myMovesLeftOnBranch, myMoveToEvaluate);
+		if(shouldContinueInNewThread && ResourceAllocator.claimThread())
+		{
+			//Only copy the board/limiter if we aren't running the next move eval in the same thread
+			if(makeThreadSafe())
+			{
+				myThread = new Thread(this);
+				myThread.setUncaughtExceptionHandler(this);
+			}
+			else
+			{
+				ResourceAllocator.freeThread();
+			}
+		}
 	}
 
 	@Override
 	public void run()
 	{
-		ChessMoveEvaluator.evaluateMove(myMoveToEvaluate, myBoard, myLimiter, myResult, myMovesLeftOnBranch);
+		try
+		{
+			ChessMoveEvaluator.evaluateMove(myMoveToEvaluate, myBoard, myLimiter, myResult, myMovesLeftOnBranch);
+		}
+		catch(SearchInterruptedError error)
+		{
+			//Nothing to do here
+		}
 		freeResources();
 	}
 
@@ -60,21 +83,9 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	 */
 	public void advancedRun()
 	{
-		boolean shouldContinueInNewThread = ChessMoveEvaluator.shouldContinueInNewThread(myBoard, myLimiter, myMovesLeftOnBranch, myMoveToEvaluate);
-		if(shouldContinueInNewThread && ResourceAllocator.claimThread())
+		if(myThread != null)
 		{
-			//Only copy the board/limiter if we aren't running the next move eval in the same thread
-			if(makeThreadSafe())
-			{
-				myThread = new Thread(this);
-				myThread.setUncaughtExceptionHandler(this);
-				myThread.start();
-			}
-			else
-			{
-				ResourceAllocator.freeThread();
-				runInCurrentThread();
-			}
+			myThread.start();
 		}
 		else
 		{
@@ -102,7 +113,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	 */
 	private boolean makeThreadSafe()
 	{
-		ChessBoard copy = myBoard.copy();
+		ChessBoard copy = myBoard.copy(DEBUG);
 		if(copy == null)
 		{
 			LOGGER.severe("Failed to clone board.");

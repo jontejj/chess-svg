@@ -97,19 +97,19 @@ public class MoveLogger implements MoveListener
 	@Override
 	public void moveReverted(final RevertingMove move)
 	{
+		myRemovalHistory.remove(myMoveHistory.size());
 		removeLastEnPassant();
 	}
 
 	public Piece getRemovedPieceForLastMove()
 	{
-		//TODO: this return pieces that wasn't removed sometimes
 		return myRemovalHistory.get(myMoveHistory.size() - 1);
 	}
 
 	@Override
 	public void pieceRemoved(final Piece removedPiece)
 	{
-		if(!removedPiece.isPawnReplacementPiece())
+		if(!removedPiece.isPromoted())
 		{
 			myRemovalHistory.put(myMoveHistory.size(), removedPiece);
 		}

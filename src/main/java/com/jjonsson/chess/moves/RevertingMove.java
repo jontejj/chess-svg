@@ -1,5 +1,7 @@
 package com.jjonsson.chess.moves;
 
+import static com.jjonsson.utilities.Logger.LOGGER;
+
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.pieces.Piece;
 
@@ -13,8 +15,11 @@ public class RevertingMove extends IndependantMove {
 	private Move myMoveToRevert;
 	private Piece myPieceToPlaceAtOldPosition;
 
-	//Used when pawns reach the top/bottom of the board (i.e the queen should be removed)
-	private Piece myPieceThatReplacedMyPiece;
+	/**
+	 * Used when pawns reach the top/bottom of the board (i.e the queen should be removed)
+	 */
+	private Piece myPawnPromotionPiece;
+
 	public RevertingMove(final Move moveToRevert)
 	{
 		super(-moveToRevert.getRowChange(), -moveToRevert.getColumnChange(), moveToRevert.getPiece());
@@ -67,11 +72,11 @@ public class RevertingMove extends IndependantMove {
 	/**
 	 * Should be used when a pawn has reached the top/bottom and the piece that the pawn was replaced with should be removed from
 	 * the board
-	 * @param p the piece that the pawn was replaced with
+	 * @param p the piece that the pawn was promoted to
 	 */
-	public void setPieceThatReplacedMyPiece(final Piece p)
+	public void setPawnPromotionPiece(final Piece p)
 	{
-		myPieceThatReplacedMyPiece = p;
+		myPawnPromotionPiece = p;
 	}
 
 	public void setPieceToPlaceAtOldPosition(final Piece removedPiece)
@@ -103,17 +108,30 @@ public class RevertingMove extends IndependantMove {
 		{
 			Position oldPosition = getCurrentPosition();
 
-			if(myPieceThatReplacedMyPiece != null)
+			if(myPawnPromotionPiece != null)
 			{
-				//A pawn was replaced by another piece
-				myPieceThatReplacedMyPiece.removeFromBoard(board);
+				myPawnPromotionPiece.removeFromBoard(board);
 			}
+
+			boolean wasRemoved = getPiece().isRemoved();
+			//This makes it possible for the piece to make once again if the piece was removed previously
+			getPiece().reEnablePossibleMoves();
 
 			if(!super.makeMoveWithoutChecking(board))
 			{
-				board.addPiece(myPieceThatReplacedMyPiece, true, false);
+				//Revert what we just did because this reverting move is not possible to make
+				LOGGER.warning("Failed to revert: " + this);
+				if(wasRemoved)
+				{
+					getPiece().removeFromBoard(board);
+				}
+				if(myPawnPromotionPiece != null)
+				{
+					board.addPiece(myPawnPromotionPiece, true, false);
+				}
 				return false;
 			}
+			myPawnPromotionPiece =null;
 
 			//The move that this move reverts took over a piece so that needs to be restored
 			if(myPieceToPlaceAtOldPosition != null)
@@ -122,8 +140,6 @@ public class RevertingMove extends IndependantMove {
 				board.addPiece(myPieceToPlaceAtOldPosition, true, false);
 				board.updatePossibilityOfMovesForPosition(myPieceToPlaceAtOldPosition.getCurrentPosition());
 			}
-
-			getPiece().reEnablePossibleMoves();
 
 			board.popLastMoveIfEqual(myMoveToRevert);
 			//Decrement how many times the move to revert has been made

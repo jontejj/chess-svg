@@ -55,7 +55,7 @@ public final class ProgressTracker
 			{
 				movesPerSecond = (long) (movesMade / passedSeconds);
 			}
-			LOGGER.finest("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
+			LOGGER.finer("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
 		}
 	}
 }

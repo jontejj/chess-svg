@@ -31,11 +31,11 @@ public interface ChessBoardListener
 	 * 
 	 * @return true if the listener wishes to decide which piece a pawn should be replaced with
 	 */
-	boolean supportsPawnReplacementDialog();
+	boolean supportsPawnPromotionDialog();
 
 	/**
 	 * 
 	 * @return null if you don't support pawn replacement dialogs
 	 */
-	Piece getPawnReplacementFromDialog();
+	Piece getPawnPromotionFromDialog();
 }

@@ -59,7 +59,7 @@ public abstract class Pawn extends Piece
 	 * @param position the position that should be evaluated (usually the Pawns current position)
 	 * @return true if it's time for this pawn to be replaced
 	 */
-	public boolean isTimeForReplacement(final Position position)
+	public boolean isTimeForPromotion(final Position position)
 	{
 		int destinationRow = (isBlack()) ? 0 :(ChessBoard.BOARD_SIZE - 1);
 		return position.getRow() == destinationRow;
@@ -69,9 +69,9 @@ public abstract class Pawn extends Piece
 	 * 
 	 * @param position the position that should be evaluated (usually the Pawns current position)
 	 * @param affinity the affinity of the pawn
-	 * @return true if it's time for this pawn to be replaced
+	 * @return true if it's time for this pawn to be promoted
 	 */
-	public static boolean isTimeForReplacement(final Position position, final boolean affinity)
+	public static boolean isTimeForPromotion(final Position position, final boolean affinity)
 	{
 		int destinationRow = (affinity == BLACK) ? WHITE_STARTING_ROW : BLACK_STARTING_ROW;
 		return position.getRow() == destinationRow;
@@ -88,9 +88,11 @@ public abstract class Pawn extends Piece
 			myTwoStepMove.updateMove(board);
 		}
 		//The pawn was removed because it reached it's destination, we need to add it again
-		if(isTimeForReplacement(oldPosition))
+		if(isTimeForPromotion(oldPosition))
 		{
-			board.addPiece(this, true, false);
+			this.dePromote();
+			board.notifyListenersAboutPiecePlacement(this, false);
+			//board.addPiece(this, true, false);
 		}
 	}
 

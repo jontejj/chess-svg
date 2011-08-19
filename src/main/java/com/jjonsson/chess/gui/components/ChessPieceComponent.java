@@ -138,6 +138,8 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		}
 		myBoardComponent.repaint();*/
 		LOGGER.finest(this.getPiece() + " clicked");
+		//TODO: this should not be needed
+		//this.getPiece().initilizePossibilityOfMoves(getPiece().getBoard());
 		ChessBoardComponent boardComponent = myBoardComponent;
 		Piece currentlySelected = boardComponent.getSelectedPiece();
 		if(currentlySelected != null && !currentlySelected.hasSameAffinityAs(this.getPiece()))

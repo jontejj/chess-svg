@@ -29,10 +29,10 @@ public abstract class PawnMove extends DependantMove
 			return false;
 		}
 
-		if(Pawn.class.cast(getPiece()).isTimeForReplacement(getCurrentPosition()))
+		if(Pawn.class.cast(getPiece()).isTimeForPromotion(getCurrentPosition()))
 		{
 			//The white/black pawn has reached the bottom/top and now it's time to replace him
-			getRevertingMove().setPieceThatReplacedMyPiece(board.replacePawn(getPiece()));
+			getRevertingMove().setPawnPromotionPiece(board.promotePawn(getPiece()));
 		}
 		Pawn.class.cast(getPiece()).removeTwoStepMove(board);
 		return true;
@@ -62,7 +62,7 @@ public abstract class PawnMove extends DependantMove
 	@Override
 	public int getTakeOverValue()
 	{
-		if(myCanBeMadeCache && Pawn.isTimeForReplacement(getDestination(), getAffinity()))
+		if(myCanBeMadeCache && Pawn.isTimeForPromotion(getDestination(), getAffinity()))
 		{
 			return Piece.QUEEN_VALUE - Piece.PAWN_VALUE;
 		}

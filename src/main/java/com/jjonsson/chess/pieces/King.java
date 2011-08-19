@@ -5,6 +5,7 @@ import static com.jjonsson.chess.moves.Move.LEFT;
 import static com.jjonsson.chess.moves.Move.NO_CHANGE;
 import static com.jjonsson.chess.moves.Move.RIGHT;
 import static com.jjonsson.chess.moves.Move.UP;
+import static com.jjonsson.utilities.Logger.LOGGER;
 
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.moves.CastlingMove;
@@ -13,6 +14,7 @@ import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.persistence.BoardLoader;
 
 public class King extends Piece
 {
@@ -62,13 +64,12 @@ public class King extends Piece
 			myKingSideCastlingMove = new CastlingMove(0, 2, this);
 			myKingSideCastlingMove.setRock((Rock) rightRock);
 			addPossibleMove(myKingSideCastlingMove);
-			getBoard().getPositionContainer(myKingSideCastlingMove.getRockDestination()).setCastlingMove(myKingSideCastlingMove);
 		}
 	}
 
 	private boolean isRock(final Piece aPiece)
 	{
-		return aPiece != null && aPiece instanceof Rock;
+		return aPiece != null && aPiece instanceof Rock && hasSameAffinityAs(aPiece);
 	}
 
 	/**
@@ -82,8 +83,6 @@ public class King extends Piece
 			myQueenSideCastlingMove = new CastlingMove(0, -2, this);
 			myQueenSideCastlingMove.setRock((Rock) leftRock);
 			addPossibleMove(myQueenSideCastlingMove);
-			getBoard().getPositionContainer(myQueenSideCastlingMove.getIntermediatePosition()).setCastlingMove(myQueenSideCastlingMove);
-			getBoard().getPositionContainer(myQueenSideCastlingMove.getRockDestination()).setCastlingMove(myQueenSideCastlingMove);
 		}
 	}
 
@@ -122,12 +121,10 @@ public class King extends Piece
 			if(myKingSideCastlingMove != null)
 			{
 				myKingSideCastlingMove.removeFromBoard(board);
-				getPossibleMoves().remove(myKingSideCastlingMove);
 			}
 			if(myQueenSideCastlingMove != null)
 			{
 				myQueenSideCastlingMove.removeFromBoard(board);
-				getPossibleMoves().remove(myQueenSideCastlingMove);
 			}
 		}
 		if(!super.performMove(move, board, printOut))
@@ -136,6 +133,16 @@ public class King extends Piece
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public Piece removeFromBoard(final ChessBoard board)
+	{
+		BoardLoader.saveBoard(board, "temp_board_with_move_that_takes_king_over");
+		LOGGER.severe("" + new UnsupportedOperationException("Kings may not be removed from the board"));
+		//TODO: this should throw but as the problem isn't fixed it's easier to handle it without throwing
+		//throw new UnsupportedOperationException("Kings may not be removed from the board");
+		return this;
 	}
 
 	/**

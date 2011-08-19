@@ -238,4 +238,29 @@ public class TestScenarios
 		Move takeOverMove = board.getAvailableMove(king, position("2E"));
 		assertNull(takeOverMove);
 	}
+
+	@Test
+	public void testThatAProtectingPieceCanMoveIntoAPositionThatAlsoProtectsTheKing()
+	{
+		ChessBoard board = loadBoard("white_bishop_should_be_able_to_move_to_3C");
+		Piece bishop = board.getPiece(position("2D"));
+		Move bishopMove = board.getAvailableMove(bishop, position("3C"));
+		assertTrue(bishop.performMove(bishopMove, board));
+	}
+
+	@Test
+	public void testThatPiecesThatProtectsTheKingCanMoveWhenANewPieceProtectsTheKing() throws UnavailableMoveItem
+	{
+		ChessBoard board = loadBoard("pieces_that_protects_the_king_should_be_able_to_move_when_a_new_piece_protects_the_king");
+		board.move("2D", "4E");
+	}
+
+	@Test
+	public void testHintedMoveWasNotPossible()
+	{
+		ChessBoard board = loadBoard("hinted_move_should_be_possible");
+		Piece queen = board.getPiece(position("1D"));
+		Move queenMove = board.getAvailableMove(queen, position("3F"));
+		assertTrue(queen.performMove(queenMove, board));
+	}
 }

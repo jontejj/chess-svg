@@ -61,6 +61,8 @@ public abstract class Move
 	private int myFirstDimensionIndex;
 	private int mySecondDimensionIndex;
 
+	private boolean myIsEnPassant;
+
 	/**
 	 * 
 	 * @param rowChange the row change for this move, valid numbers are (-7) to (+7)
@@ -401,6 +403,7 @@ public abstract class Move
 	/**
 	 * Called when this move is the last one that was made on the board, i.e when a move has been reverted.
 	 */
+	@SuppressWarnings("unused") //Used by subclasses, perhaps this should be solved nicer?
 	public void onceAgainLastMoveThatWasMade(final ChessBoard board)
 	{
 
@@ -509,16 +512,10 @@ public abstract class Move
 	/**
 	 * This doesn't run canBeMade on the move before trying to perform it
 	 * @param board
-	 * @return
+	 * @return false if this move isn't available right now, true otherwise
 	 */
 	protected boolean makeMoveWithoutChecking(final ChessBoard board)
 	{
-		if(myPieceAtDestination != null)
-		{
-			//Take over is happening
-			myPieceAtDestination = myPieceAtDestination.removeFromBoard(board);
-		}
-
 		if(!board.movePiece(myPiece, this))
 		{
 			return false;
@@ -542,6 +539,16 @@ public abstract class Move
 	public boolean isPartOfAnotherMove()
 	{
 		return false;
+	}
+
+	public boolean isEnPassant()
+	{
+		return myIsEnPassant;
+	}
+
+	public void setEnPassant(final boolean isEnPassant)
+	{
+		myIsEnPassant = isEnPassant;
 	}
 
 	/**

@@ -31,7 +31,7 @@ public final class TradeoffCalculator
 		long startTime = System.nanoTime();
 		for(int i = BENCHMARK_AMOUNT; i >0; i--)
 		{
-			board.copy();
+			board.copy(false);
 		}
 		long nanosPerClone = (System.nanoTime() - startTime) / BENCHMARK_AMOUNT;
 		double duration = (double)(nanosPerClone * BENCHMARK_AMOUNT) / SECONDS.toNanos(1);

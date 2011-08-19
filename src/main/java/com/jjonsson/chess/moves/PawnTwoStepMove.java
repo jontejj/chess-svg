@@ -27,7 +27,7 @@ public class PawnTwoStepMove extends PawnMove
 	{
 		if(super.makeMove(board))
 		{
-			performEnpassantPossibilitySync(board, getPiece(), false);
+			performEnpassantPossibilitySync(board, getPiece(), true);
 			return true;
 		}
 		return false;
@@ -37,24 +37,25 @@ public class PawnTwoStepMove extends PawnMove
 	 * 
 	 * @param board
 	 * @param pieceAtEnPassantDestination
-	 * @param remove true if this sync is supposed to remove possible en-passant moves, false if they should be added
+	 * @param enable true if this sync is supposed to add possible en-passant moves, false if they should be removed
 	 */
-	private void performEnpassantPossibilitySync(final ChessBoard board, final Piece pieceAtEnPassantDestination, final boolean remove)
+	private void performEnpassantPossibilitySync(final ChessBoard board, final Piece pieceAtEnPassantDestination, final boolean enable)
 	{
 		Collection<Move> moves = null;
-		if(remove)
+		if(enable)
 		{
-			moves = board.getAvailableMoves(getEnpassantPosition(), !getAffinity());
+			moves = board.getNonAvailableMoves(getEnpassantPosition(), !getAffinity());
 		}
 		else
 		{
-			moves = board.getNonAvailableMoves(getEnpassantPosition(), !getAffinity());
+			moves = board.getAvailableMoves(getEnpassantPosition(), !getAffinity());
 		}
 		ImmutableSet<Move> otherTakeOverMoves = ImmutableSet.copyOf(moves);
 		for(Move possiblePawnTakeOverMove : otherTakeOverMoves)
 		{
 			if(possiblePawnTakeOverMove instanceof PawnTakeOverMove)
 			{
+				possiblePawnTakeOverMove.setEnPassant(enable);
 				possiblePawnTakeOverMove.setPieceAtDestination(pieceAtEnPassantDestination);
 				possiblePawnTakeOverMove.updatePossibility(board, false);
 			}
@@ -80,13 +81,13 @@ public class PawnTwoStepMove extends PawnMove
 	 */
 	public void removeEnpassantMoves(final ChessBoard board)
 	{
-		performEnpassantPossibilitySync(board, board.getPiece(getEnpassantPosition()), true);
+		performEnpassantPossibilitySync(board, board.getPiece(getEnpassantPosition()), false);
 	}
 
 	@Override
 	public void onceAgainLastMoveThatWasMade(final ChessBoard board)
 	{
-		performEnpassantPossibilitySync(board, getPiece(), false);
+		performEnpassantPossibilitySync(board, getPiece(), true);
 	}
 
 	@Override

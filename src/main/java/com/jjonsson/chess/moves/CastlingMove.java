@@ -18,7 +18,7 @@ public class CastlingMove extends IndependantMove
 	/**
 	 * The position that the king needs to traverse over in a QueenSideCastling
 	 */
-	private ImmutablePosition myQueenSideCastlingKingStepPosition;
+	private CastlingMovePart myIntermediateStep;
 	private ImmutablePosition myPreviousPosition;
 
 	/**
@@ -30,11 +30,8 @@ public class CastlingMove extends IndependantMove
 	public CastlingMove(final int rowChange, final int columnChange, final Piece pieceThatTheMoveWillBeMadeWith)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
-		myKingMove = new KingCastlingMovePart(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith);
-		if(isQueenSideCastlingMove())
-		{
-			myQueenSideCastlingKingStepPosition = ImmutablePosition.from(getCurrentPosition().getRow(), getCurrentPosition().getColumn() - 3);
-		}
+		super.updateDestination(getPiece().getBoard());
+		myKingMove = new KingCastlingMovePart(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith, this);
 	}
 
 	private boolean isQueenSideCastlingMove()
@@ -48,69 +45,52 @@ public class CastlingMove extends IndependantMove
 	 */
 	public void setRock(final Rock aRock)
 	{
+		aRock.setCastlingMove(this);
 		if(isQueenSideCastlingMove())
 		{
-			myRockMove = new RockCastlingMovePart(0, 3, aRock);
+			myRockMove = new RockCastlingMovePart(0, 3, aRock, this);
+			myIntermediateStep = new IntermediateCastlingMovePart(0, -3, getPiece(), this);
 		}
 		else
 		{
-			myRockMove = new RockCastlingMovePart(0, -2, aRock);
+			myRockMove = new RockCastlingMovePart(0, -2, aRock, this);
 		}
 		myRock = aRock;
 	}
 
 	@Override
-	public void updateMove(final ChessBoard board)
-	{
-		myKingMove.updateMove(board);
-		if(myRockMove != null)
-		{
-			myRockMove.updateMove(board);
-		}
-		super.updateMove(board);
-	}
-
-	@Override
 	public void updateDestination(final ChessBoard board)
 	{
-		myKingMove.updateDestination(board);
-		if(myRockMove != null)
-		{
-			myRockMove.updateDestination(board);
-		}
-		super.updateDestination(board);
+		//Nothing to do here since the destination never changes
 	}
 
 	@Override
 	public void updatePossibility(final ChessBoard board, final boolean updatePieceAtDestination)
 	{
 		myKingMove.updatePossibility(board, updatePieceAtDestination);
-		if(myRockMove != null)
-		{
-			myRockMove.updatePossibility(board, updatePieceAtDestination);
-		}
+		myRockMove.updatePossibility(board, updatePieceAtDestination);
 		super.updatePossibility(board, updatePieceAtDestination);
+	}
+
+	public void updatePossibility(final ChessBoard board)
+	{
+		super.updatePossibility(board, false);
 	}
 
 	@Override
 	protected boolean canBeMadeInternal(final ChessBoard board)
 	{
-		if(myRock == null)
+		if(!myKingMove.canBeMade(board))
 		{
 			return false;
 		}
 
-		if(!myKingMove.canBeMadeInternal(board))
+		if(!myRockMove.canBeMade(board))
 		{
 			return false;
 		}
 
-		if(!myRockMove.canBeMadeInternal(board))
-		{
-			return false;
-		}
-
-		if(isQueenSideCastlingMove() && board.getPiece(myQueenSideCastlingKingStepPosition) != null)
+		if(isQueenSideCastlingMove() && !myIntermediateStep.canBeMade(board))
 		{
 			//For Queen Side castling moves there should be a free square over as there are three squares between the Rock and the King
 			return false;
@@ -145,6 +125,31 @@ public class CastlingMove extends IndependantMove
 		return true;
 	}
 
+	@Override
+	public void removeFromBoard(final ChessBoard chessBoard)
+	{
+		getPiece().getPossibleMoves().remove(this);
+		super.removeFromBoard(chessBoard);
+		myKingMove.removeFromBoard(chessBoard);
+		myRockMove.removeFromBoard(chessBoard);
+		if(isQueenSideCastlingMove())
+		{
+			myIntermediateStep.removeFromBoard(chessBoard);
+		}
+	}
+
+	@Override
+	public void updateMove(final ChessBoard board)
+	{
+		myKingMove.updatePossibility(board, true);
+		myRockMove.updatePossibility(board, true);
+		if(isQueenSideCastlingMove())
+		{
+			myIntermediateStep.updatePossibility(board, true);
+		}
+		super.updateMove(board);
+	}
+
 	/**
 	 * Overridden because castling moves makes two moves in one and thus
 	 * would the oldPosition be faulty if it weren't handled here
@@ -156,12 +161,12 @@ public class CastlingMove extends IndependantMove
 	}
 
 	/**
-	 * @return the position that neither the rock nor the king is to be moved to during queen side castling move,
-	 * returns null if this isn't a queen side castling move
+	 * @return the position that neither the rock nor the king is to be moved to during queen side castling move
+	 * @exception NullPointerException if this isn't a queen side castling move
 	 */
 	public ImmutablePosition getIntermediatePosition()
 	{
-		return myQueenSideCastlingKingStepPosition;
+		return myIntermediateStep.getDestination();
 	}
 
 	public boolean hasConnectedWithRock()
@@ -172,7 +177,7 @@ public class CastlingMove extends IndependantMove
 	/**
 	 * 
 	 * @return the destination for the rock move that this castling does.
-	 * @throws NullPointerException when {@link CastlingMove#setRock(Piece)} hasn't been called, use {@link CastlingMove#hasConnectedWithRock()} to determine this
+	 * @exception NullPointerException when {@link CastlingMove#setRock(Piece)} hasn't been called, use {@link CastlingMove#hasConnectedWithRock()} to determine this
 	 */
 	public ImmutablePosition getRockDestination()
 	{
@@ -233,5 +238,4 @@ public class CastlingMove extends IndependantMove
 		}
 		return 9;
 	}
-
 }
