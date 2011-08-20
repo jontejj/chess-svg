@@ -7,6 +7,7 @@ import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -122,5 +123,15 @@ public class TestUndoMoves
 
 		whitePawn = board.getPiece(takeOverTwoSpot);
 		assertNotNull(whitePawn);
+	}
+
+	@Test
+	public void testThatUndoTakeOverResyncsMovesForTheRevivedPieceEvenThoughTheyHaveTheSamePossibilityAndDestination() throws UnavailableMoveItem
+	{
+		ChessBoard board = loadBoard("move_from_2D_to_3E_should_be_unavailable_due_to_check");
+		board.move("2D", "4B");
+		board.undoMoves(1);
+		Piece queen = board.getPiece(position("2D"));
+		assertNull(board.getAvailableMove(queen, position("3E")));
 	}
 }

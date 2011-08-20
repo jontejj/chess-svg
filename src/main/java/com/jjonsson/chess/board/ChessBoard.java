@@ -60,6 +60,7 @@ import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.Rock;
 import com.jjonsson.chess.pieces.WhitePawn;
+import com.jjonsson.utilities.Logger;
 
 public final class ChessBoard
 {
@@ -428,6 +429,7 @@ public final class ChessBoard
 	public void nextPlayer()
 	{
 		myCurrentPlayer = !myCurrentPlayer;
+
 		//TODO(jontejj): could this be cached?
 		for(Move m : getCurrentKing().getPossibleMoves())
 		{
@@ -489,8 +491,9 @@ public final class ChessBoard
 		Piece oldPiece = getPositionContainer(currentPosition).setCurrentPiece(p);
 		if(oldPiece != null & oldPiece != p)
 		{
-			//TODO: throw this
-			LOGGER.severe("" + new DuplicatePieceError(oldPiece, p));
+			Error e = new DuplicatePieceError(oldPiece, p);
+			LOGGER.severe("" + Logger.stackTraceToString(e));
+			throw e;
 		}
 		addPieceToPositionMaps(p);
 		if(initializePossibleMoves)

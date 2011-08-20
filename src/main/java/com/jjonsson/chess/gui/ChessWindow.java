@@ -300,6 +300,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	{
 		myComponent.clear();
 		myBoard.reset();
+		myComponent.nextPlayer();
 	}
 
 	/**

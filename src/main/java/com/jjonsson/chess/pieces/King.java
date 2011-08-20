@@ -8,6 +8,7 @@ import static com.jjonsson.chess.moves.Move.UP;
 import static com.jjonsson.utilities.Logger.LOGGER;
 
 import com.jjonsson.chess.board.ChessBoard;
+import com.jjonsson.chess.exceptions.UnremovablePieceError;
 import com.jjonsson.chess.moves.CastlingMove;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.KingMove;
@@ -15,6 +16,8 @@ import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.persistence.BoardLoader;
+import com.jjonsson.chess.persistence.ChessFileFilter;
+import com.jjonsson.utilities.Logger;
 
 public class King extends Piece
 {
@@ -138,11 +141,10 @@ public class King extends Piece
 	@Override
 	public Piece removeFromBoard(final ChessBoard board)
 	{
-		BoardLoader.saveBoard(board, "temp_board_with_move_that_takes_king_over");
-		LOGGER.severe("" + new UnsupportedOperationException("Kings may not be removed from the board"));
-		//TODO: this should throw but as the problem isn't fixed it's easier to handle it without throwing
-		//throw new UnsupportedOperationException("Kings may not be removed from the board");
-		return this;
+		BoardLoader.saveBoard(board, "board_with_move_that_takes_king_over_" + System.currentTimeMillis() + ChessFileFilter.FILE_ENDING);
+		Error error = new UnremovablePieceError("Kings may not be removed from the board");
+		LOGGER.severe("" + Logger.stackTraceToString(error));
+		throw error;
 	}
 
 	/**

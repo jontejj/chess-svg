@@ -62,6 +62,10 @@ public abstract class Move
 	private int mySecondDimensionIndex;
 
 	private boolean myIsEnPassant;
+	/**
+	 * This is used when this piece is to be revived
+	 */
+	private boolean	myResyncNeeded;
 
 	/**
 	 * 
@@ -91,6 +95,16 @@ public abstract class Move
 	public RevertingMove getRevertingMove()
 	{
 		return myRevertingMove;
+	}
+
+	public boolean resyncNeeded()
+	{
+		return myResyncNeeded;
+	}
+
+	public void resyncWasMade()
+	{
+		myResyncNeeded = false;
 	}
 
 	/**
@@ -372,6 +386,7 @@ public abstract class Move
 		myCanBeMadeCache = false;
 		myOldPieceAtDestination = myPieceAtDestination;
 		myPieceAtDestination = null;
+		myResyncNeeded = true;
 	}
 
 	public void removeFromBoard(final ChessBoard chessBoard)

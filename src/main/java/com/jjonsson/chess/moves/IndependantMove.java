@@ -35,7 +35,7 @@ public abstract class IndependantMove extends Move
 		}
 
 		myCanBeMadeCache = canBeMadeInternal(board);
-		if(oldCanBeMade != myCanBeMadeCache || getDestination() != getPreviousDestination())
+		if(oldCanBeMade != myCanBeMadeCache || getDestination() != getPreviousDestination() || resyncNeeded())
 		{
 			if(oldCanBeMade)
 			{
@@ -58,6 +58,7 @@ public abstract class IndependantMove extends Move
 			}
 			//Make sure that the previous destination is saved
 			updatePreviousDestination();
+			resyncWasMade();
 		}
 	}
 
