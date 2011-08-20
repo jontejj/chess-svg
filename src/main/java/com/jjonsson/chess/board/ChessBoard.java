@@ -657,7 +657,7 @@ public final class ChessBoard
 	/**
 	 * 
 	 * @param position
-	 * @return
+	 * @return the {@link PositionContainer} object for the given position
 	 * @throws NullPointerException if position is null
 	 * @throws ArrayIndexOutOfBoundsException if position is an invalid position
 	 */
@@ -1175,7 +1175,7 @@ public final class ChessBoard
 	/**
 	 * First this writes the state of the game to the given stream and then
 	 * it writes the position, affinity and type of each piece
-	 * @param stream the stream to write to
+	 * @param buffer the buffer to write to
 	 * @throws IOException
 	 */
 	public void writePersistenceData(final ByteBuffer buffer, final boolean writeMoveHistory) throws IOException

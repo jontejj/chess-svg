@@ -95,7 +95,7 @@ public abstract class Position
 	 * Validates that row and column are NOT between 0-7 (inclusive)
 	 * @param row
 	 * @param column
-	 * @return
+	 * @return true if the given row/column isn't a valid position
 	 */
 	public static boolean isInvalidPosition(final int row, final int column)
 	{
@@ -138,7 +138,7 @@ public abstract class Position
 
 	/**
 	 * Same as clone() but without the CloneNotSupportedException
-	 * @return
+	 * @return a new instance that represents this position, or the same instance if it's a {@link ImmutablePosition}
 	 */
 	public abstract Position copy();
 }

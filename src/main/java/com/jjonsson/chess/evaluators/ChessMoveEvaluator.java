@@ -39,7 +39,7 @@ public final class ChessMoveEvaluator
 	 * Performs a directed DFS (not all moves to a given level are evaluated) and tries to return the best move available
 	 * @param board
 	 * @return the best move for the current player on the given board
-	 * @throws NoMovesAvailableException if the evaluation of available moves didn't return a move<p/>
+	 * @throws NoMovesAvailableException if the evaluation of available moves didn't return a move
 	 * @throws SearchInterruptedError if interrupted by something (e.g the GUI)
 	 */
 	public static Move getBestMove(final ChessBoard board, final StatusListener listener) throws NoMovesAvailableException
@@ -72,13 +72,8 @@ public final class ChessMoveEvaluator
 		LOGGER.warning("getBestMove took " + duration + " secs");
 		return result;
 	}
-
 	/**
-	 * 
-	 * @param board
-	 * @return
-	 * @throws NoMovesAvailableException
-	 * @throws SearchInterruptedError
+	 * Like {@link ChessMoveEvaluator#getBestMove(ChessBoard, StatusListener)} but without progress tracking
 	 */
 	public static Move getBestMove(final ChessBoard board) throws NoMovesAvailableException
 	{

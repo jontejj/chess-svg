@@ -177,7 +177,7 @@ public class CastlingMove extends IndependantMove
 	/**
 	 * 
 	 * @return the destination for the rock move that this castling does.
-	 * @exception NullPointerException when {@link CastlingMove#setRock(Piece)} hasn't been called, use {@link CastlingMove#hasConnectedWithRock()} to determine this
+	 * @exception NullPointerException when {@link CastlingMove#setRock(Rock)} hasn't been called, use {@link CastlingMove#hasConnectedWithRock()} to determine this
 	 */
 	public ImmutablePosition getRockDestination()
 	{
