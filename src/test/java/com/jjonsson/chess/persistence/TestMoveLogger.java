@@ -1,8 +1,14 @@
 package com.jjonsson.chess.persistence;
 
+import static com.jjonsson.chess.board.PiecePlacement.DONT_PLACE_PIECES;
+import static com.jjonsson.chess.board.PiecePlacement.PLACE_PIECES;
+import static com.jjonsson.chess.gui.Settings.disableDebug;
+import static com.jjonsson.chess.gui.Settings.enableDebug;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
+import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_LOGGING;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -11,11 +17,12 @@ import java.io.File;
 import org.junit.Test;
 
 import com.jjonsson.chess.board.ChessBoard;
+import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
+import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.pieces.Piece;
-
 
 public class TestMoveLogger
 {
@@ -53,18 +60,23 @@ public class TestMoveLogger
 	}
 
 	@Test
-	public void testCopyMoveHistory() throws UnavailableMoveItem
+	public void testCopyMoveHistory() throws UnavailableMoveItem, NoMovesAvailableException
 	{
 		String filename = "test_copy_move_history" + ChessFileFilter.FILE_ENDING;
-		ChessBoard board = new ChessBoard(true, true);
+		ChessBoard board = new ChessBoard(PLACE_PIECES, USE_PERSISTANCE_LOGGING);
 		board.move("2A", "3A");
-		ChessBoard copy = board.copy(true);
+		ChessBoard copy = board.copy(USE_PERSISTANCE_LOGGING);
 		copy.move("7A", "5A");
 		BoardLoader.saveBoard(copy, filename);
 
-		ChessBoard savedBoard = new ChessBoard(false, true);
+		ChessBoard savedBoard = new ChessBoard(DONT_PLACE_PIECES, USE_PERSISTANCE_LOGGING);
 		BoardLoader.loadFileIntoBoard(new File(filename), savedBoard);
 		savedBoard.move("2B", "3B");
 		assertEquals(3, savedBoard.undoMoves(3));
+
+		enableDebug();
+		Move bestMove = ChessMoveEvaluator.getBestMove(savedBoard);
+		assertNotNull(bestMove);
+		disableDebug();
 	}
 }

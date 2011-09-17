@@ -17,6 +17,11 @@ import com.jjonsson.chess.pieces.Piece;
  */
 public class PositionContainer
 {
+	/**
+	 * This estimation was calculated during a game
+	 */
+	private static final int EXPECTED_MOVES_PER_POSITION = 4;
+
 	private ChessBoard myBoard;
 
 	private Piece myCurrentPiece;
@@ -54,15 +59,6 @@ public class PositionContainer
 		myBlackNonAvailableMoves = Sets.newHashSet();
 	}
 
-	public void clear()
-	{
-		myWhiteAvailableMoves.clear();
-		myWhiteNonAvailableMoves.clear();
-		myBlackAvailableMoves.clear();
-		myBlackNonAvailableMoves.clear();
-		myCurrentPiece = null;
-	}
-
 	/**
 	 * @param move the move to add
 	 * @return true if the move was added
@@ -70,41 +66,25 @@ public class PositionContainer
 	public boolean addAvailableMove(final Move move)
 	{
 		Set<Move> availableMoves = getAvailableMoves(move.getAffinity());
-		if(availableMoves.add(move))
-		{
-			return true;
-		}
-		return false;
+		return availableMoves.add(move);
 	}
 
 	public boolean removeAvailableMove(final Move move)
 	{
 		Set<Move> availableMoves = getAvailableMoves(move.getAffinity());
-		if(availableMoves.remove(move))
-		{
-			return true;
-		}
-		return false;
+		return availableMoves.remove(move);
 	}
 
 	public boolean addNonAvailableMove(final Move move)
 	{
 		Set<Move> nonAvailableMoves = getNonAvailableMoves(move.getAffinity());
-		if(nonAvailableMoves.add(move))
-		{
-			return true;
-		}
-		return false;
+		return nonAvailableMoves.add(move);
 	}
 
 	public boolean removeNonAvailableMove(final Move move)
 	{
 		Set<Move> nonAvailableMoves = getNonAvailableMoves(move.getAffinity());
-		if(nonAvailableMoves.remove(move))
-		{
-			return true;
-		}
-		return false;
+		return nonAvailableMoves.remove(move);
 	}
 
 	/**
@@ -159,19 +139,8 @@ public class PositionContainer
 
 	public void updatePossibiltyForSetOfMoves()
 	{
-		//TODO: can this be done more efficiently?
-		//Update destinations
-		//TODO: if this would place the king's moves last it may be possible to not update all the king's moves between each turn
-		/*ImmutableSet<Move> movesToUpdate = new Builder<Move>().addAll(myWhiteAvailableMoves).
-		addAll(myWhiteNonAvailableMoves).
-		addAll(myBlackAvailableMoves).
-		addAll(myBlackNonAvailableMoves).build();*/
-		//Update possibilities
-		//updatePossibiltyForSetOfMoves(movesToUpdate);
-
 		Set<Move> kingMoves = Sets.newHashSetWithExpectedSize(1);
-		Set<Move> regularMoves = Sets.newHashSetWithExpectedSize(myWhiteNonAvailableMoves.size() + myWhiteAvailableMoves.size() +
-				myBlackAvailableMoves.size() + myBlackNonAvailableMoves.size());
+		Set<Move> regularMoves = Sets.newHashSetWithExpectedSize(EXPECTED_MOVES_PER_POSITION);
 
 		fillMoves(myBlackAvailableMoves, regularMoves, kingMoves);
 		fillMoves(myBlackNonAvailableMoves, regularMoves, kingMoves);

@@ -7,6 +7,8 @@ import javax.swing.KeyStroke;
 
 public final class CrossPlatformUtilities
 {
+	private CrossPlatformUtilities(){}
+
 	private static final int WINDOWS_TITLE_HEIGHT = 58;
 	public static final int USUAL_TITLE_HEIGHT = 22;
 
@@ -31,11 +33,6 @@ public final class CrossPlatformUtilities
 		isWindows = (operatingSystem.indexOf("windows") != -1);
 		isMac = (operatingSystem.indexOf("mac") != -1);
 		shortcutModifier = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
-	}
-
-	private CrossPlatformUtilities()
-	{
-
 	}
 
 	public static boolean isWindows()

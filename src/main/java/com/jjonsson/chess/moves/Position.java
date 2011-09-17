@@ -86,11 +86,6 @@ public abstract class Position
 		return row < 0 || column < 0 || row >= ChessBoard.BOARD_SIZE || column >= ChessBoard.BOARD_SIZE;
 	}
 
-	public boolean isInvalid()
-	{
-		return myRow < 0 || myColumn < 0 || myRow >= ChessBoard.BOARD_SIZE || myColumn >= ChessBoard.BOARD_SIZE;
-	}
-
 	/**
 	 * Validates that row and column are NOT between 0-7 (inclusive)
 	 * @param row
@@ -111,10 +106,6 @@ public abstract class Position
 	@Override
 	public boolean equals(final Object o)
 	{
-		if(o == null)
-		{
-			return false;
-		}
 		Position p = (Position)o;
 		return myRow == p.getRow() && myColumn == p.getColumn();
 	}
@@ -125,15 +116,7 @@ public abstract class Position
 	@Override
 	public String toString()
 	{
-		//if myColumn is an invalid index there is something that is seriously wrong
-		try
-		{
-			return (myRow+1) + "" + COLUMNS[myColumn];
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-			return (myRow+1) + " - " + (myColumn+1);
-		}
+		return (myRow+1) + "" + COLUMNS[myColumn];
 	}
 
 	/**

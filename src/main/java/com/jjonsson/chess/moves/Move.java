@@ -644,23 +644,16 @@ public abstract class Move
 				return 4;
 			}
 		}
-		else
+
+		if(myColumnChange == 0)
 		{
-			if(myColumnChange == 0)
-			{
-				return 5;
-			}
-			else if(myColumnChange > 0)
-			{
-				return 6;
-			}
-			else
-			{
-				return 7;
-			}
+			return 5;
 		}
-		//Detect faulty moves early
-		return -1;
+		else if(myColumnChange > 0)
+		{
+			return 6;
+		}
+		return 7;
 	}
 
 	/**

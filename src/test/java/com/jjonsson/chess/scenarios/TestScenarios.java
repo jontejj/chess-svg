@@ -1,20 +1,32 @@
 package com.jjonsson.chess.scenarios;
 
+import static com.jjonsson.chess.board.PiecePlacement.DONT_PLACE_PIECES;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
+import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_LOGGING;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.Set;
+
 import junit.framework.Assert;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.moves.ImmutablePosition;
+import com.jjonsson.chess.moves.KingMove;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.persistence.BoardLoader;
@@ -24,6 +36,7 @@ import com.jjonsson.chess.pieces.King;
 import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.WhitePawn;
+import com.jjonsson.chess.utilities.VersionControlHelper;
 
 public class TestScenarios
 {
@@ -33,10 +46,19 @@ public class TestScenarios
 		return loadBoard(testName, true);
 	}
 
+	private static Set<String> usedTestFiles = Sets.newHashSet();
+
 	public static ChessBoard loadBoard(final String testName, final boolean expectValidBoard)
 	{
 		String scenarioFile = "/scenarios/" + testName + ChessFileFilter.FILE_ENDING;
-		ChessBoard board = new ChessBoard(false, true);
+		STDOUT.info("Loading: " + scenarioFile);
+
+		usedTestFiles.add(testName + ChessFileFilter.FILE_ENDING);
+
+		ChessBoard board = new ChessBoard(DONT_PLACE_PIECES, USE_PERSISTANCE_LOGGING);
+
+		VersionControlHelper.assertThatResourceIsVersionControlled(scenarioFile, true);
+
 		assertEquals("Could not load:" + scenarioFile, expectValidBoard, BoardLoader.loadStreamIntoBoard(BoardLoader.class.getResourceAsStream(scenarioFile), board));
 		return board;
 	}
@@ -199,6 +221,13 @@ public class TestScenarios
 	}
 
 	@Test
+	public void testEnpassantUpdateMovesForPositionOfTakeoverPawn() throws UnavailableMoveItem
+	{
+		ChessBoard board = loadBoard("enpassant_should_update_moves_for_the_position_of_the_takeover_pawn");
+		board.move("6B", "5C");
+	}
+
+	@Test
 	public void testThatAPieceCanMoveWhenAnotherPieceProtectsTheKing()
 	{
 		ChessBoard board = loadBoard("black_pawn_at_7D_should_be_able_to_move_to_6D");
@@ -262,5 +291,42 @@ public class TestScenarios
 		Piece queen = board.getPiece(position("1D"));
 		Move queenMove = board.getAvailableMove(queen, position("3F"));
 		assertTrue(queen.performMove(queenMove, board));
+	}
+
+	@Test
+	public void testOnlyKingShouldBeAllowedToMove()
+	{
+		Collection<String> files = Lists.newArrayList("only_the_king_should_be_allowed_to_move", "only_the_king_should_be_allowed_to_move_2");
+		for(String file : files)
+		{
+			ChessBoard board = loadBoard(file);
+			for(Move m : board.getAvailableMoves())
+			{
+				assertTrue(m + " was allowed to be made", m instanceof KingMove);
+			}
+		}
+	}
+
+	@Test
+	public void testKingMoveUpdates() throws UnavailableMoveItem
+	{
+		ChessBoard board = loadBoard("king_should_not_be_able_to_move_into_thretenened_2");
+		board.move("8C", "7B");
+		Piece king = board.getPiece(position("5A"));
+		assertNull(board.getAvailableMove(king, position("6A")));
+	}
+
+	@AfterClass
+	public static void testMoveUnusedTestFiles()
+	{
+		File testFiles = new File("src/test/resources/scenarios/");
+		for(File testFile : testFiles.listFiles())
+		{
+			if(!usedTestFiles.contains(testFile.getName()))
+			{
+				testFile.renameTo(new File("src/test/resources/scenarios/unused/" + testFile.getName()));
+				System.out.println("Moved unused test file: " + testFile);
+			}
+		}
 	}
 }

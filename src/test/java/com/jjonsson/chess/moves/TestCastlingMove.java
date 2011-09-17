@@ -77,6 +77,14 @@ public class TestCastlingMove
 	}
 
 	@Test
+	public void testCastlingMoveShouldBeUnavailableWhenDestinationForKingIsThreatened()
+	{
+		ChessBoard board = loadBoard("castling_move_should_not_be_possible_when_kings_destination_is_threatened");
+		King blackKing = board.getKing(BLACK);
+		assertNull(board.getAvailableMove(blackKing, position("8C")));
+	}
+
+	@Test
 	public void testThatCastlingMoveUpdatesTheThreePositionsThatChange() throws UnavailableMoveItem
 	{
 		ChessBoard board = loadBoard("queenside_castling_should_update_moves_for_all_three_positions_that_it_affects");

@@ -1,6 +1,6 @@
 package com.jjonsson.chess.evaluators;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -8,16 +8,15 @@ import com.jjonsson.chess.listeners.StatusListener;
 
 public final class ProgressTracker
 {
+	private ProgressTracker(){}
+
 	private static long movesMade;
 	private static long movesMadeAtLastSync;
 	private static long myLastSync;
 	private static StatusListener myStatusTracker;
 	private static long startTime;
 
-	private ProgressTracker()
-	{
-
-	}
+	//TODO: make this visible in a popup display instead
 
 	@VisibleForTesting
 	public static synchronized void setStatusListener(final StatusListener listener)
@@ -55,7 +54,7 @@ public final class ProgressTracker
 			{
 				movesPerSecond = (long) (movesMade / passedSeconds);
 			}
-			LOGGER.finer("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
+			STDOUT.debug("Moves evaluated: " + movesMade + ", Moves/Second: " + movesPerSecond);
 		}
 	}
 }

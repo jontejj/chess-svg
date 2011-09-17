@@ -1,7 +1,9 @@
 package com.jjonsson.chess.evaluators;
 
 import static com.jjonsson.chess.gui.Settings.DEBUG;
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.chess.persistence.PersistanceLogging.SKIP_PERSISTANCE_LOGGING;
+import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_LOGGING;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.util.Collections;
@@ -24,10 +26,7 @@ import com.jjonsson.utilities.ThreadTracker;
  */
 public final class ChessMoveEvaluator
 {
-	private ChessMoveEvaluator()
-	{
-
-	}
+	private ChessMoveEvaluator(){}
 
 	private static long deepestSearch = 0;
 	/**
@@ -47,7 +46,7 @@ public final class ChessMoveEvaluator
 		long startTime = System.nanoTime();
 		Move result = null;
 		deepestSearch = 0;
-		ChessBoard copyOfBoard = board.copy(DEBUG);
+		ChessBoard copyOfBoard = board.copy(DEBUG ? USE_PERSISTANCE_LOGGING : SKIP_PERSISTANCE_LOGGING);
 
 		ProgressTracker.setStatusListener(listener);
 		SearchLimiter limiter = new SearchLimiter(board.getDifficulty());
@@ -57,19 +56,14 @@ public final class ChessMoveEvaluator
 		{
 			throw new NoMovesAvailableException();
 		}
-		LOGGER.finer("Best move: " + result);
-		LOGGER.finer("Best move value: " + searchResult.getBestMoveValue());
-		LOGGER.finer("Reached " + deepestSearch + " steps ahead on the deepest path");
+		STDOUT.debug("Best move: " + result);
+		STDOUT.debug("Best move value: " + searchResult.getBestMoveValue());
+		STDOUT.debug("Reached " + deepestSearch + " steps ahead on the deepest path");
 		ProgressTracker.done();
 		//This fetches the corresponding move from our original board
 		result = board.getMove(result);
-		if(result == null)
-		{
-			//Should not happen :)
-			throw new NoMovesAvailableException();
-		}
 		double duration = (double)(System.nanoTime() - startTime) / SECONDS.toNanos(1);
-		LOGGER.warning("getBestMove took " + duration + " secs");
+		STDOUT.debug("getBestMove took " + duration + " secs");
 		return result;
 	}
 	/**
@@ -105,7 +99,7 @@ public final class ChessMoveEvaluator
 			Move bestMove = getBestMove(board, listener);
 			if(!bestMove.getPiece().performMove(bestMove, board))
 			{
-				LOGGER.info("Move: " + bestMove + " is not available, performing random move");
+				STDOUT.info("Move: " + bestMove + " is not available, performing random move");
 				//In the worst case scenario we make a random move if possible
 				board.performRandomMove();
 			}

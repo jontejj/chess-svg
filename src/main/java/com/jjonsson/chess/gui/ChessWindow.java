@@ -12,7 +12,7 @@ import static com.jjonsson.utilities.CrossPlatformUtilities.getTitleHeightForCur
 import static com.jjonsson.utilities.CrossPlatformUtilities.getUndoKeyStroke;
 import static com.jjonsson.utilities.CrossPlatformUtilities.getUndoTwiceKeyStroke;
 import static com.jjonsson.utilities.CrossPlatformUtilities.isMac;
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -423,7 +423,7 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	@Override
 	public void actionPerformed(final ActionEvent e)
 	{
-		LOGGER.finer(e.getActionCommand());
+		STDOUT.debug(e.getActionCommand());
 		if(!noAbortionNecessaryCommands.containsKey(e.getActionCommand()))
 		{
 			//Cancel current jobs such as when the AI is thinking of the next move or when a hint move is searched for

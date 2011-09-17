@@ -1,6 +1,6 @@
 package com.jjonsson.chess.gui;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDERR;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,14 +13,10 @@ import org.w3c.dom.svg.SVGDocument;
 
 import com.google.common.collect.Maps;
 import com.jjonsson.chess.pieces.Piece;
-import com.jjonsson.utilities.Logger;
 
 public final class PieceImageCache
 {
-	private PieceImageCache()
-	{
-
-	}
+	private PieceImageCache(){}
 
 	private static SAXSVGDocumentFactory svgFactory = new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());
 
@@ -50,13 +46,12 @@ public final class PieceImageCache
 		}
 		catch (FileNotFoundException fnfe)
 		{
-			LOGGER.severe("PieceImageCache: Couldn't find resource for image at: " + image);
+			STDERR.fatal("PieceImageCache: Couldn't find resource for image at: " + image);
 			return null;
 		}
 		catch (IOException e)
 		{
-			LOGGER.severe("Failed to load image for piece: " + p);
-			LOGGER.severe(Logger.stackTraceToString(e));
+			STDERR.fatal("Failed to load image for piece: " + p, e);
 		}
 		return document;
 	}

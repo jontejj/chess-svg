@@ -62,7 +62,7 @@ public class MoveLogger implements MoveListener
 		Move lastMove = myMoveHistory.peekFirst();
 		if(lastMove != null)
 		{
-			Piece removedPiece = myRemovalHistory.get(myMoveHistory.size() - 1);
+			Piece removedPiece = getRemovedPieceForLastMove();
 			lastMove.getRevertingMove().setPieceToPlaceAtOldPosition(removedPiece);
 		}
 		return lastMove;

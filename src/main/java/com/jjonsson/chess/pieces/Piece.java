@@ -1,7 +1,7 @@
 package com.jjonsson.chess.pieces;
 
 import static com.jjonsson.utilities.Bits.containBits;
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Shorts;
 import com.jjonsson.chess.board.ChessBoard;
-import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
 import com.jjonsson.chess.listeners.MoveListener;
 import com.jjonsson.chess.moves.ChainMove;
 import com.jjonsson.chess.moves.DependantMove;
@@ -71,9 +70,6 @@ public abstract class Piece
 	private static final byte BLACK_BIT = (byte) 0x8;
 
 	private static final byte TYPE_MASK = (byte) 0x07;
-
-	public static final boolean NO_SORT = false;
-	public static final boolean SORT = true;
 
 	public static final int BYTES_PER_PIECE = 2;
 
@@ -320,11 +316,6 @@ public abstract class Piece
 		myListeners.add(listener);
 	}
 
-	public void removeMoveListener(final MoveListener listener)
-	{
-		myListeners.remove(listener);
-	}
-
 	/**
 	 * Utility function that adds a chain of moves that this piece can do
 	 * @param rowChange the increment(positive)/decrement(negative) for each step
@@ -387,25 +378,20 @@ public abstract class Piece
 	 * Note: the returned list may be mutable because of performance issues
 	 */
 
-	public List<Move> getAvailableMoves(final boolean sort, final ChessBoard board)
+	public List<Move> getAvailableMoves()
 	{
 		List<Move> availableMoves = Lists.newArrayList();
 
 		for(Move m : getPossibleMoves())
 		{
-			if(m.canBeMade(board))
+			if(m.canBeMade(myBoard))
 			{
 				availableMoves.add(m);
 			}
 			if(m instanceof DependantMove)
 			{
-				availableMoves.addAll(((DependantMove)m).getPossibleMovesThatIsDependantOnMe(board));
+				availableMoves.addAll(((DependantMove)m).getPossibleMovesThatIsDependantOnMe(myBoard));
 			}
-		}
-
-		if(sort)
-		{
-			return MoveOrdering.getInstance().immutableSortedCopy(availableMoves);
 		}
 		return availableMoves;
 	}
@@ -425,9 +411,9 @@ public abstract class Piece
 		return moves;
 	}
 
-	public boolean canMakeAMove(final ChessBoard board)
+	public boolean canMakeAMove()
 	{
-		return getAvailableMoves(NO_SORT, board).size() > 0;
+		return getAvailableMoves().size() > 0;
 	}
 
 	/**
@@ -530,7 +516,7 @@ public abstract class Piece
 	{
 		if(printOut)
 		{
-			LOGGER.finest("Performing: " + move);
+			STDOUT.debug("Performing: " + move);
 		}
 
 		if(!move.makeMove(board))
@@ -554,15 +540,7 @@ public abstract class Piece
 		}
 		if(!move.isPartOfAnotherMove())
 		{
-			try
-			{
-				board.nextPlayer();
-			}
-			catch(NullPointerException npe)
-			{
-				LOGGER.severe("Got NPE during nextPlayer: " + npe);
-				LOGGER.severe("Taken piece by last move: " + getBoard().getMoveLogger().getRemovedPieceForLastMove());
-			}
+			board.nextPlayer();
 		}
 		return true;
 	}

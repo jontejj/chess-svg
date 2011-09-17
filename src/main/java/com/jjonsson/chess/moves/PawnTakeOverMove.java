@@ -6,14 +6,14 @@ import com.jjonsson.chess.pieces.Piece;
 public class PawnTakeOverMove extends PawnMove
 {
 
-	public PawnTakeOverMove(int rowChange, int columnChange, Piece pieceThatTheMoveWillBeMadeWith, DependantMove moveDependingOnMe, DependantMove moveThatIDependUpon)
+	public PawnTakeOverMove(final int rowChange, final int columnChange, final Piece pieceThatTheMoveWillBeMadeWith, final DependantMove moveDependingOnMe, final DependantMove moveThatIDependUpon)
 	{
 		super(rowChange, columnChange, pieceThatTheMoveWillBeMadeWith, moveDependingOnMe, moveThatIDependUpon);
 		//TODO(jontejj): fix better constructor for this move (it's not dependent on any other move, but it shares functionality with PawnMove)
 	}
 
 	@Override
-	public boolean canBeMadeInternal(ChessBoard board)
+	public boolean canBeMadeInternal(final ChessBoard board)
 	{
 		if(getPieceAtDestination() == null || getPieceAtDestination().hasSameAffinityAs(getPiece()))
 		{
@@ -24,7 +24,7 @@ public class PawnTakeOverMove extends PawnMove
 		//Take over is available
 		return true;
 	}
-	
+
 	/**
 	 * Overridden to prioritize moves that takes pawns further
 	 * @return the value of the piece at this move's destination
@@ -39,14 +39,30 @@ public class PawnTakeOverMove extends PawnMove
 		}
 		return super.getTakeOverValue();
 	}
-	
-	
+
+	@Override
+	public boolean makeMove(final ChessBoard board)
+	{
+		boolean wasEnPassant = isEnPassant();
+		Piece enPassantTakenPiece = getPieceAtDestination();
+		if(!super.makeMove(board))
+		{
+			return false;
+		}
+		if(wasEnPassant)
+		{
+			board.updatePossibilityOfMovesForPosition(enPassantTakenPiece.getCurrentPosition());
+		}
+		return true;
+	}
+
+
 	@Override
 	public boolean canBeTakeOverMove()
 	{
 		return true;
 	}
-	
+
 	@Override
 	protected int getSecondDimensionIndexInternal()
 	{

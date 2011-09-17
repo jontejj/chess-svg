@@ -1,6 +1,7 @@
 package com.jjonsson.chess.persistence;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.chess.persistence.PersistanceLogging.SKIP_PERSISTANCE_LOGGING;
+import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_LOGGING;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -32,12 +33,12 @@ public class PersistenceLogger implements MoveListener
 
 	public void setStartBoard(final ChessBoard board)
 	{
-		myStartBoard = board.copy(false);
+		myStartBoard = board.copy(SKIP_PERSISTANCE_LOGGING);
 	}
 
 	public void writeMoveHistory(final ByteBuffer buffer)
 	{
-		buffer.put(myStartBoard.getGameStateSettingsByte(true));
+		buffer.put(myStartBoard.getGameStateSettingsByte(USE_PERSISTANCE_LOGGING));
 		Iterator<MoveItem> fromFirstMoveToLastIterator = myPersistenceStorage.descendingIterator();
 		while(fromFirstMoveToLastIterator.hasNext())
 		{
@@ -50,7 +51,7 @@ public class PersistenceLogger implements MoveListener
 
 	public int getPersistenceSize()
 	{
-		return myStartBoard.getPersistenceSize(false) + myPersistenceStorage.size() * BYTES_PER_MOVE + 1; //+1 for the end of moves indicator
+		return myStartBoard.getPersistenceSize(SKIP_PERSISTANCE_LOGGING) + myPersistenceStorage.size() * BYTES_PER_MOVE + 1; //+1 for the end of moves indicator
 	}
 
 	public void readMoveHistory(final ByteBuffer buffer)
@@ -73,28 +74,10 @@ public class PersistenceLogger implements MoveListener
 	{
 		myIsApplyingMoveHistory = true;
 		Iterator<MoveItem> fromFirstMoveToLastIterator = myPersistenceStorage.descendingIterator();
-		LOGGER.finest("Applying " + myPersistenceStorage.size() + " moves");
 		while(fromFirstMoveToLastIterator.hasNext())
 		{
 			MoveItem moveItem = fromFirstMoveToLastIterator.next();
-			try
-			{
-				moveItem.perform(board);
-			}
-			catch(UnavailableMoveItem umi)
-			{
-				LOGGER.severe("Failed to apply: " + moveItem);
-				if(fromFirstMoveToLastIterator.hasNext())
-				{
-					LOGGER.info("Didn't apply: ");
-					while(fromFirstMoveToLastIterator.hasNext())
-					{
-						LOGGER.info("MoveItem: " + fromFirstMoveToLastIterator.next());
-					}
-				}
-				//TODO: throw it!
-				//throw umi;
-			}
+			moveItem.perform(board);
 		}
 		myIsApplyingMoveHistory = false;
 	}

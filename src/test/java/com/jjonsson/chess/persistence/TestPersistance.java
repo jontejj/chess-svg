@@ -1,18 +1,24 @@
 package com.jjonsson.chess.persistence;
 
+import static com.jjonsson.chess.board.PiecePlacement.DONT_PLACE_PIECES;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.moves.Position.E;
 import static com.jjonsson.chess.moves.Position.F;
 import static com.jjonsson.chess.moves.Position.G;
+import static com.jjonsson.chess.persistence.PersistanceLogging.SKIP_PERSISTANCE_LOGGING;
+import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_LOGGING;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Set;
@@ -32,10 +38,19 @@ import com.jjonsson.chess.pieces.Rock;
 public class TestPersistance
 {
 
+	public class ErrorenousInputStream extends InputStream
+	{
+		@Override
+		public int read() throws IOException
+		{
+			throw new IOException("Faked exception");
+		}
+	}
+
 	@Test
 	public void testGetPieceFromPersistanceData()
 	{
-		ChessBoard board = new ChessBoard(false);
+		ChessBoard board = new ChessBoard(DONT_PLACE_PIECES);
 
 		Set<Short> persistanceUniquenessTest = Sets.newHashSet();
 		ByteBuffer buffer = ByteBuffer.allocate(2);
@@ -87,7 +102,7 @@ public class TestPersistance
 		assertTrue(BoardLoader.saveBoard(board, tempFilename));
 
 		//Verify that the king can't castle after the save
-		ChessBoard savedBoard = new ChessBoard(false, true);
+		ChessBoard savedBoard = new ChessBoard(DONT_PLACE_PIECES, USE_PERSISTANCE_LOGGING);
 		assertTrue(BoardLoader.loadFileIntoBoard(new File(tempFilename), savedBoard));
 		King savedKing = savedBoard.getKing(WHITE);
 		assertNull(savedBoard.getAvailableMove(savedKing, castlingDestinationPos));
@@ -106,7 +121,7 @@ public class TestPersistance
 		assertTrue(BoardLoader.saveBoard(board, tempFilename));
 
 		//Verify that the changes could be read
-		ChessBoard savedBoard = new ChessBoard(false, true);
+		ChessBoard savedBoard = new ChessBoard(DONT_PLACE_PIECES, USE_PERSISTANCE_LOGGING);
 		assertTrue(BoardLoader.loadFileIntoBoard(new File(tempFilename), savedBoard));
 		Piece savedRock = savedBoard.getPiece(position("8F"));
 		assertTrue("Saved piece doesn't match the read one", blackRock.same(savedRock));
@@ -123,6 +138,11 @@ public class TestPersistance
 		King whiteKing = King.class.cast(board.getPiece(position("2E")));
 
 		assertNull(board.getAvailableMove(whiteKing, position("3D")));
+
+		//Test the exception handling
+		assertFalse(BoardLoader.loadStreamIntoBoard(new ErrorenousInputStream(), board));
+		assertFalse(BoardLoader.loadFileIntoBoard(new File("no_file"), board));
+		assertFalse(BoardLoader.saveBoard(board, "."));
 	}
 
 	@Test
@@ -130,12 +150,11 @@ public class TestPersistance
 	{
 		ChessBoard board = loadBoard("board_cloning_test");
 		Collection<Piece> pieces = board.getPieces();
-		ChessBoard copy = board.copy(false);
+		ChessBoard copy = board.copy(SKIP_PERSISTANCE_LOGGING);
 		for(Piece p : pieces)
 		{
 			assertTrue(p.same(copy.getPiece(p.getCurrentPosition())));
 		}
-
 	}
 
 	@Test

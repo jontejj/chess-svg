@@ -32,6 +32,6 @@ public class DuplicatePieceError extends Error
 	@Override
 	public String toString()
 	{
-		return "Duplicate Piece: " + myDuplicatePiece + " tried to replace exisiting piece: " + myExistingPiece;
+		return "Duplicate Piece: " + getDuplicatePiece() + " tried to replace exisiting piece: " + getExistingPiece();
 	}
 }

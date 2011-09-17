@@ -23,19 +23,6 @@ public class CenterStageOrdering extends Ordering<Move> implements Serializable
 	{
 		Position rightDestination = left.getDestination();
 		Position leftDestination = right.getDestination();
-		//TODO: null checks shouldn't have to be here since only available moves (which has a destination) should be sorted
-		if(rightDestination == null && leftDestination == null)
-		{
-			return 0;
-		}
-		else if(rightDestination == null)
-		{
-			return 1;
-		}
-		else if(leftDestination == null)
-		{
-			return -1;
-		}
 		return Math.abs(leftDestination.getRow() - CENTER) - Math.abs(rightDestination.getRow() - CENTER) +
 		(Math.abs(leftDestination.getColumn() - CENTER) - Math.abs(rightDestination.getColumn() - CENTER));
 	}

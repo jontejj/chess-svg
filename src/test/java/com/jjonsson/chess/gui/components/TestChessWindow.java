@@ -1,5 +1,6 @@
 package com.jjonsson.chess.gui.components;
 
+import static com.jjonsson.chess.board.PiecePlacement.PLACE_PIECES;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertNotNull;
@@ -73,7 +74,7 @@ public class TestChessWindow
 	@Test
 	public void testUndoMove() throws InvalidPosition
 	{
-		ChessBoard board = new ChessBoard(true);
+		ChessBoard board = new ChessBoard(PLACE_PIECES);
 		ChessWindow window = new ChessWindow(board);
 
 		window.displayGame();
@@ -167,7 +168,7 @@ public class TestChessWindow
 	@Test
 	public void testNewGame()
 	{
-		ChessBoard board = new ChessBoard(true);
+		ChessBoard board = new ChessBoard(PLACE_PIECES);
 		ChessWindow window = new ChessWindow(board);
 
 		window.displayGame();
@@ -193,7 +194,7 @@ public class TestChessWindow
 	@Test
 	public void testWindowResize()
 	{
-		ChessBoard board = new ChessBoard(true);
+		ChessBoard board = new ChessBoard(PLACE_PIECES);
 		ChessWindow window = new ChessWindow(board);
 
 		window.displayGame();

@@ -1,6 +1,6 @@
 package com.jjonsson.chess.gui;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 
 import java.awt.RenderingHints;
 
@@ -8,10 +8,7 @@ import javax.swing.UIManager;
 
 public final class WindowUtilities {
 
-	private WindowUtilities()
-	{
-
-	}
+	private WindowUtilities(){}
 
 	private static RenderingHints renderHints;
 	static
@@ -35,7 +32,7 @@ public final class WindowUtilities {
 		}
 		catch (Exception e)
 		{
-			LOGGER.warning("Failed to set look and feel due to: " + e);
+			STDOUT.fatal("Failed to set look and feel due to: " + e);
 		}
 	}
 

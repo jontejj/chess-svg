@@ -2,6 +2,7 @@ package com.jjonsson.chess.evaluators;
 
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -42,8 +43,7 @@ public class TestChessBoardEvaluator
 	public void testStaleMate()
 	{
 		ChessBoard board = loadBoard("should_be_stalemate");
-		ChessState currentState = board.getCurrentState();
-		assertEquals(GAME_STATE, ChessState.STALEMATE, currentState);
+		assertTrue(GAME_STATE, board.getStatusString().startsWith("Stalemate"));
 	}
 
 	@Test
@@ -86,6 +86,13 @@ public class TestChessBoardEvaluator
 	public void testShouldBeCheckMate3()
 	{
 		ChessBoard board = loadBoard("should_be_checkmate_6");
+		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
+	}
+
+	@Test
+	public void testShouldBeCheckMate4()
+	{
+		ChessBoard board = loadBoard("should_be_checkmate_7");
 		assertEquals(ChessState.CHECKMATE, board.getCurrentState());
 	}
 

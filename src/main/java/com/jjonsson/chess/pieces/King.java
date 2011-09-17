@@ -5,7 +5,7 @@ import static com.jjonsson.chess.moves.Move.LEFT;
 import static com.jjonsson.chess.moves.Move.NO_CHANGE;
 import static com.jjonsson.chess.moves.Move.RIGHT;
 import static com.jjonsson.chess.moves.Move.UP;
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDERR;
 
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.UnremovablePieceError;
@@ -17,7 +17,6 @@ import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.persistence.BoardLoader;
 import com.jjonsson.chess.persistence.ChessFileFilter;
-import com.jjonsson.utilities.Logger;
 
 public class King extends Piece
 {
@@ -72,7 +71,7 @@ public class King extends Piece
 
 	private boolean isRock(final Piece aPiece)
 	{
-		return aPiece != null && aPiece instanceof Rock && hasSameAffinityAs(aPiece);
+		return aPiece instanceof Rock && hasSameAffinityAs(aPiece);
 	}
 
 	/**
@@ -141,9 +140,9 @@ public class King extends Piece
 	@Override
 	public Piece removeFromBoard(final ChessBoard board)
 	{
-		BoardLoader.saveBoard(board, "board_with_move_that_takes_king_over_" + System.currentTimeMillis() + ChessFileFilter.FILE_ENDING);
+		BoardLoader.saveBoard(board, "faulty_boards/board_with_move_that_takes_king_over_" + System.currentTimeMillis() + ChessFileFilter.FILE_ENDING);
 		Error error = new UnremovablePieceError("Kings may not be removed from the board");
-		LOGGER.severe("" + Logger.stackTraceToString(error));
+		STDERR.fatal("", error);
 		throw error;
 	}
 

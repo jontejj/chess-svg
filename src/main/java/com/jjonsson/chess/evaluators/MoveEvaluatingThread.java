@@ -1,7 +1,9 @@
 package com.jjonsson.chess.evaluators;
 
 import static com.jjonsson.chess.gui.Settings.DEBUG;
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.chess.persistence.PersistanceLogging.SKIP_PERSISTANCE_LOGGING;
+import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_LOGGING;
+import static com.jjonsson.utilities.Loggers.STDERR;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.CountDownLatch;
@@ -10,7 +12,6 @@ import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.exceptions.SearchInterruptedError;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.persistence.BoardLoader;
-import com.jjonsson.utilities.Logger;
 
 public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 {
@@ -100,7 +101,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 		{
 			//This means that we can't continue and thus will the moves down this path not be evaluated (BAD)
 			mySignal.countDown();
-			LOGGER.severe("Failed to evaluate some moves due to a bug in the chessboard cloning process");
+			STDERR.fatal("Failed to evaluate some moves due to a bug in the chessboard cloning process");
 			return;
 		}
 		ChessMoveEvaluator.evaluateMove(myMoveToEvaluate, myBoard, myLimiter, myResult, myMovesLeftOnBranch);
@@ -113,17 +114,17 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	 */
 	private boolean makeThreadSafe()
 	{
-		ChessBoard copy = myBoard.copy(DEBUG);
+		ChessBoard copy = myBoard.copy(DEBUG ? USE_PERSISTANCE_LOGGING : SKIP_PERSISTANCE_LOGGING);
 		if(copy == null)
 		{
-			LOGGER.severe("Failed to clone board.");
-			BoardLoader.saveBoard(myBoard, "temp_board_causing_clone_failure");
+			STDERR.fatal("Failed to clone board.");
+			BoardLoader.saveBoard(myBoard, "faulty_boards/temp_board_causing_clone_failure");
 			return false;
 		}
 		Move move = copy.getMove(myMoveToEvaluate);
 		if(move == null)
 		{
-			LOGGER.severe("Failed to find move for: " + myMoveToEvaluate);
+			STDERR.fatal("Failed to find move for: " + myMoveToEvaluate);
 			return false;
 		}
 		myLimiter = myLimiter.copy();
@@ -145,8 +146,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	@Override
 	public void uncaughtException(final Thread t, final Throwable e)
 	{
-		LOGGER.severe("Uncaught exception received: " + e + ", for thread: " + t);
-		LOGGER.info("Exception trace: " + Logger.stackTraceToString(e));
+		STDERR.fatal("Uncaught exception received: " + e + ", for thread: " + t, e);
 		//Let's handle crashes gracefully
 		freeResources();
 	}

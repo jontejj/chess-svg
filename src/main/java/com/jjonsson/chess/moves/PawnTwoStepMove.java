@@ -57,7 +57,7 @@ public class PawnTwoStepMove extends PawnMove
 			{
 				possiblePawnTakeOverMove.setEnPassant(enable);
 				possiblePawnTakeOverMove.setPieceAtDestination(pieceAtEnPassantDestination);
-				possiblePawnTakeOverMove.updatePossibility(board, false);
+				possiblePawnTakeOverMove.updatePossibility(board, !enable);
 			}
 		}
 	}
@@ -68,11 +68,11 @@ public class PawnTwoStepMove extends PawnMove
 	 */
 	private ImmutablePosition getEnpassantPosition()
 	{
-		if(getPiece().isBlack())
+		if(getPiece().isWhite())
 		{
-			return getCurrentPosition().up();
+			return getCurrentPosition().down();
 		}
-		return getCurrentPosition().down();
+		return getCurrentPosition().up();
 	}
 
 	/**

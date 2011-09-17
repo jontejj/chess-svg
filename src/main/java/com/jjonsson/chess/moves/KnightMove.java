@@ -52,10 +52,8 @@ public class KnightMove extends IndependantMove
 				{
 					return 6;
 				}
-				return 7;
 		}
-		//Detect faulty moves early
-		return -1;
+		return 7;
 	}
 
 }

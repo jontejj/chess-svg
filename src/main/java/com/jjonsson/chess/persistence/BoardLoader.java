@@ -1,26 +1,31 @@
 package com.jjonsson.chess.persistence;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.chess.gui.Settings.disableSaving;
+import static com.jjonsson.chess.gui.Settings.enableSaving;
+import static com.jjonsson.chess.persistence.PersistanceLogging.SKIP_PERSISTANCE_LOGGING;
+import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_LOGGING;
+import static com.jjonsson.utilities.Loggers.STDERR;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.jjonsson.chess.board.ChessBoard;
+import com.jjonsson.chess.board.PiecePlacement;
 import com.jjonsson.chess.exceptions.DuplicatePieceError;
 import com.jjonsson.chess.exceptions.InvalidBoardException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
+import com.jjonsson.chess.gui.Settings;
 
 public final class BoardLoader
 {
-	private BoardLoader()
-	{
-
-	}
+	private BoardLoader(){}
 
 	/**
 	 * @param input the stream to load the board from
@@ -67,19 +72,19 @@ public final class BoardLoader
 		}
 		catch (DuplicatePieceError e)
 		{
-			LOGGER.severe("Got a duplicate piece: " + e.getDuplicatePiece() + ", conflicted with: " + e.getExistingPiece());
+			STDERR.error("Got a duplicate piece: " + e.getDuplicatePiece() + ", conflicted with: " + e.getExistingPiece());
 		}
 		catch (InvalidBoardException e)
 		{
-			LOGGER.severe("Faulty board, detected that only one king exists. The possibility of moves needs to be fixed.");
+			STDERR.error("Faulty board, detected that only one king exists. The possibility of moves needs to be fixed.");
 		}
 		catch (UnavailableMoveItem e)
 		{
-			LOGGER.info("Could only apply " + boardToLoadInto.getMoveLogger().getMovesMade() + " moves because: " + e);
+			STDERR.error("Could only apply " + boardToLoadInto.getMoveLogger().getMovesMade() + " moves because: " + e);
 		}
 		catch (ArrayIndexOutOfBoundsException e)
 		{
-			LOGGER.warning("Faulty position, index that is faulty: " + e);
+			STDERR.error("Faulty position, index that is faulty: " + e);
 		}
 		return false;
 	}
@@ -94,11 +99,15 @@ public final class BoardLoader
 	{
 		try
 		{
+			if(Settings.DISABLE_SAVING)
+			{
+				return false;
+			}
 			//TODO: perhaps this should be optional?
-			boolean includeMovesPossible = board.hasPersistencePossibility();
-			ByteBuffer buffer = ByteBuffer.allocate(board.getPersistenceSize(includeMovesPossible));
+			PersistanceLogging persistanceLogging = board.hasPersistencePossibility() ? USE_PERSISTANCE_LOGGING : SKIP_PERSISTANCE_LOGGING;
+			ByteBuffer buffer = ByteBuffer.allocate(board.getPersistenceSize(persistanceLogging));
 
-			board.writePersistenceData(buffer, includeMovesPossible);
+			board.writePersistenceData(buffer, persistanceLogging);
 			buffer.flip();
 			Files.write(buffer.array(), new File(pathToFile));
 			return true;
@@ -107,5 +116,29 @@ public final class BoardLoader
 		{
 			return false;
 		}
+	}
+
+	public static void cleanUnloadableBoards(final String path)
+	{
+		disableSaving();
+		ChessBoard board = new ChessBoard(PiecePlacement.DONT_PLACE_PIECES, PersistanceLogging.USE_PERSISTANCE_LOGGING);
+
+		File faultyBoardsDir = new File(path);
+		Set<File> failedBoards = Sets.newHashSet();
+		for(File faultyBoard : faultyBoardsDir.listFiles())
+		{
+			board.clear();
+			if(!loadFileIntoBoard(faultyBoard, board))
+			{
+				failedBoards.add(faultyBoard);
+			}
+		}
+		for(File failedBoard : failedBoards)
+		{
+			System.out.println("Deleted: " + failedBoard);
+			failedBoard.delete();
+		}
+		System.out.println("Failed boards: " + failedBoards.size());
+		enableSaving();
 	}
 }

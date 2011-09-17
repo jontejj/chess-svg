@@ -1,6 +1,6 @@
 package com.jjonsson.chess.moves;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDERR;
 
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.pieces.Piece;
@@ -114,13 +114,13 @@ public class RevertingMove extends IndependantMove {
 			}
 
 			boolean wasRemoved = getPiece().isRemoved();
-			//This makes it possible for the piece to make once again if the piece was removed previously
+			//This makes it possible for the piece to make moves once again if the piece was removed previously
 			getPiece().reEnablePossibleMoves();
 
 			if(!super.makeMoveWithoutChecking(board))
 			{
 				//Revert what we just did because this reverting move is not possible to make
-				LOGGER.warning("Failed to revert: " + this);
+				STDERR.warn("Failed to revert: " + this);
 				if(wasRemoved)
 				{
 					getPiece().removeFromBoard(board);

@@ -2,7 +2,7 @@ package com.jjonsson.chess.gui.components;
 
 import static com.jjonsson.chess.gui.Settings.DEMO;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.awt.Color;
@@ -36,7 +36,6 @@ import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.pieces.Piece;
-import com.jjonsson.utilities.Logger;
 import com.jjonsson.utilities.ThreadTracker;
 
 public class ChessBoardComponent extends JComponent implements MouseListener, ChessBoardListener, UncaughtExceptionHandler
@@ -156,11 +155,6 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		return myCurrentPieceSize;
 	}
 
-	public void setComponentSize(final Dimension newSize)
-	{
-		mySize = newSize;
-	}
-
 	private void setCurrentPieceSize()
 	{
 		myCurrentPieceSize = new Dimension(mySize.width / ChessBoard.BOARD_SIZE, mySize.height / ChessBoard.BOARD_SIZE);
@@ -268,7 +262,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		}
 		catch(SearchInterruptedError sie)
 		{
-			LOGGER.finest("Aborted the search for a hint move");
+			STDOUT.info("Aborted the search for a hint move");
 		}
 	}
 
@@ -302,7 +296,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			//Mark pieces with available moves
 			for(Piece p : ImmutableList.copyOf(getBoard().getPieces()))
 			{
-				if(p.hasSameAffinityAs(getBoard().getCurrentPlayer()) && p.canMakeAMove(getBoard()))
+				if(p.hasSameAffinityAs(getBoard().getCurrentPlayer()) && p.canMakeAMove())
 				{
 					markSquare(p.getCurrentPosition(),AVAILABLE_PIECE_BORDER, graphics);
 				}
@@ -331,7 +325,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		if(ChessBoardEvaluator.inPlay(getBoard()) && myCurrentlySelectedPiece != null)
 		{
 			//Mark available moves for the selected piece
-			List<Move> moves = ImmutableList.copyOf(myCurrentlySelectedPiece.getAvailableMoves(Piece.NO_SORT, getBoard()));
+			List<Move> moves = ImmutableList.copyOf(myCurrentlySelectedPiece.getAvailableMoves());
 			for(Move m : moves)
 			{
 				markSquare(m.getDestination(),AVAILABLE_POSITION_BORDER, graphics);
@@ -414,7 +408,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	public void mouseClicked(final MouseEvent e)
 	{
 		long startNanos = System.nanoTime();
-		LOGGER.finest("Board clicked");
+		STDOUT.debug("Board clicked");
 		Point p = e.getPoint();
 		ImmutablePosition selectedPosition = null;
 		try
@@ -424,17 +418,17 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		catch (InvalidPosition ip)
 		{
 			//User must have clicked outside the board
-			LOGGER.info("Out of bounds position: " + ip);
+			STDOUT.info("Out of bounds position: " + ip);
 			return;
 		}
 
-		LOGGER.finest("Point: " + p + ", Position: " + selectedPosition);
+		STDOUT.debug("Point: " + p + ", Position: " + selectedPosition);
 
 		positionClicked(selectedPosition);
 
 		long time = (System.nanoTime() - startNanos);
 		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(SECONDS.toNanos(1)));
-		LOGGER.finer("Seconds: " + bd.toPlainString());
+		STDOUT.debug("Seconds: " + bd.toPlainString());
 	}
 	@Override
 	public void mousePressed(final MouseEvent e){}
@@ -452,16 +446,16 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			Move m = getBoard().getAvailableMove(myCurrentlySelectedPiece, positionThatWasClicked);
 			if(m != null)
 			{
-				LOGGER.finest("Destination available: " + positionThatWasClicked);
+				STDOUT.debug("Destination available: " + positionThatWasClicked);
 				if(myCurrentlySelectedPiece.performMove(m, getBoard()))
 				{
 					return;
 				}
-				LOGGER.info("Unavailable move: " + m);
+				STDOUT.info("Unavailable move: " + m);
 			}
 			else
 			{
-				LOGGER.finest("Destination not available: " + positionThatWasClicked);
+				STDOUT.debug("Destination not available: " + positionThatWasClicked);
 			}
 		}
 
@@ -484,7 +478,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void gameStateChanged(final ChessState newState)
 	{
-		LOGGER.finer("" + newState);
+		STDOUT.debug("" + newState);
 		statusChange();
 	}
 
@@ -519,7 +513,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 			}
 			catch(SearchInterruptedError interrupted)
 			{
-				LOGGER.finest("Aborted searching for a move");
+				STDOUT.info("Aborted searching for a move");
 				return;
 			}
 			statusChange();
@@ -556,7 +550,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 					}
 					catch (NoMovesAvailableException e)
 					{
-						LOGGER.warning("No moves available for the random player");
+						STDOUT.warn("No moves available for the random player");
 					}
 				}
 			}
@@ -597,8 +591,8 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	@Override
 	public void uncaughtException(final Thread t, final Throwable e)
 	{
-		LOGGER.severe("Uncaught exception received in 'main' thread: " + e + ", for thread: " + t);
-		LOGGER.info("Exception trace: " + Logger.stackTraceToString(e));
-		LOGGER.info("AI move will not be made");
+		STDOUT.fatal("Uncaught exception received in 'main' thread: " + e + ", for thread: " + t);
+		STDOUT.info("Exception trace: ", e);
+		STDOUT.info("AI move will not be made");
 	}
 }

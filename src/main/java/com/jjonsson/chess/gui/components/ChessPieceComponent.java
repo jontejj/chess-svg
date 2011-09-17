@@ -1,6 +1,6 @@
 package com.jjonsson.chess.gui.components;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.awt.Point;
@@ -137,7 +137,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 			m.updateMove(myBoardComponent.getBoard());
 		}
 		myBoardComponent.repaint();*/
-		LOGGER.finest(this.getPiece() + " clicked");
+		STDOUT.debug(this.getPiece() + " clicked");
 		//TODO: this should not be needed
 		//this.getPiece().initilizePossibilityOfMoves(getPiece().getBoard());
 		ChessBoardComponent boardComponent = myBoardComponent;
@@ -153,12 +153,11 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 				{
 					return;
 				}
-				LOGGER.info("Unavailable move: " + takeOverMove);
+				STDOUT.info("Unavailable move: " + takeOverMove);
 			}
 		}
 
-		if(this.getPiece().hasSameAffinityAs(boardComponent.getBoard().getCurrentPlayer())
-				&& this.getPiece().canMakeAMove(boardComponent.getBoard()))
+		if(this.getPiece().hasSameAffinityAs(boardComponent.getBoard().getCurrentPlayer()) && this.getPiece().canMakeAMove())
 		{
 			//If no takeover was done it means that this piece should be the selected one (given that it's this players turn)
 			//Only select pieces that can make a move
@@ -166,7 +165,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		}
 		long time = (System.nanoTime() - startNanos);
 		BigDecimal bd = new BigDecimal(time).divide(BigDecimal.valueOf(SECONDS.toNanos(1)));
-		LOGGER.finest("Seconds: " + bd.toPlainString());
+		STDOUT.debug("Seconds: " + bd.toPlainString());
 	}
 	@Override
 	public void mousePressed(final MouseEvent e){}

@@ -7,6 +7,7 @@ import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNotSame;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
@@ -71,7 +72,7 @@ public class TestChessMoveEvaluator
 		Move possibleCheckMateMove = board.getAvailableMove(blackQueen, position("3G"));
 		assertTrue(blackQueen.performMove(possibleCheckMateMove, board));
 		//The King should be able to flee
-		assertFalse(ChessState.CHECKMATE == board.getCurrentState());
+		assertNotSame(ChessState.CHECKMATE, board.getCurrentState());
 	}
 
 	/**

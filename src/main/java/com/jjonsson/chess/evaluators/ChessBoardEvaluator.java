@@ -16,12 +16,10 @@ import com.jjonsson.chess.pieces.Piece;
 
 public final class ChessBoardEvaluator
 {
+	private ChessBoardEvaluator(){}
+
 	private static final long VALUE_OF_CHECKMATE = 50000;
 	private static final long VALUE_OF_STALEMATE = -10000;
-	private ChessBoardEvaluator()
-	{
-
-	}
 
 	public enum ChessState
 	{
@@ -84,12 +82,18 @@ public final class ChessBoardEvaluator
 
 	private static boolean isCheckMate(final ChessBoard board, final Collection<Move> movesThreateningKing, final King currentKing)
 	{
-		List<Move> kingMoves = currentKing.getAvailableMoves(Piece.NO_SORT, board);
-		Set<Move> movesStoppingCheck = Sets.newHashSet();
-		int stoppableMoves = 0;
-		for(Move threateningMove : movesThreateningKing)
+		List<Move> kingMoves = currentKing.getAvailableMoves();
+
+		//First a fast check
+		if(movesThreateningKing.size() > 1 && kingMoves.isEmpty())
 		{
-			boolean moveIsStoppable = false;
+			return true;
+		}
+
+		Set<Move> movesStoppingCheck = Sets.newHashSet();
+		if(movesThreateningKing.size() == 1)
+		{
+			Move threateningMove = movesThreateningKing.iterator().next();
 			if(threateningMove instanceof DependantMove)
 			{
 				//Check if a player can put himself in harms way
@@ -103,7 +107,6 @@ public final class ChessBoardEvaluator
 						//Clear kings because they can't put themselves in harms way
 						if(!(stoppingMove instanceof KingMove))
 						{
-							moveIsStoppable = true;
 							movesStoppingCheck.add(stoppingMove);
 						}
 					}
@@ -117,12 +120,6 @@ public final class ChessBoardEvaluator
 			if(defendingMoves.size() > 0)
 			{
 				movesStoppingCheck.addAll(defendingMoves);
-				moveIsStoppable = true;
-			}
-
-			if(moveIsStoppable)
-			{
-				stoppableMoves++;
 			}
 		}
 
@@ -130,7 +127,7 @@ public final class ChessBoardEvaluator
 		//Caches the moves available for the current player (I.e invalidating all moves that during a non-check would be available)
 		board.setMovesThatStopsKingFromBeingChecked(movesStoppingCheck);
 
-		if(stoppableMoves != movesThreateningKing.size() && kingMoves.size() == 0)
+		if(movesStoppingCheck.isEmpty())
 		{
 			return true;
 		}

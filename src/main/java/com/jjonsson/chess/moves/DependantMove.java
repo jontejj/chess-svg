@@ -1,7 +1,5 @@
 package com.jjonsson.chess.moves;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -219,17 +217,7 @@ public abstract class DependantMove extends Move
 	{
 		super.copyMoveCounter(moveToCopyFrom);
 		DependantMove moveDependingOnMe = getMoveDependingOnMe();
-		DependantMove fromMove = null;
-		try
-		{
-			fromMove = DependantMove.class.cast(moveToCopyFrom).getMoveDependingOnMe();
-		}
-		catch(ClassCastException cce)
-		{
-			LOGGER.warning("Could not cast: " + moveToCopyFrom + ", Move that tried to copy was: " + this);
-			//It's okey to fail silently because a King or Rock is saved differently if they can't make a castling move
-			return;
-		}
+		DependantMove fromMove = DependantMove.class.cast(moveToCopyFrom).getMoveDependingOnMe();
 		if(moveDependingOnMe != null && fromMove != null)
 		{
 			moveDependingOnMe.copyMoveCounter(fromMove);
@@ -284,27 +272,6 @@ public abstract class DependantMove extends Move
 		return dependantMoves;
 	}
 
-
-	public List<Move> getNonPossibleMovesThatIsDependantOnMe(final ChessBoard board)
-	{
-		DependantMove move = myMoveDependingOnMe;
-		if(move == null)
-		{
-			return Collections.emptyList();
-		}
-
-		List<Move> dependantMoves = Lists.newArrayList();
-		while(move != null)
-		{
-			if(!move.canBeMade(board))
-			{
-				dependantMoves.add(move);
-			}
-			move = move.getMoveDependingOnMe();
-		}
-		return dependantMoves;
-	}
-
 	/**
 	 * 
 	 * @return regardless if the moves can be made or not
@@ -332,16 +299,10 @@ public abstract class DependantMove extends Move
 		return myMoveThatIDependUpon;
 	}
 
-	public void setMoveThatIDependUpon(final DependantMove move)
-	{
-		myMoveThatIDependUpon = move;
-	}
-
 	public void setMoveThatDependsOnMe(final DependantMove move)
 	{
 		myMoveDependingOnMe = move;
 	}
-
 
 	/**
 	 * Moves depending on this one will need to be disabled as well

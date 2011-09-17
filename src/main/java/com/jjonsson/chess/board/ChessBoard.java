@@ -13,10 +13,10 @@ import static com.jjonsson.chess.moves.Position.H;
 import static com.jjonsson.chess.moves.Position.WHITE_PAWN_ROW;
 import static com.jjonsson.chess.moves.Position.WHITE_STARTING_ROW;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
-import static com.jjonsson.chess.pieces.Piece.NO_SORT;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.utilities.Bits.containBits;
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDERR;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -49,8 +50,10 @@ import com.jjonsson.chess.moves.PawnTakeOverMove;
 import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.persistence.BoardLoader;
+import com.jjonsson.chess.persistence.ChessFileFilter;
 import com.jjonsson.chess.persistence.MoveLogger;
 import com.jjonsson.chess.persistence.MoveLoggerFactory;
+import com.jjonsson.chess.persistence.PersistanceLogging;
 import com.jjonsson.chess.persistence.PersistenceLogger;
 import com.jjonsson.chess.pieces.Bishop;
 import com.jjonsson.chess.pieces.BlackPawn;
@@ -60,7 +63,6 @@ import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.Rock;
 import com.jjonsson.chess.pieces.WhitePawn;
-import com.jjonsson.utilities.Logger;
 
 public final class ChessBoard
 {
@@ -147,11 +149,13 @@ public final class ChessBoard
 	private Set<Piece> myPieces;
 	private PositionContainer[][] myPositions;
 
+	private Set<Move> myScheduledMoveUpdates;
+
 	/**
 	 * Constructs the chess board
 	 * @param placeInitialPieces if true, all the pieces is set to their default locations
 	 */
-	public ChessBoard(final boolean placeInitialPieces)
+	public ChessBoard(final PiecePlacement piecePlacement)
 	{
 		myDifficulty = DEFAULT_DIFFICULTY;
 		myAllowsMoves = true;
@@ -159,6 +163,7 @@ public final class ChessBoard
 		myBoardListeners = Sets.newHashSet();
 		myMoveListeners = Sets.newHashSet();
 		myMoveLogger = MoveLoggerFactory.createMoveLogger();
+		myScheduledMoveUpdates = Sets.newHashSet();
 		addMoveListener(myMoveLogger);
 
 		myPieces = Sets.newIdentityHashSet();
@@ -166,7 +171,7 @@ public final class ChessBoard
 		myPieceToPositionAvailableMoves = Maps.newHashMap();
 		myPieceToPositionNonAvailableMoves = Maps.newHashMap();
 
-		if(placeInitialPieces)
+		if(piecePlacement.shouldPlacePieces())
 		{
 			this.reset();
 		}
@@ -176,18 +181,23 @@ public final class ChessBoard
 		}
 	}
 
-	public ChessBoard(final boolean placeInitialPiece, final boolean activatePersistenceLogging)
+	public ChessBoard(final PiecePlacement piecePlacement, final PersistanceLogging persistenceLogging)
 	{
-		this(placeInitialPiece);
-		if(activatePersistenceLogging)
+		this(piecePlacement);
+		if(persistenceLogging.usePersistanceLogging())
 		{
 			addPersistenceLogger(MoveLoggerFactory.createPersistenceLogger());
-			if(placeInitialPiece)
+			if(piecePlacement.shouldPlacePieces())
 			{
 				//This means that we now have a board for the persistence logger to start from
 				updatePersistenceLogger();
 			}
 		}
+	}
+
+	private void scheduleMoveForUpdate(final Move move)
+	{
+		myScheduledMoveUpdates.add(move);
 	}
 
 	public void setupPositionContainers()
@@ -229,13 +239,13 @@ public final class ChessBoard
 	 * @param withMoveHistory true if the made moves from this board should be included in the copy
 	 * @return the new board or null if the copy failed
 	 */
-	public ChessBoard copy(final boolean withMoveHistory)
+	public ChessBoard copy(final PersistanceLogging persistanceLogging)
 	{
-		ChessBoard newBoard = new ChessBoard(false, withMoveHistory);
-		ByteBuffer buffer = ByteBuffer.allocate(getPersistenceSize(withMoveHistory));
+		ChessBoard newBoard = new ChessBoard(PiecePlacement.DONT_PLACE_PIECES, persistanceLogging);
+		ByteBuffer buffer = ByteBuffer.allocate(getPersistenceSize(persistanceLogging));
 		try
 		{
-			writePersistenceData(buffer, withMoveHistory);
+			writePersistenceData(buffer, persistanceLogging);
 			buffer.flip();
 			if(BoardLoader.loadBufferIntoBoard(buffer, newBoard))
 			{
@@ -244,6 +254,8 @@ public final class ChessBoard
 			}
 			else
 			{
+				BoardLoader.saveBoard(this, "faulty_boards/board_failed_to_copy_" + System.currentTimeMillis() + ChessFileFilter.FILE_ENDING);
+				STDERR.error("Failed to copy board");
 				newBoard = null;
 			}
 		}
@@ -251,11 +263,6 @@ public final class ChessBoard
 		{
 			newBoard = null;
 		}
-		/*catch(NullPointerException npe)
-		{
-			LOGGER.warning("NPE during chessboard cloning: " + Logger.stackTraceToString(npe));
-			//BoardLoader.saveBoard(this, "error_board_causing_npe_during_cloning_send_to_jontejj_at_gmail.com_" + System.currentTimeMillis() + ChessFileFilter.FILE_ENDING);
-		}*/
 
 		return newBoard;
 	}
@@ -430,12 +437,18 @@ public final class ChessBoard
 	{
 		myCurrentPlayer = !myCurrentPlayer;
 
-		//TODO(jontejj): could this be cached?
-		for(Move m : getCurrentKing().getPossibleMoves())
+		for(Move m : ImmutableList.copyOf(myScheduledMoveUpdates))
 		{
 			m.updatePossibility(this, true);
 			m.syncCountersWithBoard(this);
 		}
+		myScheduledMoveUpdates.clear();
+		//TODO(jontejj): remove this when the caching of this has been confirmed
+		/*for(Move m : getCurrentKing().getPossibleMoves())
+		{
+			m.updatePossibility(this, true);
+			m.syncCountersWithBoard(this);
+		}*/
 
 		updateGameState();
 
@@ -489,10 +502,12 @@ public final class ChessBoard
 		}
 		ImmutablePosition currentPosition = p.getCurrentPosition();
 		Piece oldPiece = getPositionContainer(currentPosition).setCurrentPiece(p);
-		if(oldPiece != null & oldPiece != p)
+		//TODO: why is there pieces in the position container that doesn't have the same position as the container?
+		if(oldPiece != null & oldPiece != p && oldPiece.getCurrentPosition() == p.getCurrentPosition())
 		{
 			Error e = new DuplicatePieceError(oldPiece, p);
-			LOGGER.severe("" + Logger.stackTraceToString(e));
+			BoardLoader.saveBoard(this, "faulty_boards/board_before_duplicate_piece_is_put_into_it_" + System.currentTimeMillis() + ChessFileFilter.FILE_ENDING);
+			STDERR.error("", e);
 			throw e;
 		}
 		addPieceToPositionMaps(p);
@@ -684,12 +699,12 @@ public final class ChessBoard
 				}
 			}
 			//Check if the opposite king previously couldn't move into this position, if so maybe he can now?
-			/*King oppositeKing = getOppositeKing(piece.getAffinity());
-			Move kingMove = getNonAvailableMove(oppositeKing, pos);
+			King oppositeKing = getOppositeKing(piece.getAffinity());
+			Move kingMove = myPieceToPositionNonAvailableMoves.get(oppositeKing).get(pos);
 			if(kingMove != null)
 			{
-				kingMove.updateMove(this);
-			}*/
+				scheduleMoveForUpdate(kingMove);
+			}
 		}
 	}
 
@@ -707,6 +722,13 @@ public final class ChessBoard
 					map.put(pos, removedMove);
 				}
 			}
+			//Check if the opposite king previously couldn't move into this position, if so then maybe he can now?
+			King oppositeKing = getOppositeKing(piece.getAffinity());
+			Move kingMove = myPieceToPositionNonAvailableMoves.get(oppositeKing).get(pos);
+			if(kingMove != null)
+			{
+				scheduleMoveForUpdate(kingMove);
+			}
 		}
 	}
 
@@ -723,12 +745,12 @@ public final class ChessBoard
 				Map<ImmutablePosition, Move> map = myPieceToPositionAvailableMoves.get(piece);
 				map.put(pos, move);
 				//Check if the opposite king previously could move into this position, if so remove that move because now he can't
-				/*TODO: King oppositeKing = getOppositeKing(piece.getAffinity());
+				King oppositeKing = getOppositeKing(piece.getAffinity());
 				Move kingMove = getAvailableMove(oppositeKing, pos);
 				if(kingMove != null)
 				{
-					kingMove.updateMove(this);
-				}*/
+					scheduleMoveForUpdate(kingMove);
+				}
 			}
 		}
 	}
@@ -745,16 +767,22 @@ public final class ChessBoard
 				map.put(pos, move);
 
 				//Check if the opposite king previously couldn't move into this position, if so then maybe he can now?
-				/*TODO: if(!(piece instanceof King))
-				{
-					King oppositeKing = getOppositeKing(piece.getAffinity());
-					Move kingMove = getNonAvailableMove(oppositeKing, pos);
-					if(kingMove != null)
-					{
-						kingMove.updateMove(this);
-					}
-				}*/
+				updateKingMovesForPosition(getOppositeKing(piece.getAffinity()), pos);
 			}
+		}
+	}
+
+	private void updateKingMovesForPosition(final King king, final ImmutablePosition position)
+	{
+		Move kingMove = myPieceToPositionAvailableMoves.get(king).get(position);
+		if(kingMove != null)
+		{
+			scheduleMoveForUpdate(kingMove);
+		}
+		kingMove = myPieceToPositionNonAvailableMoves.get(king).get(position);
+		if(kingMove != null)
+		{
+			scheduleMoveForUpdate(kingMove);
 		}
 	}
 
@@ -856,6 +884,24 @@ public final class ChessBoard
 			}
 		}
 		return moves;
+	}
+
+
+	/**
+	 * Note this also runs canBeMade on the moves before returning them
+	 * @return a collection of moves that the current player can make
+	 */
+	public Collection<Move> getAvailableMoves()
+	{
+		List<Move> actualMoves = Lists.newArrayList();
+		for(Move m : getAvailableMoves(myCurrentPlayer))
+		{
+			if(m.canBeMade(this))
+			{
+				actualMoves.add(m);
+			}
+		}
+		return actualMoves;
 	}
 
 	/**
@@ -1028,13 +1074,14 @@ public final class ChessBoard
 		{
 			//The move was out of sync, lets fix it
 			//TODO: this wouldn't be needed if the moves were updated properly
-			LOGGER.info("Move out of sync, Old piece at destination:" + assumedTakeOverPiece +
+			STDOUT.info("Move out of sync, Old piece at destination:" + assumedTakeOverPiece +
 					"Actual piece at destination:" + currentPieceAtDestination);
+			BoardLoader.saveBoard(this, "faulty_boards/board_with_move_thats_out_of_sync_" + System.currentTimeMillis() + ChessFileFilter.FILE_ENDING);
 			moveToPerform.setPieceAtDestination(currentPieceAtDestination);
 			moveToPerform.updatePossibility(this, false);
 			if(!moveToPerform.canBeMade(this))
 			{
-				LOGGER.info("Due to the move being out of sync it was thought to be available when in fact it wasn't. Faulty move: " + moveToPerform);
+				STDOUT.info("Due to the move being out of sync it was thought to be available when in fact it wasn't. Faulty move: " + moveToPerform);
 				return false;
 			}
 		}
@@ -1163,9 +1210,9 @@ public final class ChessBoard
 	 * @param includeMoves true if moves is to be saved as well
 	 * @return the number of bytes needed to save this board
 	 */
-	public int getPersistenceSize(final boolean includeMoves)
+	public int getPersistenceSize(final PersistanceLogging persistanceLogging)
 	{
-		if(includeMoves && checkPersistencePossibility())
+		if(persistanceLogging.usePersistanceLogging() && checkPersistencePossibility())
 		{
 			return myPersistenceLogger.getPersistenceSize();
 		}
@@ -1178,15 +1225,15 @@ public final class ChessBoard
 	 * @param buffer the buffer to write to
 	 * @throws IOException
 	 */
-	public void writePersistenceData(final ByteBuffer buffer, final boolean writeMoveHistory) throws IOException
+	public void writePersistenceData(final ByteBuffer buffer, final PersistanceLogging persistanceLogging) throws IOException
 	{
-		if(writeMoveHistory && checkPersistencePossibility())
+		if(persistanceLogging.usePersistanceLogging() && checkPersistencePossibility())
 		{
 			myPersistenceLogger.writeMoveHistory(buffer);
 		}
 		else
 		{
-			buffer.put(getGameStateSettingsByte(writeMoveHistory));
+			buffer.put(getGameStateSettingsByte(persistanceLogging));
 			writePieces(buffer);
 		}
 	}
@@ -1199,14 +1246,14 @@ public final class ChessBoard
 		}
 	}
 
-	public byte getGameStateSettingsByte(final boolean writeMoveHistory)
+	public byte getGameStateSettingsByte(final PersistanceLogging persistanceLogging)
 	{
 		byte settings = 0;
 		if(myCurrentPlayer == BLACK)
 		{
 			settings |= BLACKS_TURN_BIT;
 		}
-		if(writeMoveHistory)
+		if(persistanceLogging.usePersistanceLogging())
 		{
 			settings |= READ_MOVE_HISTORY_BIT;
 		}
@@ -1342,28 +1389,37 @@ public final class ChessBoard
 	 */
 	public boolean undoMove(final Move moveToUndo, final boolean printOuts)
 	{
-		boolean wasUndone = true;
+		boolean wasUndone = false;
 		boolean wasPartOfAnotherMove = false;
 
+		//TODO: Mostly called because of it's side effect, not nice :)
+		Move lastMove = getLastMove();
+		if(lastMove == null)
+		{
+			return false;
+		}
+
 		myAllowsMoves = false;
+
 		RevertingMove revertingMove = moveToUndo.getRevertingMove();
-		if(moveToUndo.getPiece().performMove(revertingMove, this, printOuts))
+		if(revertingMove == lastMove.getRevertingMove() && moveToUndo.getPiece().performMove(revertingMove, this, printOuts))
 		{
 			if(revertingMove.isPartOfAnotherMove())
 			{
 				wasPartOfAnotherMove = true;
 				wasUndone = (undoMoves(1, false) == 1);
 			}
+			else
+			{
+				wasUndone = true;
+			}
 		}
-		else
-		{
-			wasUndone = false;
-		}
+
 		myAllowsMoves = true;
 
 		if(wasUndone && !wasPartOfAnotherMove)
 		{
-			Move lastMove = myMoveLogger.getLastMove();
+			lastMove = myMoveLogger.getLastMove();
 			if(lastMove != null)
 			{
 				lastMove.onceAgainLastMoveThatWasMade(this);
@@ -1481,7 +1537,7 @@ public final class ChessBoard
 		long playerTakeOverCount = getTakeOverPiecesCount(affinity);
 		long totalPieceValue = getTotalPieceValueForAffinity(affinity);
 		//Counts the available moves for the king
-		int kingMobility = this.getKing(affinity).getAvailableMoves(NO_SORT, this).size() * KING_MOBILITY_FACTOR;
+		int kingMobility = this.getKing(affinity).getAvailableMoves().size() * KING_MOBILITY_FACTOR;
 		return playerNrOfAvailableMoves + playerProtectiveMoves + playerTakeOverCount + totalPieceValue + kingMobility;
 	}
 

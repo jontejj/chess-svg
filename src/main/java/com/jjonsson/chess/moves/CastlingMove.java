@@ -1,6 +1,6 @@
 package com.jjonsson.chess.moves;
 
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDERR;
 
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.pieces.Piece;
@@ -74,7 +74,14 @@ public class CastlingMove extends IndependantMove
 
 	public void updatePossibility(final ChessBoard board)
 	{
+		boolean oldCanBeMade = myCanBeMadeCache;
 		super.updatePossibility(board, false);
+
+		//Make sure all parts are updated and check once more if castling is possible
+		if(myCanBeMadeCache && !oldCanBeMade)
+		{
+			updatePossibility(board, false);
+		}
 	}
 
 	@Override
@@ -118,7 +125,7 @@ public class CastlingMove extends IndependantMove
 		getPiece().setMovesMade(getPiece().getMovesMade() + 1);
 		if(!myRock.performMove(myRockMove, board, false))
 		{
-			LOGGER.warning("Castling move: " + this + " not available");
+			STDERR.warn("Castling move: " + this + " not available");
 			board.undoMove(myKingMove, false);
 			return false;
 		}
@@ -158,30 +165,6 @@ public class CastlingMove extends IndependantMove
 	public ImmutablePosition getOldPosition()
 	{
 		return myPreviousPosition;
-	}
-
-	/**
-	 * @return the position that neither the rock nor the king is to be moved to during queen side castling move
-	 * @exception NullPointerException if this isn't a queen side castling move
-	 */
-	public ImmutablePosition getIntermediatePosition()
-	{
-		return myIntermediateStep.getDestination();
-	}
-
-	public boolean hasConnectedWithRock()
-	{
-		return myRock != null;
-	}
-
-	/**
-	 * 
-	 * @return the destination for the rock move that this castling does.
-	 * @exception NullPointerException when {@link CastlingMove#setRock(Rock)} hasn't been called, use {@link CastlingMove#hasConnectedWithRock()} to determine this
-	 */
-	public ImmutablePosition getRockDestination()
-	{
-		return myRockMove.getDestination();
 	}
 
 	@Override

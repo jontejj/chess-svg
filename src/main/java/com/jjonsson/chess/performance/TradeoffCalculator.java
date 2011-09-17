@@ -2,10 +2,12 @@ package com.jjonsson.chess.performance;
 
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
-import static com.jjonsson.utilities.Logger.LOGGER;
+import static com.jjonsson.utilities.Loggers.STDOUT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.jjonsson.chess.board.ChessBoard;
+import com.jjonsson.chess.board.ChessBoard.PersistanceLogging;
+import com.jjonsson.chess.board.ChessBoard.PiecePlacement;
 import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
 import com.jjonsson.chess.evaluators.ProgressTracker;
 import com.jjonsson.chess.evaluators.SearchLimiter;
@@ -26,16 +28,16 @@ public final class TradeoffCalculator
 		};
 		ProgressTracker.setStatusListener(listener);
 
-		ChessBoard board = new ChessBoard(true);
+		ChessBoard board = new ChessBoard(PiecePlacement.PLACE_PIECES);
 
 		long startTime = System.nanoTime();
 		for(int i = BENCHMARK_AMOUNT; i >0; i--)
 		{
-			board.copy(false);
+			board.copy(PersistanceLogging.SKIP_PERSISTANCE_LOGGING);
 		}
 		long nanosPerClone = (System.nanoTime() - startTime) / BENCHMARK_AMOUNT;
 		double duration = (double)(nanosPerClone * BENCHMARK_AMOUNT) / SECONDS.toNanos(1);
-		LOGGER.warning("cloning took " + duration + " secs, nanos per clone: " + nanosPerClone);
+		STDOUT.warn("cloning took " + duration + " secs, nanos per clone: " + nanosPerClone);
 
 		Move move = board.getAvailableMove(position("4E"), WHITE);
 		SearchLimiter limiter = new SearchLimiter(0);
@@ -52,9 +54,9 @@ public final class TradeoffCalculator
 		long nanosPerMove = (System.nanoTime() - startTime) / BENCHMARK_AMOUNT;
 		duration = (double)(nanosPerMove * BENCHMARK_AMOUNT) / SECONDS.toNanos(1);
 
-		LOGGER.warning("eval took " + duration + " secs, nanos per move eval: " + nanosPerMove);
+		STDOUT.warn("eval took " + duration + " secs, nanos per move eval: " + nanosPerMove);
 
 		long moveEvalsPerCloning = nanosPerClone / nanosPerMove;
-		LOGGER.warning("Move evals per cloning: " +  moveEvalsPerCloning);
+		STDOUT.warn("Move evals per cloning: " +  moveEvalsPerCloning);
 	}
 }
