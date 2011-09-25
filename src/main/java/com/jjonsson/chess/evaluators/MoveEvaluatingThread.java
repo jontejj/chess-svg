@@ -48,7 +48,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 			//Only copy the board/limiter if we aren't running the next move eval in the same thread
 			if(makeThreadSafe())
 			{
-				myThread = new Thread(this);
+				myThread = new Thread(this, MoveEvaluatingThread.class.getName());
 				myThread.setUncaughtExceptionHandler(this);
 			}
 			else
@@ -109,7 +109,7 @@ public class MoveEvaluatingThread implements Runnable, UncaughtExceptionHandler
 	}
 
 	/**
-	 * 
+	 * TODO: this should always be possible
 	 * @return true if it was possible to make the board thread safe
 	 */
 	private boolean makeThreadSafe()

@@ -19,7 +19,7 @@ import com.jjonsson.chess.moves.Position;
 import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.pieces.Piece;
 
-public class ChessPieceComponent extends JSVGComponent implements MoveListener, MouseListener//, SVGLoadEventDispatcherListener, SVGDocumentLoaderListener, GVTTreeBuilderListener, GVTTreeRendererListener
+public class ChessPieceComponent extends JSVGComponent implements MoveListener, MouseListener
 {
 	private static final long	serialVersionUID	= 3048642024943627256L;
 
@@ -32,10 +32,6 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 		super();
 		myBoardComponent = boardComponent;
 		myPieceToDraw = pieceToDraw;
-		/*addSVGDocumentLoaderListener(this);
-		addSVGLoadEventDispatcherListener(this);
-		addGVTTreeBuilderListener(this);
-		addGVTTreeRendererListener(this);*/
 
 		SVGDocument doc = PieceImageCache.getSVGForPiece(myPieceToDraw);
 		if(doc != null)
@@ -74,7 +70,6 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 
 	private void setBackgroundColor()
 	{
-		//setBackground(null);
 		if ( (myPieceToDraw.getCurrentPosition().getRow() % 2) == (myPieceToDraw.getCurrentPosition().getColumn() % 2) )
 		{
 			setBackground(ChessBoardComponent.LIGHT_BACKGROUND);
@@ -130,16 +125,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 	public void mouseClicked(final MouseEvent e)
 	{
 		long startNanos = System.nanoTime();
-		/*System.out.println(myBoardComponent.getBoard().getAvailableMoves(myPieceToDraw.getCurrentPosition(), !myPieceToDraw.getAffinity()));
-		myBoardComponent.getBoard().updateGameState();
-		for(Move m : myPieceToDraw.getPossibleMoves())
-		{
-			m.updateMove(myBoardComponent.getBoard());
-		}
-		myBoardComponent.repaint();*/
 		STDOUT.debug(this.getPiece() + " clicked");
-		//TODO: this should not be needed
-		//this.getPiece().initilizePossibilityOfMoves(getPiece().getBoard());
 		ChessBoardComponent boardComponent = myBoardComponent;
 		Piece currentlySelected = boardComponent.getSelectedPiece();
 		if(currentlySelected != null && !currentlySelected.hasSameAffinityAs(this.getPiece()))
@@ -159,7 +145,7 @@ public class ChessPieceComponent extends JSVGComponent implements MoveListener, 
 
 		if(this.getPiece().hasSameAffinityAs(boardComponent.getBoard().getCurrentPlayer()) && this.getPiece().canMakeAMove())
 		{
-			//If no takeover was done it means that this piece should be the selected one (given that it's this players turn)
+			//If no take over was done it means that this piece should be the selected one (given that it's this players turn)
 			//Only select pieces that can make a move
 			boardComponent.setSelectedPiece(this.getPiece());
 		}

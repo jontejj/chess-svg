@@ -1,6 +1,6 @@
 package com.jjonsson.chess.pieces;
 
-import static com.jjonsson.chess.moves.Position.A;
+import static com.jjonsson.chess.moves.Position.Column.A;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static junit.framework.Assert.assertFalse;

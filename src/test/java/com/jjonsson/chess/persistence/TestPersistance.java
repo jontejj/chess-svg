@@ -1,10 +1,11 @@
 package com.jjonsson.chess.persistence;
 
 import static com.jjonsson.chess.board.PiecePlacement.DONT_PLACE_PIECES;
+import static com.jjonsson.chess.moves.ImmutablePosition.from;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
-import static com.jjonsson.chess.moves.Position.E;
-import static com.jjonsson.chess.moves.Position.F;
-import static com.jjonsson.chess.moves.Position.G;
+import static com.jjonsson.chess.moves.Position.Column.E;
+import static com.jjonsson.chess.moves.Position.Column.F;
+import static com.jjonsson.chess.moves.Position.Column.G;
 import static com.jjonsson.chess.persistence.PersistanceLogging.SKIP_PERSISTANCE_LOGGING;
 import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_LOGGING;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
@@ -80,9 +81,9 @@ public class TestPersistance
 	{
 		String tempFilename = "temp_save_test_1";
 		ChessBoard board = loadBoard("castling_move");
-		Position kingOriginalPos = position(1, E);
-		Position castlingDestinationPos = position(1, G);
-		Position kingTempPos = position(1, F);
+		Position kingOriginalPos = from(1, E);
+		Position castlingDestinationPos = from(1, G);
+		Position kingTempPos = from(1, F);
 		King whiteKing = board.getKing(WHITE);
 
 		//First verify that it's possible to castle before any moves have been made

@@ -37,6 +37,7 @@ import com.jjonsson.chess.pieces.Piece;
 import com.jjonsson.chess.pieces.Queen;
 import com.jjonsson.chess.pieces.WhitePawn;
 import com.jjonsson.chess.utilities.VersionControlHelper;
+import com.jjonsson.chess.utilities.VersionControlHelper.ExceptionHandling;
 
 public class TestScenarios
 {
@@ -57,7 +58,7 @@ public class TestScenarios
 
 		ChessBoard board = new ChessBoard(DONT_PLACE_PIECES, USE_PERSISTANCE_LOGGING);
 
-		VersionControlHelper.assertThatResourceIsVersionControlled(scenarioFile, true);
+		VersionControlHelper.assertThatResourceIsVersionControlled(scenarioFile, ExceptionHandling.IGNORE_EXCEPTION);
 
 		assertEquals("Could not load:" + scenarioFile, expectValidBoard, BoardLoader.loadStreamIntoBoard(BoardLoader.class.getResourceAsStream(scenarioFile), board));
 		return board;
@@ -78,7 +79,7 @@ public class TestScenarios
 	@Test
 	public void testMoveAvailabilityUnderFutureCheck()
 	{
-		ChessBoard board = loadBoard("new_move_is also_on_stopping_path_take_over_should_also_be_possible");
+		ChessBoard board = loadBoard("new_move_is_also_on_stopping_path_take_over_should_also_be_possible");
 
 		Queen q = (Queen)board.getPiece(position("2F"));
 
@@ -324,8 +325,8 @@ public class TestScenarios
 		{
 			if(!usedTestFiles.contains(testFile.getName()))
 			{
-				testFile.renameTo(new File("src/test/resources/scenarios/unused/" + testFile.getName()));
-				System.out.println("Moved unused test file: " + testFile);
+				//testFile.renameTo(new File("src/test/resources/scenarios/unused/" + testFile.getName()));
+				System.out.println("Possibly unused test file: " + testFile);
 			}
 		}
 	}

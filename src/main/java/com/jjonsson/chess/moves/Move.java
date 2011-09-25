@@ -541,6 +541,15 @@ public abstract class Move
 		return true;
 	}
 
+	/**
+	 * Performs this move on the board that the piece connected to this move is placed on
+	 * @return
+	 */
+	public boolean perform()
+	{
+		return myPiece.performMove(this, getPiece().getBoard(), false);
+	}
+
 	@Override
 	public String toString()
 	{

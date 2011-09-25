@@ -3,12 +3,14 @@ package com.jjonsson.chess.evaluators;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 
 public class TestChessBoardEvaluator
@@ -29,6 +31,16 @@ public class TestChessBoardEvaluator
 		ChessBoard board = loadBoard("should_be_checkmate");
 		ChessState currentState = board.getCurrentState();
 		assertEquals(GAME_STATE, ChessState.CHECKMATE, currentState);
+
+		try
+		{
+			//Make sure no more moves can be made on the board
+			ChessMoveEvaluator.performBestMove(board);
+			fail();
+		}
+		catch (NoMovesAvailableException e)
+		{
+		}
 	}
 
 	@Test

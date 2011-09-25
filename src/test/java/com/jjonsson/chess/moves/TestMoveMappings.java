@@ -1,6 +1,5 @@
 package com.jjonsson.chess.moves;
 
-import static com.jjonsson.chess.board.PiecePlacement.PLACE_PIECES;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertSame;
 
@@ -19,7 +18,7 @@ public class TestMoveMappings
 	@Test
 	public void testTwoDimMapping() throws InvalidPosition
 	{
-		ChessBoard board = new ChessBoard(PLACE_PIECES);
+		ChessBoard board = new ChessBoard();
 		for(Piece piece : board.getPieces())
 		{
 			//We keep our own copy to check for duplicates

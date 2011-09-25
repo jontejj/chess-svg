@@ -1,6 +1,5 @@
 package com.jjonsson.chess.evaluators.ordering;
 
-import static com.jjonsson.chess.board.PiecePlacement.PLACE_PIECES;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static junit.framework.Assert.assertEquals;
@@ -18,7 +17,7 @@ public class TestCenterStageOrdering
 	@Test
 	public void testCenterStageOrdering()
 	{
-		ChessBoard board = new ChessBoard(PLACE_PIECES);
+		ChessBoard board = new ChessBoard();
 		Move pawnTwoStepMove = board.getAvailableMove(position("4C"), WHITE);
 		Move knightMove = board.getAvailableMove(position("3A"), WHITE);
 

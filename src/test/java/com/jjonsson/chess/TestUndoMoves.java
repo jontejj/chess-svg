@@ -1,6 +1,5 @@
 package com.jjonsson.chess;
 
-import static com.jjonsson.chess.board.PiecePlacement.PLACE_PIECES;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
@@ -27,7 +26,7 @@ public class TestUndoMoves
 	@Test
 	public void testPawnTwoStepMoveUndo()
 	{
-		ChessBoard board = new ChessBoard(PLACE_PIECES);
+		ChessBoard board = new ChessBoard();
 		Move pawnTwoStepMove = board.getAvailableMove(position("4C"), WHITE);
 		assertTrue(pawnTwoStepMove.getPiece().performMove(pawnTwoStepMove, board));
 		assertEquals(1, board.undoMoves(1));
@@ -37,7 +36,7 @@ public class TestUndoMoves
 	@Test
 	public void testUndoNotAvailable()
 	{
-		ChessBoard board = new ChessBoard(PLACE_PIECES);
+		ChessBoard board = new ChessBoard();
 		assertEquals(0, board.undoMoves(1, false));
 	}
 

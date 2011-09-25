@@ -9,14 +9,38 @@ public abstract class Position
 	private byte myRow;
 	private byte myColumn;
 
-	public static final int A = 0;
+	/*public static final int A = 0;
 	public static final int B = 1;
 	public static final int C = 2;
 	public static final int D = 3;
 	public static final int E = 4;
 	public static final int F = 5;
 	public static final int G = 6;
-	public static final int H = 7;
+	public static final int H = 7;*/
+
+	public enum Column
+	{
+		A(0),
+		B(1),
+		C(2),
+		D(3),
+		E(4),
+		F(5),
+		G(6),
+		H(7);
+
+		private byte myColumn;
+
+		private Column(final int column)
+		{
+			myColumn = (byte) column;
+		}
+
+		public byte getValue()
+		{
+			return myColumn;
+		}
+	}
 
 	public static final int BLACK_STARTING_ROW = ChessBoard.BOARD_SIZE - 1;
 	public static final int BLACK_PAWN_ROW = ChessBoard.BOARD_SIZE - 2;

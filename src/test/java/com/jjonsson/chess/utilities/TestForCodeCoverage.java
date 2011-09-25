@@ -14,29 +14,33 @@ import com.jjonsson.chess.board.PositionContainer;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
 import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
-import com.jjonsson.chess.evaluators.ProgressTracker;
+import com.jjonsson.chess.evaluators.ResourceAllocator;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
+import com.jjonsson.chess.evaluators.statistics.StatisticsAction;
+import com.jjonsson.chess.gui.DisplayOption;
+import com.jjonsson.chess.gui.KeyboardActions;
 import com.jjonsson.chess.gui.PieceImageCache;
 import com.jjonsson.chess.gui.Settings;
 import com.jjonsson.chess.gui.WindowUtilities;
+import com.jjonsson.chess.moves.Position.Column;
 import com.jjonsson.chess.persistence.BoardLoader;
 import com.jjonsson.chess.persistence.MoveItem;
 import com.jjonsson.chess.persistence.MoveLoggerFactory;
 import com.jjonsson.chess.persistence.PersistanceLogging;
 import com.jjonsson.utilities.Bits;
 import com.jjonsson.utilities.CrossPlatformUtilities;
+import com.jjonsson.utilities.FileSystem;
 import com.jjonsson.utilities.HashCodes;
 import com.jjonsson.utilities.Loggers;
 
+/** The reasoning behind testing code that doesn't do anything is to achieve 100% code coverage and to notice when the code
+	coverage drops. Otherwise one could always think, hey I don't have 100% code coverage anymore but it's PROBABLY because
+	of my private constructors (or any other code that's not used but needed). This makes it easy to spot untested methods without having to check that it just was a
+	private constructor etc.
+ */
 public class TestForCodeCoverage
 {
-
 	/**
-		The reasoning behind testing code that doesn't do anything is to achieve 100% code coverage and to notice when the code
-		coverage drops. Otherwise one could always think, hey I don't have 100% code coverage anymore but it's PROBABLY because
-		of my private constructors (or any other code that's not used but needed). This makes it easy to spot untested methods without having to check that it just was a
-		private constructor etc.
-
 		IMO it's best to use reflection here since otherwise you would have to either get a better code coverage tool that
 		ignores these constructors or somehow tell the code coverage tool to ignore the method
 		(perhaps an Annotation or a configuration file) because then you would be stuck with a specific code coverage tool.
@@ -51,12 +55,12 @@ public class TestForCodeCoverage
 	 * @throws IllegalArgumentException
 	 */
 	@Test
-	public void callPrivateConstructorsForCodeCoverage() throws SecurityException, NoSuchMethodException, IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException
+	public void callPrivateConstructorsForCodeCoverage() throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException
 	{
 		Class<?>[] classesToConstruct = {MoveOrdering.class, Bits.class, CrossPlatformUtilities.class, ChessMoveEvaluator.class,
-				ChessBoardEvaluator.class, ProgressTracker.class, BoardLoader.class, MoveLoggerFactory.class, Settings.class,
+				ChessBoardEvaluator.class, KeyboardActions.class, BoardLoader.class, MoveLoggerFactory.class, Settings.class,
 				WindowUtilities.class, PieceImageCache.class, HashCodes.class, Loggers.class, Chess.class,
-				VersionControlHelper.class};
+				VersionControlHelper.class, FileSystem.class, ResourceAllocator.class};
 
 		for(Class<?> clazz : classesToConstruct)
 		{
@@ -75,6 +79,9 @@ public class TestForCodeCoverage
 		PiecePlacement.valueOf(PiecePlacement.PLACE_PIECES.toString());
 		PersistanceLogging.valueOf(PersistanceLogging.USE_PERSISTANCE_LOGGING.toString());
 		ChessState.valueOf(ChessState.CHECK.toString());
+		DisplayOption.valueOf(DisplayOption.DISPLAY.toString());
+		StatisticsAction.valueOf(StatisticsAction.MOVE_EVALUATED.toString());
+		Column.valueOf(Column.A.toString());
 		assertTrue(true);
 	}
 

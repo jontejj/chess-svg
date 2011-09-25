@@ -1,9 +1,13 @@
 package com.jjonsson.chess.gui.components;
 
-import static com.jjonsson.chess.board.PiecePlacement.PLACE_PIECES;
-import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_LOGGING;
+import static com.jjonsson.chess.gui.ChessWindow.ACTIONS_MENU_NAME;
+import static com.jjonsson.chess.gui.ChessWindow.SHOW_STATISTICS_MENU_ITEM;
+import static com.jjonsson.chess.moves.ImmutablePosition.from;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+
+import java.awt.Point;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -11,10 +15,14 @@ import org.junit.Test;
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
 import com.jjonsson.chess.evaluators.ChessMoveEvaluator;
+import com.jjonsson.chess.exceptions.InvalidPosition;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.gui.ChessWindow;
+import com.jjonsson.chess.gui.DisplayOption;
 import com.jjonsson.chess.gui.Settings;
 import com.jjonsson.chess.gui.WindowUtilities;
+import com.jjonsson.chess.moves.ImmutablePosition;
+import com.jjonsson.chess.moves.Position.Column;
 import com.jjonsson.chess.pieces.Piece;
 public class TestChessBoardComponent
 {
@@ -37,7 +45,10 @@ public class TestChessBoardComponent
 		WindowUtilities.setNativeLookAndFeel();
 	}
 
-	private static final int SLEEP_TIME = 2000;
+	/**
+	 * Represents 2 seconds
+	 */
+	private static final long SLEEP_TIME = SECONDS.toMillis(2);
 
 	private static long benchmarkedPlaytime;
 	private static long benchmarkedPlaytimeInSeconds;
@@ -69,10 +80,9 @@ public class TestChessBoardComponent
 	@Test
 	public void testPerformHintedMove()
 	{
-		ChessBoard board = new ChessBoard(PLACE_PIECES, USE_PERSISTANCE_LOGGING);
-		ChessWindow window = new ChessWindow(board);
+		ChessBoard board = new ChessBoard();
+		ChessWindow window = new ChessWindow(board, DisplayOption.DISPLAY);
 		window.setTitle("Testing and performing a hinted move");
-		window.displayGame();
 
 		ChessBoardComponent component = window.getBoardComponent();
 		component.showHint();
@@ -82,6 +92,7 @@ public class TestChessBoardComponent
 		sleep();
 		component.positionClicked(component.getHintMove().getDestination());
 		sleep();
+		window.dispose();
 	}
 
 	/**
@@ -97,11 +108,12 @@ public class TestChessBoardComponent
 		//TODO: revert changes in this function
 		//while(true)
 		{
-			ChessBoard board = new ChessBoard(PLACE_PIECES, USE_PERSISTANCE_LOGGING);
-			ChessWindow window = new ChessWindow(board);
+			ChessBoard board = new ChessBoard();
+			ChessWindow window = new ChessWindow(board, DisplayOption.DISPLAY);
 
-			window.displayGame();
 			window.setTitle("Expecting black to win within " + benchmarkedPlaytimeInSeconds + " secs");
+
+			TestChessWindow.clickMenuItem(window, ACTIONS_MENU_NAME, SHOW_STATISTICS_MENU_ITEM);
 
 			ChessBoardComponent component = window.getBoardComponent();
 			component.setAIEnabled(false);
@@ -128,11 +140,29 @@ public class TestChessBoardComponent
 			//TODO(jontejj) the takeOverPiecesCount seems to be off needs more testing
 			//assertTrue(board.getMeasuredStatusForPlayer(Piece.BLACK) >= board.getMeasuredStatusForPlayer(Piece.WHITE));
 			sleep();
+			window.dispose();
+		}
+	}
+
+	@Test
+	public void testConversionBetweenPositionAndPoint() throws InvalidPosition
+	{
+		ChessBoardComponent component = new ChessWindow(new ChessBoard(), DisplayOption.DONT_DISPLAY).getBoardComponent();
+
+		for(int r = 0; r < ChessBoard.BOARD_SIZE; r++)
+		{
+			for(Column c : Column.values())
+			{
+				ImmutablePosition pos = from(r, c.getValue());
+				Point point = component.getPointForPosition(pos);
+
+				assertEquals(pos, component.getPositionForPoint(point));
+			}
 		}
 	}
 
 	/**
-	 * Sleeps some time to show the user what the test cases are doing, sleeps only if {@link Settings#DEBUG} is true
+	 * Sleeps {@link TestChessBoardComponent#SLEEP_TIME} seconds to show the user what the test cases are doing, sleeps only if {@link Settings#DEBUG} is true
 	 */
 	public static void sleep()
 	{

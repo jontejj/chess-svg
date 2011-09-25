@@ -1,17 +1,18 @@
 package com.jjonsson.chess.gui;
 
+import static com.jjonsson.chess.gui.KeyboardActions.getKeyStrokeForAction;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.EXIT;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.LOAD;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.NEW;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.RELOAD;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.SAVE;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.SAVE_AS;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.SHOW_HINT;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.SHOW_STATISTICS;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.UNDO;
+import static com.jjonsson.chess.gui.KeyboardActions.Action.UNDO_TWICE;
 import static com.jjonsson.utilities.CrossPlatformUtilities.USUAL_TITLE_HEIGHT;
-import static com.jjonsson.utilities.CrossPlatformUtilities.getExitKeyStroke;
-import static com.jjonsson.utilities.CrossPlatformUtilities.getLoadKeyStroke;
-import static com.jjonsson.utilities.CrossPlatformUtilities.getNewKeyStroke;
-import static com.jjonsson.utilities.CrossPlatformUtilities.getReloadKeyStroke;
-import static com.jjonsson.utilities.CrossPlatformUtilities.getSaveAsKeyStroke;
-import static com.jjonsson.utilities.CrossPlatformUtilities.getSaveKeyStroke;
-import static com.jjonsson.utilities.CrossPlatformUtilities.getShowHintKeyStroke;
 import static com.jjonsson.utilities.CrossPlatformUtilities.getTitleHeightForCurrentPlatform;
-import static com.jjonsson.utilities.CrossPlatformUtilities.getUndoKeyStroke;
-import static com.jjonsson.utilities.CrossPlatformUtilities.getUndoTwiceKeyStroke;
-import static com.jjonsson.utilities.CrossPlatformUtilities.isMac;
 import static com.jjonsson.utilities.Loggers.STDOUT;
 
 import java.awt.Color;
@@ -21,7 +22,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -30,15 +31,20 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
+import org.fest.swing.util.Platform;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.jjonsson.chess.board.ChessBoard;
+import com.jjonsson.chess.board.PiecePlacement;
+import com.jjonsson.chess.evaluators.statistics.StatisticsAction;
 import com.jjonsson.chess.gui.components.ChessBoardComponent;
 import com.jjonsson.chess.listeners.StatusListener;
 import com.jjonsson.chess.persistence.BoardLoader;
 import com.jjonsson.chess.persistence.ChessFileFilter;
+import com.jjonsson.chess.persistence.PersistanceLogging;
 import com.jjonsson.utilities.ThreadTracker;
 
 public class ChessWindow extends JFrame implements ActionListener, StatusListener
@@ -56,24 +62,36 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 	private static final int WINDOW_BORDER_SIZE = 3;
 
 	@VisibleForTesting
+	public static final String	FILE_MENU_NAME	= "File";
+
+	@VisibleForTesting
 	public static final String NEW_MENU_ITEM = "New";
 	private static final String LOAD_MENU_ITEM = "Load";
 	private static final String	RELOAD_MENU_ITEM	= "Reload";
 	private static final String SAVE_MENU_ITEM = "Save";
 	private static final String SAVE_AS_MENU_ITEM = "Save As";
 	@VisibleForTesting
+	public static final String EXIT_MENU_ITEM = "Exit";
+
+	public static final String	SETTINGS_MENU_NAME	= "Settings";
+
+	@VisibleForTesting
 	public static final String DISABLE_AI_MENU_ITEM = "Disable Computer Player";
 	private static final String ENABLE_AI_MENU_ITEM = "Enable Computer Player";
 	@VisibleForTesting
-	public static final String EXIT_MENU_ITEM = "Exit";
+	public static final String	SHOW_AVAILABLE_CLICKS_MENU_ITEM	= "Show Available Clicks";
+	private static final String	HIDE_AVAILABLE_CLICKS_MENU_ITEM	= "Hide Available Clicks";
+
+	@VisibleForTesting
+	public static final String	ACTIONS_MENU_NAME	= "Actions";
+
 	@VisibleForTesting
 	public static final String UNDO_BLACK_MENU_ITEM = "Undo Last Move";
 	private static final String UNDO_WHITE_MENU_ITEM = "Undo Last Two Moves";
-	private static final String SHOW_HINT_MENU_ITEM = "Show Hint";
-
 	@VisibleForTesting
-	public static final String	SHOW_AVAILABLE_CLICKS_MENU_ITEM	= "Show Available Clicks";
-	private static final String	HIDE_AVAILABLE_CLICKS_MENU_ITEM	= "Hide Available Clicks";
+	public static final String SHOW_HINT_MENU_ITEM = "Show Hint";
+	@VisibleForTesting
+	public static final String	SHOW_STATISTICS_MENU_ITEM = "Show Statistics";
 
 	private String lastFileChooserLocation;
 
@@ -96,7 +114,12 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 
 	private ThreadTracker myTracker;
 
-	public ChessWindow(final ChessBoard board)
+	/**
+	 * Makes it possible to view the current speed of evaluations
+	 */
+	private StatisticsWindow myStatisticsWindow;
+
+	public ChessWindow(final ChessBoard board, final DisplayOption displayOption)
 	{
 		super(NAME);
 		myBoard = board;
@@ -111,10 +134,43 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		myComponent.setStatusListener(this);
 		this.setContentPane(myComponent);
 
+		myStatisticsWindow = new StatisticsWindow();
+		board.setStatisticsListener(myStatisticsWindow);
+
 		this.addWindowListener(new WindowListener());
 		this.addComponentListener(new ResizeComponentAdapter(this));
 
 		createStatusBar();
+		if(displayOption.shouldDisplay())
+		{
+			displayGame();
+		}
+	}
+
+	/**
+	 * Calling this has the same affect as calling {@link ChessWindow#ChessWindow(ChessBoard, DisplayOption) with {@link DisplayOption#DISPLAY}
+	 */
+	public void displayGame()
+	{
+		this.setVisible(true);
+		myComponent.repaint();
+		if(Settings.DEMO)
+		{
+			myComponent.nextPlayer();
+		}
+	}
+
+	@Override
+	public void dispose()
+	{
+		myStatisticsWindow.dispose();
+		getBoard().performStatisticsAction(StatisticsAction.INTERRUPT_TRACKING);
+		super.dispose();
+	}
+
+	public ThreadTracker getThreadTracker()
+	{
+		return myTracker;
 	}
 
 	@VisibleForTesting
@@ -163,16 +219,6 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		return myBoard;
 	}
 
-	public void displayGame()
-	{
-		this.setVisible(true);
-		myComponent.repaint();
-		if(Settings.DEMO)
-		{
-			myComponent.nextPlayer();
-		}
-	}
-
 	public void resizeWindow()
 	{
 		resizeStatusBar();
@@ -189,40 +235,40 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 
 	private JMenu createFileMenu()
 	{
-		JMenu fileMenu = new JMenu("File");
+		JMenu fileMenu = new JMenu(FILE_MENU_NAME);
 
 		JMenuItem newAction = new JMenuItem(NEW_MENU_ITEM);
-		newAction.setAccelerator(getNewKeyStroke());
+		newAction.setAccelerator(getKeyStrokeForAction(NEW));
 		newAction.addActionListener(this);
 		fileMenu.add(newAction);
 
 		JMenuItem loadAction = new JMenuItem(LOAD_MENU_ITEM);
-		loadAction.setAccelerator(getLoadKeyStroke());
+		loadAction.setAccelerator(getKeyStrokeForAction(LOAD));
 		loadAction.addActionListener(this);
 		fileMenu.add(loadAction);
 
 		JMenuItem reloadAction = new JMenuItem(RELOAD_MENU_ITEM);
-		reloadAction.setAccelerator(getReloadKeyStroke());
+		reloadAction.setAccelerator(getKeyStrokeForAction(RELOAD));
 		reloadAction.addActionListener(this);
 		fileMenu.add(reloadAction);
 
 		JMenuItem saveAction = new JMenuItem(SAVE_MENU_ITEM);
-		saveAction.setAccelerator(getSaveKeyStroke());
+		saveAction.setAccelerator(getKeyStrokeForAction(SAVE));
 		saveAction.addActionListener(this);
 		fileMenu.add(saveAction);
 
 		JMenuItem saveAsAction = new JMenuItem(SAVE_AS_MENU_ITEM);
-		saveAsAction.setAccelerator(getSaveAsKeyStroke());
+		saveAsAction.setAccelerator(getKeyStrokeForAction(SAVE_AS));
 		saveAsAction.addActionListener(this);
 		fileMenu.add(saveAsAction);
 
 		//Mac's already have a default menu with an exit action
-		if(!isMac())
+		if(!Platform.isMacintosh())
 		{
 			fileMenu.addSeparator();
 
 			JMenuItem exitAction = new JMenuItem(EXIT_MENU_ITEM);
-			exitAction.setAccelerator(getExitKeyStroke());
+			exitAction.setAccelerator(getKeyStrokeForAction(EXIT));
 			exitAction.addActionListener(this);
 			fileMenu.add(exitAction);
 		}
@@ -233,29 +279,34 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 
 	private JMenu createActionsMenu()
 	{
-		JMenu actionsMenu = new JMenu("Actions");
+		JMenu actionsMenu = new JMenu(ACTIONS_MENU_NAME);
 
 		JMenuItem undoBlack = new JMenuItem(UNDO_BLACK_MENU_ITEM);
-		undoBlack.setAccelerator(getUndoKeyStroke());
+		undoBlack.setAccelerator(getKeyStrokeForAction(UNDO));
 		undoBlack.addActionListener(this);
 		actionsMenu.add(undoBlack);
 
 		JMenuItem undoWhite = new JMenuItem(UNDO_WHITE_MENU_ITEM);
-		undoWhite.setAccelerator(getUndoTwiceKeyStroke());
+		undoWhite.setAccelerator(getKeyStrokeForAction(UNDO_TWICE));
 		undoWhite.addActionListener(this);
 		actionsMenu.add(undoWhite);
 
 		JMenuItem showHint = new JMenuItem(SHOW_HINT_MENU_ITEM);
-		showHint.setAccelerator(getShowHintKeyStroke());
+		showHint.setAccelerator(getKeyStrokeForAction(SHOW_HINT));
 		showHint.addActionListener(this);
 		actionsMenu.add(showHint);
+
+		JMenuItem showStatistics = new JMenuItem(SHOW_STATISTICS_MENU_ITEM);
+		showStatistics.setAccelerator(getKeyStrokeForAction(SHOW_STATISTICS));
+		showStatistics.addActionListener(this);
+		actionsMenu.add(showStatistics);
 
 		return actionsMenu;
 	}
 
 	private JMenu createSettingsMenu()
 	{
-		JMenu settingsMenu = new JMenu("Settings");
+		JMenu settingsMenu = new JMenu(SETTINGS_MENU_NAME);
 
 		JMenuItem showAvailableClicks = null;
 		if(Settings.DEBUG || Settings.DEMO)
@@ -325,23 +376,23 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		File selectedFile = selectFile("Load Chess File");
 		if(myCurrentBoardFile != null)
 		{
-			//TODO(jontejj): make a copy of the previous board, in case something goes wrong with the loading
-			getBoard().clear();
-			myComponent.clear();
 			boolean loadOk = false;
-
 			while(!loadOk && myCurrentBoardFile != null)
 			{
-				loadOk = BoardLoader.loadFileIntoBoard(selectedFile, getBoard());
-				if(loadOk)
+				//First make a test load
+				if(BoardLoader.loadFileIntoBoard(selectedFile, new ChessBoard(PiecePlacement.DONT_PLACE_PIECES, PersistanceLogging.USE_PERSISTANCE_LOGGING)))
 				{
-					break;
+					//The board seems to look fine, replace the board connected to the GUI with this one
+					getBoard().clear();
+					myComponent.clear();
+					loadOk = BoardLoader.loadFileIntoBoard(selectedFile, getBoard());
+					if(loadOk)
+					{
+						break;
+					}
 				}
-
 				myStatusBar.setText(myGameStatus + " (Invalid board file format, Select new file to load)");
-
 				selectedFile = selectFile("Load Chess File");
-
 			}
 			myComponent.loadingOfBoardDone();
 
@@ -352,7 +403,6 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 			else
 			{
 				setResultOfInteraction("Load Cancelled");
-				newGame();
 			}
 		}
 	}
@@ -412,19 +462,16 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		myComponent.setAIEnabled(enable);
 	}
 
-	private static Map<String, Boolean> noAbortionNecessaryCommands = Maps.newHashMap();
-	static
-	{
-		noAbortionNecessaryCommands.put(SHOW_AVAILABLE_CLICKS_MENU_ITEM, true);
-		noAbortionNecessaryCommands.put(HIDE_AVAILABLE_CLICKS_MENU_ITEM, true);
-		//noAbortionNecessaryCommands.put(SHOW_HINT_MENU_ITEM, true);
-	}
+	private static Set<String> noAbortionNecessaryCommands = Sets.newHashSet(
+			SHOW_AVAILABLE_CLICKS_MENU_ITEM,
+			HIDE_AVAILABLE_CLICKS_MENU_ITEM,
+			SHOW_STATISTICS_MENU_ITEM);
 
 	@Override
 	public void actionPerformed(final ActionEvent e)
 	{
 		STDOUT.debug(e.getActionCommand());
-		if(!noAbortionNecessaryCommands.containsKey(e.getActionCommand()))
+		if(!noAbortionNecessaryCommands.contains(e.getActionCommand()))
 		{
 			//Cancel current jobs such as when the AI is thinking of the next move or when a hint move is searched for
 			myComponent.interruptCurrentJobs();
@@ -482,6 +529,10 @@ public class ChessWindow extends JFrame implements ActionListener, StatusListene
 		{
 			myComponent.showAvailableClicks(false);
 			JMenuItem.class.cast(e.getSource()).setText(SHOW_AVAILABLE_CLICKS_MENU_ITEM);
+		}
+		else if(e.getActionCommand().equals(SHOW_STATISTICS_MENU_ITEM))
+		{
+			myStatisticsWindow.setVisible(true);
 		}
 		else if(e.getActionCommand().equals(EXIT_MENU_ITEM))
 		{

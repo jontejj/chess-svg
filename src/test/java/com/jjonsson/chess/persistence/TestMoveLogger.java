@@ -1,7 +1,6 @@
 package com.jjonsson.chess.persistence;
 
 import static com.jjonsson.chess.board.PiecePlacement.DONT_PLACE_PIECES;
-import static com.jjonsson.chess.board.PiecePlacement.PLACE_PIECES;
 import static com.jjonsson.chess.gui.Settings.disableDebug;
 import static com.jjonsson.chess.gui.Settings.enableDebug;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
@@ -63,7 +62,7 @@ public class TestMoveLogger
 	public void testCopyMoveHistory() throws UnavailableMoveItem, NoMovesAvailableException
 	{
 		String filename = "test_copy_move_history" + ChessFileFilter.FILE_ENDING;
-		ChessBoard board = new ChessBoard(PLACE_PIECES, USE_PERSISTANCE_LOGGING);
+		ChessBoard board = new ChessBoard();
 		board.move("2A", "3A");
 		ChessBoard copy = board.copy(USE_PERSISTANCE_LOGGING);
 		copy.move("7A", "5A");

@@ -1,17 +1,17 @@
 package com.jjonsson.chess.board;
 
-import static com.jjonsson.chess.moves.Position.A;
-import static com.jjonsson.chess.moves.Position.B;
 import static com.jjonsson.chess.moves.Position.BLACK_PAWN_ROW;
 import static com.jjonsson.chess.moves.Position.BLACK_STARTING_ROW;
-import static com.jjonsson.chess.moves.Position.C;
-import static com.jjonsson.chess.moves.Position.D;
-import static com.jjonsson.chess.moves.Position.E;
-import static com.jjonsson.chess.moves.Position.F;
-import static com.jjonsson.chess.moves.Position.G;
-import static com.jjonsson.chess.moves.Position.H;
 import static com.jjonsson.chess.moves.Position.WHITE_PAWN_ROW;
 import static com.jjonsson.chess.moves.Position.WHITE_STARTING_ROW;
+import static com.jjonsson.chess.moves.Position.Column.A;
+import static com.jjonsson.chess.moves.Position.Column.B;
+import static com.jjonsson.chess.moves.Position.Column.C;
+import static com.jjonsson.chess.moves.Position.Column.D;
+import static com.jjonsson.chess.moves.Position.Column.E;
+import static com.jjonsson.chess.moves.Position.Column.F;
+import static com.jjonsson.chess.moves.Position.Column.G;
+import static com.jjonsson.chess.moves.Position.Column.H;
 import static com.jjonsson.chess.pieces.Piece.BLACK;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.utilities.Bits.containBits;
@@ -20,6 +20,7 @@ import static com.jjonsson.utilities.Loggers.STDOUT;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,12 +36,15 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator;
 import com.jjonsson.chess.evaluators.ChessBoardEvaluator.ChessState;
+import com.jjonsson.chess.evaluators.statistics.StatisticsAction;
+import com.jjonsson.chess.evaluators.statistics.StatisticsTracker;
 import com.jjonsson.chess.exceptions.DuplicatePieceError;
 import com.jjonsson.chess.exceptions.InvalidBoardException;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.UnavailableMoveItem;
 import com.jjonsson.chess.listeners.ChessBoardListener;
 import com.jjonsson.chess.listeners.MoveListener;
+import com.jjonsson.chess.listeners.StatisticsListener;
 import com.jjonsson.chess.moves.DependantMove;
 import com.jjonsson.chess.moves.ImmutablePosition;
 import com.jjonsson.chess.moves.KingMove;
@@ -48,6 +52,7 @@ import com.jjonsson.chess.moves.Move;
 import com.jjonsson.chess.moves.MutablePosition;
 import com.jjonsson.chess.moves.PawnTakeOverMove;
 import com.jjonsson.chess.moves.Position;
+import com.jjonsson.chess.moves.Position.Column;
 import com.jjonsson.chess.moves.RevertingMove;
 import com.jjonsson.chess.persistence.BoardLoader;
 import com.jjonsson.chess.persistence.ChessFileFilter;
@@ -94,10 +99,15 @@ public final class ChessBoard
 	private Map<Piece, Map<ImmutablePosition, Move>> myPieceToPositionAvailableMoves;
 	private Map<Piece, Map<ImmutablePosition, Move>> myPieceToPositionNonAvailableMoves;
 
+	private Set<Move> myWhiteAvailableMoves;
+	private Set<Move> myBlackAvailableMoves;
+
 	private boolean myCurrentPlayer;
 
 	private Set<ChessBoardListener> myBoardListeners;
 	private Set<MoveListener> myMoveListeners;
+	private StatisticsTracker myStatisticsTracker;
+
 	private MoveLogger myMoveLogger;
 	private PersistenceLogger myPersistenceLogger;
 
@@ -160,16 +170,18 @@ public final class ChessBoard
 		myDifficulty = DEFAULT_DIFFICULTY;
 		myAllowsMoves = true;
 		myMovesThatStopsKingFromBeingChecked = ImmutableSet.of();
-		myBoardListeners = Sets.newHashSet();
-		myMoveListeners = Sets.newHashSet();
+		myBoardListeners = Sets.newIdentityHashSet();
+		myMoveListeners = Sets.newIdentityHashSet();
 		myMoveLogger = MoveLoggerFactory.createMoveLogger();
-		myScheduledMoveUpdates = Sets.newHashSet();
+		myScheduledMoveUpdates = Sets.newIdentityHashSet();
 		addMoveListener(myMoveLogger);
 
 		myPieces = Sets.newIdentityHashSet();
 
 		myPieceToPositionAvailableMoves = Maps.newHashMap();
 		myPieceToPositionNonAvailableMoves = Maps.newHashMap();
+		myWhiteAvailableMoves = Sets.newIdentityHashSet();
+		myBlackAvailableMoves = Sets.newIdentityHashSet();
 
 		if(piecePlacement.shouldPlacePieces())
 		{
@@ -193,6 +205,23 @@ public final class ChessBoard
 				updatePersistenceLogger();
 			}
 		}
+	}
+
+	public void performStatisticsAction(final StatisticsAction action)
+	{
+		if(myStatisticsTracker != null)
+		{
+			myStatisticsTracker.perform(action);
+		}
+	}
+
+	/**
+	 * Constructs a default ChessBoard (places pieces in their original positions),
+	 * with the possibility to save moves as well.
+	 */
+	public ChessBoard()
+	{
+		this(PiecePlacement.PLACE_PIECES, PersistanceLogging.USE_PERSISTANCE_LOGGING);
 	}
 
 	private void scheduleMoveForUpdate(final Move move)
@@ -220,6 +249,16 @@ public final class ChessBoard
 	public boolean addMoveListener(final MoveListener moveListener)
 	{
 		return myMoveListeners.add(moveListener);
+	}
+
+	public void setStatisticsListener(final StatisticsListener statisticsListener)
+	{
+		myStatisticsTracker = new StatisticsTracker(statisticsListener);
+	}
+
+	public StatisticsTracker getStatisticsTracker()
+	{
+		return myStatisticsTracker;
 	}
 
 	public void addPersistenceLogger(final PersistenceLogger persistenceMoveLogger)
@@ -251,6 +290,7 @@ public final class ChessBoard
 			{
 				newBoard.copyMoveCounters(this);
 				newBoard.myMoveLogger.setMovesMadeOffset(myMoveLogger.getMovesMade());
+				newBoard.myStatisticsTracker = myStatisticsTracker;
 			}
 			else
 			{
@@ -463,12 +503,17 @@ public final class ChessBoard
 	 */
 	public void performRandomMove() throws NoMovesAvailableException
 	{
+		/**
+		 * Necessary check because {@link Move#canBeMade(ChessBoard)} doesn't check this (optimization)
+		 */
 		if(!ChessBoardEvaluator.inPlay(this))
 		{
 			throw new NoMovesAvailableException();
 		}
 
-		List<Move> shuffledMoves = getAvailableMoves(getCurrentPlayer());
+		Set<Move> moves = getAvailableMoves(getCurrentPlayer());
+
+		List<Move> shuffledMoves = Arrays.asList(moves.toArray(new Move[moves.size()]));
 		Collections.shuffle(shuffledMoves);
 
 		for(Move randomMove : shuffledMoves)
@@ -576,7 +621,7 @@ public final class ChessBoard
 	 */
 	private void setupBlackPieces()
 	{
-		for(int column = 0; column < ChessBoard.BOARD_SIZE; column++)
+		for(Column column : Column.values())
 		{
 			addPiece(new BlackPawn(MutablePosition.from(BLACK_PAWN_ROW, column), this), false, true);
 		}
@@ -599,13 +644,13 @@ public final class ChessBoard
 	{
 		if(myBlackKing.isAtStartingPosition())
 		{
-			myBlackKing.setLeftRock(getPiece(ImmutablePosition.from(BLACK_STARTING_ROW, A)));
-			myBlackKing.setRightRock(getPiece(ImmutablePosition.from(BLACK_STARTING_ROW, H)));
+			myBlackKing.setLeftRock(getPiece(ImmutablePosition.position(BLACK_STARTING_ROW , A)));
+			myBlackKing.setRightRock(getPiece(ImmutablePosition.position(BLACK_STARTING_ROW, H)));
 		}
 		if(myWhiteKing.isAtStartingPosition())
 		{
-			myWhiteKing.setLeftRock(getPiece(ImmutablePosition.from(WHITE_STARTING_ROW, A)));
-			myWhiteKing.setRightRock(getPiece(ImmutablePosition.from(WHITE_STARTING_ROW, H)));
+			myWhiteKing.setLeftRock(getPiece(ImmutablePosition.position(WHITE_STARTING_ROW , A)));
+			myWhiteKing.setRightRock(getPiece(ImmutablePosition.position(WHITE_STARTING_ROW, H)));
 		}
 	}
 
@@ -688,6 +733,7 @@ public final class ChessBoard
 			if(getPositionContainer(pos).removeAvailableMove(move))
 			{
 				decrementAvailableMoves(piece.getAffinity());
+				getAvailableMoves(piece.getAffinity()).remove(move);
 			}
 			if(move.shouldBeIncludedInMoveTable())
 			{
@@ -739,6 +785,7 @@ public final class ChessBoard
 			if(getPositionContainer(pos).addAvailableMove(move))
 			{
 				incrementAvailableMoves(piece.getAffinity());
+				getAvailableMoves(piece.getAffinity()).add(move);
 			}
 			if(move.shouldBeIncludedInMoveTable())
 			{
@@ -873,17 +920,13 @@ public final class ChessBoard
 	 * @param affinity the affinity of the player's moves that should be returned
 	 * @return the available moves for the given affinity
 	 */
-	public List<Move> getAvailableMoves(final boolean affinity)
+	public Set<Move> getAvailableMoves(final boolean affinity)
 	{
-		List<Move> moves = Lists.newArrayList();
-		for(byte r = ChessBoard.BOARD_SIZE - 1; r >= 0; r--)
+		if(affinity == WHITE)
 		{
-			for(byte c = ChessBoard.BOARD_SIZE - 1; c >= 0; c--)
-			{
-				moves.addAll(myPositions[r][c].getAvailableMoves(affinity));
-			}
+			return myWhiteAvailableMoves;
 		}
-		return moves;
+		return myBlackAvailableMoves;
 	}
 
 
@@ -1074,13 +1117,13 @@ public final class ChessBoard
 		{
 			//The move was out of sync, lets fix it
 			//TODO: this wouldn't be needed if the moves were updated properly
-			STDOUT.info("Move out of sync, Old piece at destination:" + assumedTakeOverPiece +
-					"Actual piece at destination:" + currentPieceAtDestination);
-			BoardLoader.saveBoard(this, "faulty_boards/board_with_move_thats_out_of_sync_" + System.currentTimeMillis() + ChessFileFilter.FILE_ENDING);
+			//STDOUT.info("Move out of sync, Old piece at destination:" + assumedTakeOverPiece +
+			//		"Actual piece at destination:" + currentPieceAtDestination);
 			moveToPerform.setPieceAtDestination(currentPieceAtDestination);
 			moveToPerform.updatePossibility(this, false);
 			if(!moveToPerform.canBeMade(this))
 			{
+				BoardLoader.saveBoard(this, "faulty_boards/board_with_move_thats_out_of_sync_" + System.currentTimeMillis() + ChessFileFilter.FILE_ENDING);
 				STDOUT.info("Due to the move being out of sync it was thought to be available when in fact it wasn't. Faulty move: " + moveToPerform);
 				return false;
 			}
@@ -1177,6 +1220,9 @@ public final class ChessBoard
 		myWhitePieceValueCount = 0;
 		myBlackPieceValueCount = 0;
 		myPieces.clear();
+		myWhiteAvailableMoves.clear();
+		myBlackAvailableMoves.clear();
+
 		setupPositionContainers();
 		for(MoveListener ml :  myMoveListeners)
 		{

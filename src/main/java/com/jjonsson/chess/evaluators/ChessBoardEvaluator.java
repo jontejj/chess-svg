@@ -23,32 +23,22 @@ public final class ChessBoardEvaluator
 
 	public enum ChessState
 	{
-		CHECKMATE,
-		CHECK,
-		STALEMATE,
-		PLAYING
-	}
+		CHECKMATE(VALUE_OF_CHECKMATE),
+		CHECK(0),
+		//TODO(jontejj): this could be beneficial during the end game
+		STALEMATE(VALUE_OF_STALEMATE),
+		PLAYING(0);
 
-	public static long valueOfState(final ChessState state)
-	{
-		long result = 0;
-		switch(state)
+		private long myValue;
+
+		private ChessState(final long value)
 		{
-			case CHECKMATE:
-				result = VALUE_OF_CHECKMATE;
-				break;
-			case STALEMATE:
-				//TODO(jontejj): this could be beneficial during the end game
-				result = VALUE_OF_STALEMATE;
-				break;
-			case CHECK:
-				result = 0;
-				break;
-			case PLAYING:
-				result = 0;
-				break;
+			myValue = value;
 		}
-		return result;
+		public long getValue()
+		{
+			return myValue;
+		}
 	}
 
 	/**
@@ -90,7 +80,7 @@ public final class ChessBoardEvaluator
 			return true;
 		}
 
-		Set<Move> movesStoppingCheck = Sets.newHashSet();
+		Set<Move> movesStoppingCheck = Sets.newIdentityHashSet();
 		if(movesThreateningKing.size() == 1)
 		{
 			Move threateningMove = movesThreateningKing.iterator().next();

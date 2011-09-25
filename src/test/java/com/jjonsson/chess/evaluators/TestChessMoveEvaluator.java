@@ -1,7 +1,8 @@
 package com.jjonsson.chess.evaluators;
 
+import static com.jjonsson.chess.moves.ImmutablePosition.from;
 import static com.jjonsson.chess.moves.ImmutablePosition.position;
-import static com.jjonsson.chess.moves.Position.B;
+import static com.jjonsson.chess.moves.Position.Column.B;
 import static com.jjonsson.chess.pieces.Piece.WHITE;
 import static com.jjonsson.chess.scenarios.TestScenarios.loadBoard;
 import static junit.framework.Assert.assertEquals;
@@ -35,7 +36,7 @@ public class TestChessMoveEvaluator
 	{
 		ChessBoard board = loadBoard("bishop_should_move_rational");
 		//Pawn should not be taken by the bishop at 7G
-		makeSureMoveWasNotMade(board, position(2, B));
+		makeSureMoveWasNotMade(board, from(2, B));
 	}
 
 	@Test

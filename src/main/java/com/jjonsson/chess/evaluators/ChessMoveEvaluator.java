@@ -6,16 +6,18 @@ import static com.jjonsson.chess.persistence.PersistanceLogging.USE_PERSISTANCE_
 import static com.jjonsson.utilities.Loggers.STDOUT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.jjonsson.chess.board.ChessBoard;
 import com.jjonsson.chess.evaluators.orderings.MoveOrdering;
+import com.jjonsson.chess.evaluators.statistics.StatisticsAction;
 import com.jjonsson.chess.exceptions.NoMovesAvailableException;
 import com.jjonsson.chess.exceptions.SearchInterruptedError;
-import com.jjonsson.chess.listeners.StatusListener;
 import com.jjonsson.chess.moves.Move;
 import com.jjonsson.utilities.ThreadTracker;
 
@@ -41,17 +43,19 @@ public final class ChessMoveEvaluator
 	 * @throws NoMovesAvailableException if the evaluation of available moves didn't return a move
 	 * @throws SearchInterruptedError if interrupted by something (e.g the GUI)
 	 */
-	public static Move getBestMove(final ChessBoard board, final StatusListener listener) throws NoMovesAvailableException
+	public static Move getBestMove(final ChessBoard board) throws NoMovesAvailableException
 	{
 		long startTime = System.nanoTime();
 		Move result = null;
 		deepestSearch = 0;
 		ChessBoard copyOfBoard = board.copy(DEBUG ? USE_PERSISTANCE_LOGGING : SKIP_PERSISTANCE_LOGGING);
 
-		ProgressTracker.setStatusListener(listener);
+		board.performStatisticsAction(StatisticsAction.RESET);
+
 		SearchLimiter limiter = new SearchLimiter(board.getDifficulty());
 		SearchResult searchResult = deepSearch(copyOfBoard, limiter);
 		result = searchResult.getBestMove();
+		board.performStatisticsAction(StatisticsAction.MOVE_EVALUATION_STOPPED);
 		if(result == null)
 		{
 			throw new NoMovesAvailableException();
@@ -59,30 +63,11 @@ public final class ChessMoveEvaluator
 		STDOUT.debug("Best move: " + result);
 		STDOUT.debug("Best move value: " + searchResult.getBestMoveValue());
 		STDOUT.debug("Reached " + deepestSearch + " steps ahead on the deepest path");
-		ProgressTracker.done();
 		//This fetches the corresponding move from our original board
 		result = board.getMove(result);
 		double duration = (double)(System.nanoTime() - startTime) / SECONDS.toNanos(1);
 		STDOUT.debug("getBestMove took " + duration + " secs");
 		return result;
-	}
-	/**
-	 * Like {@link ChessMoveEvaluator#getBestMove(ChessBoard, StatusListener)} but without progress tracking
-	 */
-	public static Move getBestMove(final ChessBoard board) throws NoMovesAvailableException
-	{
-		return getBestMove(board, null);
-	}
-
-	/**
-	 * Performs a move without progress tracking
-	 * @param board
-	 * @throws NoMovesAvailableException
-	 * @throws SearchInterruptedError
-	 */
-	public static void performBestMove(final ChessBoard board) throws NoMovesAvailableException
-	{
-		performBestMove(board, null);
 	}
 
 	/**
@@ -92,11 +77,11 @@ public final class ChessMoveEvaluator
 	 * @throws NoMovesAvailableException
 	 * @throws SearchInterruptedError
 	 */
-	public static void performBestMove(final ChessBoard board, final StatusListener listener) throws NoMovesAvailableException
+	public static void performBestMove(final ChessBoard board) throws NoMovesAvailableException
 	{
 		try
 		{
-			Move bestMove = getBestMove(board, listener);
+			Move bestMove = getBestMove(board);
 			if(!bestMove.getPiece().performMove(bestMove, board))
 			{
 				STDOUT.info("Move: " + bestMove + " is not available, performing random move");
@@ -133,19 +118,21 @@ public final class ChessMoveEvaluator
 		if(!ChessBoardEvaluator.inPlay(board))
 		{
 			//No move to return, only the game state's value
-			result.setBestMoveIfBetter(null, ChessBoardEvaluator.valueOfState(board.getCurrentState()));
+			result.setBestMoveIfBetter(null, board.getCurrentState().getValue());
 		}
 		else
 		{
-			List<Move> moves = board.getAvailableMoves(board.getCurrentPlayer());
-			Collections.sort(moves, MoveOrdering.getInstance());
+			Set<Move> moves = board.getAvailableMoves(board.getCurrentPlayer());
+
+			List<Move> sortedMoves = Arrays.asList(moves.toArray(new Move[moves.size()]));
+			Collections.sort(sortedMoves, MoveOrdering.getInstance());
 			//TODO: instead of doing DFS do BFS and sort the moves before diving (this will also fix concurrency problems)
 
 			//The deeper we go, the less we branch, this assumes that a reasonable ordering of the moves has been made already
 			long movesLeftToEvaluateOnThisBranch = Math.max(limiter.getDepth() * ChessBoard.BOARD_SIZE, 0) + 2;
-			CountDownLatch workersDoneSignal = new CountDownLatch(moves.size());
+			CountDownLatch workersDoneSignal = new CountDownLatch(sortedMoves.size());
 			ThreadTracker threadTracker = new ThreadTracker();
-			for(Move move : moves)
+			for(Move move : sortedMoves)
 			{
 				if(move.shouldBeIncludedInMoveTable())
 				{
@@ -199,7 +186,7 @@ public final class ChessMoveEvaluator
 	{
 		boolean takeOverMove = move.isTakeOverMove();
 		long moveValue = performMoveWithMeasurements(move, board, limiter);
-		ProgressTracker.moveHasBeenMade();
+		board.performStatisticsAction(StatisticsAction.MOVE_EVALUATED);
 		boolean deeperSearch = shouldContinueDeeper(board, limiter, movesLeftToEvaluateOnThisBranch, moveValue, takeOverMove);
 		if(deeperSearch)
 		{
@@ -322,7 +309,7 @@ public final class ChessMoveEvaluator
 		}
 
 		//Save some measurements for the after state (the current player has changed now so that's why the getCurrentPlayer has been inverted)
-		long stateValue = ChessBoardEvaluator.valueOfState(board.getCurrentState()) / limiter.getCurrentDepth();
+		long stateValue = board.getCurrentState().getValue() / limiter.getCurrentDepth();
 
 		long otherPlayerAfter = board.getMeasuredStatusForPlayer(board.getCurrentPlayer());
 		long playerAfter = board.getMeasuredStatusForPlayer(!board.getCurrentPlayer());

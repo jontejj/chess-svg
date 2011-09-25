@@ -6,6 +6,7 @@ settings.xml
 ^chess.settings
 bin/*
 build/*
+faulty_boards/*
 .metadata/*
 .settings/*
 target/*/*.class

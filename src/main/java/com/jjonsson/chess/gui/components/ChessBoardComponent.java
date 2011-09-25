@@ -19,6 +19,7 @@ import java.util.Set;
 
 import javax.swing.JComponent;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.jjonsson.chess.board.ChessBoard;
@@ -95,7 +96,7 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		myBoard = board;
 		myTracker = new ThreadTracker();
 
-		pieces = Sets.newHashSet();
+		pieces = Sets.newIdentityHashSet();
 		setCurrentPieceSize();
 		setSize(size);
 		addMouseListener(this);
@@ -347,14 +348,10 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 	 * @param pos the position to surround with a color
 	 * @param markingColor the color to surround the position with
 	 * @param graphics the object to draw the square on
+	 * @throws NullPointerException if either of {@code pos} or {@code graphics} is null
 	 */
 	private void markSquare(final Position pos, final Color markingColor, final Graphics2D graphics)
 	{
-		if(pos == null)
-		{
-			return;
-		}
-
 		graphics.setColor(markingColor);
 		Point point = getInnerBorderUpperLeftCornerPointForSquare(pos);
 		//Upper line
@@ -367,15 +364,28 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 		graphics.fillRect(point.x + myCurrentPieceSize.width - myPieceBorderSize / 2, point.y + myPieceBorderSize / 2, myPieceBorderSize / 2, myCurrentPieceSize.height - myPieceBorderSize);
 	}
 
+	/**
+	 * 
+	 * @param pos
+	 * @return the upper left inner point of the border for the given position
+	 * @throws NullPointerException if {@code pos} is null
+	 */
 	private Point getInnerBorderUpperLeftCornerPointForSquare(final Position pos)
 	{
 		return new Point(pos.getColumn() * myCurrentPieceSize.width, (ChessBoard.BOARD_SIZE - pos.getRow() - 1) * myCurrentPieceSize.height);
 	}
 
-	private ImmutablePosition getPositionForPoint(final Point p) throws InvalidPosition
+	@VisibleForTesting
+	public ImmutablePosition getPositionForPoint(final Point p) throws InvalidPosition
 	{
 		int roundedRow = ChessBoard.BOARD_SIZE - 1 - (int)Math.floor((double)p.y / myCurrentPieceSize.height);
 		return ImmutablePosition.of(roundedRow, p.x / myCurrentPieceSize.width);
+	}
+
+	public Point getPointForPosition(final ImmutablePosition p)
+	{
+		//TODO: why 60?
+		return new Point(p.getColumn() * myCurrentPieceSize.width, (ChessBoard.BOARD_SIZE - 1 - p.getRow()) * myCurrentPieceSize.height + 60);
 	}
 
 	/**
@@ -451,7 +461,6 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 				{
 					return;
 				}
-				STDOUT.info("Unavailable move: " + m);
 			}
 			else
 			{
@@ -500,12 +509,17 @@ public class ChessBoardComponent extends JComponent implements MouseListener, Ch
 
 	private class PerformBestMoveThread extends Thread
 	{
+		public PerformBestMoveThread()
+		{
+			super(PerformBestMoveThread.class.getName());
+		}
+
 		@Override
 		public void run()
 		{
 			try
 			{
-				ChessMoveEvaluator.performBestMove(getBoard(), myStatusListener);
+				ChessMoveEvaluator.performBestMove(getBoard());
 			}
 			catch (NoMovesAvailableException e)
 			{

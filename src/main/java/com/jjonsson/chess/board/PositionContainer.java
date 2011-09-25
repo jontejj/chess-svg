@@ -53,10 +53,10 @@ public class PositionContainer
 
 	private void createMoveMaps()
 	{
-		myWhiteAvailableMoves = Sets.newHashSet();
-		myWhiteNonAvailableMoves = Sets.newHashSet();
-		myBlackAvailableMoves = Sets.newHashSet();
-		myBlackNonAvailableMoves = Sets.newHashSet();
+		myWhiteAvailableMoves = Sets.newIdentityHashSet();
+		myWhiteNonAvailableMoves = Sets.newIdentityHashSet();
+		myBlackAvailableMoves = Sets.newIdentityHashSet();
+		myBlackNonAvailableMoves = Sets.newIdentityHashSet();
 	}
 
 	/**
